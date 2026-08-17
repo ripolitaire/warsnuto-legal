@@ -22,6 +22,7 @@ function renderHomeStats(data) {
             <div><dt>Base</dt><dd>${bot.storage}</dd></div>
             <div><dt>Modules</dt><dd>${bot.modules.length}</dd></div>
           </dl>
+          <a class="inline-link" href="/docs">Voir la fiche</a>
         </article>
       `
     )
@@ -54,10 +55,24 @@ function renderDocs(data) {
     .join("");
 }
 
+function renderUpdatedDate(data) {
+  const target = document.querySelector("[data-site-updated]");
+  if (!target || !data.updatedAt) return;
+
+  const date = new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${data.updatedAt}T00:00:00`));
+
+  target.textContent = `Dernière mise à jour: ${date}`;
+}
+
 loadBotData()
   .then((data) => {
     renderHomeStats(data);
     renderDocs(data);
+    renderUpdatedDate(data);
   })
   .catch(() => {
     document.querySelectorAll("[data-bot-stats], [data-docs-grid]").forEach((node) => {

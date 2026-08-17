@@ -410,6 +410,53 @@ h2 {
   padding: 20px 0 56px;
 }
 
+.product-flow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.85fr);
+  gap: 22px;
+  margin: 18px 0 0;
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background:
+    linear-gradient(135deg, rgba(254, 231, 92, 0.1), transparent 36%),
+    linear-gradient(225deg, rgba(77, 184, 255, 0.12), transparent 42%),
+    var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.product-flow h2 {
+  max-width: 620px;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+}
+
+.product-flow p {
+  max-width: 720px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.product-flow ol {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-flow li {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.product-flow li span {
+  color: var(--muted);
+}
+
 .live-strip,
 .docs-grid {
   display: grid;
@@ -455,6 +502,14 @@ h2 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 22px 0 0;
+}
+
+.inline-link {
+  display: inline-flex;
+  margin-top: 18px;
+  color: var(--protect);
+  font-weight: 950;
+  text-decoration: none;
 }
 
 .live-card dl div {
@@ -712,6 +767,7 @@ h2 {
 
   .hero,
   .section-grid,
+  .product-flow,
   .live-strip,
   .docs-grid,
   .docs-panel,
