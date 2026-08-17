@@ -65,11 +65,11 @@
         "date": "2026-08-17"
       },
       "community": {
-        "name": "Multi-serveurs",
-        "guildId": null,
-        "membersLabel": "Par serveur",
-        "membersSource": "Configuration isolée",
-        "widgetUrl": null
+        "name": "WarsNuto UNIVERS",
+        "guildId": "1052863089692905493",
+        "membersLabel": "7 795+",
+        "membersSource": "Snapshot public côté serveur",
+        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json"
       },
       "modules": [
         "Panels de tickets personnalisables",
