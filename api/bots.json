@@ -2,7 +2,7 @@
   "updatedAt": "2026-08-17",
   "contact": "solitaire.blox@gmail.com",
   "source": "Vercel static API",
-  "officialUse": "WarsNut0 Protect et WarsNuto Support sont réservés aux serveurs officiels ou autorisés par WarsNuto. Toute utilisation non autorisée peut être signalée à solitaire.blox@gmail.com.",
+  "officialUse": "WarsNut0 Protect et WarsNuto Support sont rÃ©servÃ©s aux serveurs officiels ou autorisÃ©s par WarsNuto. Toute utilisation non autorisÃ©e peut Ãªtre signalÃ©e Ã  solitaire.blox@gmail.com.",
   "bots": [
     {
       "slug": "protect",
@@ -15,8 +15,8 @@
       "page": "/protect",
       "privacy": "/privacy",
       "terms": "/terms",
-      "short": "Bot principal: modération, sécurité, niveaux, économie et dashboards serveur.",
-      "description": "WarsNut0 Protect centralise la modération, les sanctions, le système XP, l'économie, l'AutoMod, les rapports staff et la configuration multi-serveurs.",
+      "short": "Bot principal: modÃ©ration, sÃ©curitÃ©, niveaux, Ã©conomie et dashboards serveur.",
+      "description": "WarsNut0 Protect centralise la modÃ©ration, les sanctions, le systÃ¨me XP, l'Ã©conomie, l'AutoMod, les rapports staff et la configuration multi-serveurs.",
       "lastUpdate": {
         "label": "Refonte site public et documentation",
         "date": "2026-08-17"
@@ -24,15 +24,15 @@
       "community": {
         "name": "WarsNuto UNIVERS",
         "guildId": "1052863089692905493",
-        "membersLabel": "7 795+",
-        "membersSource": "Snapshot public côté serveur",
+        "membersLabel": "11 322",
+        "membersSource": "Snapshot public cÃ´tÃ© serveur",
         "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json"
       },
       "modules": [
-        "Modération et sanctions",
+        "ModÃ©ration et sanctions",
         "WarnBan et anti-abus",
         "Niveaux, caisses XP et leaderboard",
-        "Économie, boutique et blackjack",
+        "Ã‰conomie, boutique et blackjack",
         "Dashboard setup par serveur",
         "Rapports staff et Staff Of The Week"
       ],
@@ -45,7 +45,7 @@
         "/leaderboard",
         "/blackjack jouer"
       ],
-      "dataUse": "IDs Discord, configurations serveur, sanctions, statistiques staff, XP, économie et logs nécessaires aux modules activés."
+      "dataUse": "IDs Discord, configurations serveur, sanctions, statistiques staff, XP, Ã©conomie et logs nÃ©cessaires aux modules activÃ©s."
     },
     {
       "slug": "support",
@@ -58,26 +58,26 @@
       "page": "/support",
       "privacy": "/privacy",
       "terms": "/terms",
-      "short": "Bot tickets: panels customisables, équipes par type, logs et fermeture propre.",
-      "description": "WarsNuto Support gère les tickets multi-types avec équipes différentes, statuts, logs configurables et commandes staff pour fermer ou terminer un ticket.",
+      "short": "Bot tickets: panels customisables, Ã©quipes par type, logs et fermeture propre.",
+      "description": "WarsNuto Support gÃ¨re les tickets multi-types avec Ã©quipes diffÃ©rentes, statuts, logs configurables et commandes staff pour fermer ou terminer un ticket.",
       "lastUpdate": {
-        "label": "Commandes tickets et statuts renforcés",
+        "label": "Commandes tickets et statuts renforcÃ©s",
         "date": "2026-08-17"
       },
       "community": {
         "name": "WarsNuto UNIVERS",
         "guildId": "1052863089692905493",
-        "membersLabel": "7 795+",
-        "membersSource": "Snapshot public côté serveur",
+        "membersLabel": "11 322",
+        "membersSource": "Snapshot public cÃ´tÃ© serveur",
         "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json"
       },
       "modules": [
         "Panels de tickets personnalisables",
         "Types de tickets multiples",
-        "Équipes support par type",
+        "Ã‰quipes support par type",
         "Logs configurables",
         "Commandes /close et /fin",
-        "Configuration isolée par serveur"
+        "Configuration isolÃ©e par serveur"
       ],
       "commands": [
         "/ticket-dashboard",
@@ -85,7 +85,7 @@
         "/close",
         "/fin"
       ],
-      "dataUse": "IDs Discord, configuration ticket, salons créés, type de ticket, statut, équipe support et logs nécessaires au suivi des demandes."
+      "dataUse": "IDs Discord, configuration ticket, salons crÃ©Ã©s, type de ticket, statut, Ã©quipe support et logs nÃ©cessaires au suivi des demandes."
     }
   ]
 }
