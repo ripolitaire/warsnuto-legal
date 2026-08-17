@@ -10,7 +10,7 @@
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
+  <body class="home-page">
     <header class="site-header">
       <a class="brand" href="./index.html" aria-label="Accueil WarsNuto Bots">
         <span class="brand-mark">WN</span>
@@ -20,6 +20,7 @@
         </span>
       </a>
       <nav class="nav">
+        <a href="./docs.html">Docs</a>
         <a href="./privacy.html">Confidentialité</a>
         <a href="./terms.html">Conditions</a>
         <a href="mailto:solitaire.blox@gmail.com">Contact</a>
@@ -27,31 +28,49 @@
     </header>
 
     <main>
-      <section class="hero">
+      <section class="hero brand-hero">
         <div class="hero-copy">
-          <p class="eyebrow">Bots Discord multi-serveurs</p>
-          <h1>Une base claire pour la confiance, la modération et le support.</h1>
+          <p class="eyebrow">WarsNuto Ecosystem</p>
+          <h1>Deux bots Discord, une identité claire.</h1>
           <p>
-            Cette page regroupe les informations légales de WarsNut0 Protect et WarsNuto Support:
-            données utilisées, finalités, sécurité, conservation et demandes de suppression.
+            WarsNut0 Protect garde la ligne jaune et noire du bot principal. WarsNuto Support reprend
+            une direction bleue plus froide, pensée pour les tickets et l'assistance.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="./privacy.html">Lire la politique</a>
             <a class="button secondary" href="./terms.html">Voir les conditions</a>
           </div>
         </div>
-        <div class="hero-panel" aria-label="Aperçu des deux bots">
-          <div class="bot-card yellow">
+        <div class="hero-panel identity-panel" aria-label="Aperçu des deux bots">
+          <div class="bot-card protect">
+            <div class="avatar-frame protect-avatar" aria-hidden="true">
+              <span class="avatar-hair"></span>
+              <span class="avatar-arm"></span>
+              <span class="avatar-shirt"></span>
+            </div>
             <span class="status-dot"></span>
             <h2>WarsNut0 Protect</h2>
             <p>Modération, niveaux, économie, anti-abus et configuration serveur.</p>
           </div>
-          <div class="bot-card blue">
+          <div class="bot-card support">
+            <div class="avatar-frame support-avatar" aria-hidden="true">
+              <span class="avatar-hair"></span>
+              <span class="avatar-arm"></span>
+              <span class="avatar-shirt"></span>
+            </div>
             <span class="status-dot"></span>
             <h2>WarsNuto Support</h2>
             <p>Tickets, équipes support, logs et suivi des demandes membres.</p>
           </div>
         </div>
+      </section>
+
+      <section class="live-strip" data-bot-stats>
+        <article class="live-card">
+          <span class="section-number">API</span>
+          <h2>Données publiques</h2>
+          <p>Chargement des informations des bots...</p>
+        </article>
       </section>
 
       <section class="section-grid">
@@ -86,5 +105,6 @@
       <span>WarsNuto Bots</span>
       <span>Dernière mise à jour: 17 août 2026</span>
     </footer>
+    <script src="./app.js" defer></script>
   </body>
 </html>

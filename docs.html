@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Documentation - WarsNuto Bots</title>
+    <meta
+      name="description"
+      content="Documentation publique des bots Discord WarsNut0 Protect et WarsNuto Support."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="docs-page">
+    <header class="site-header">
+      <a class="brand" href="./index.html" aria-label="Accueil WarsNuto Bots">
+        <span class="brand-mark">WN</span>
+        <span>
+          <strong>WarsNuto Bots</strong>
+          <small>Protect & Support</small>
+        </span>
+      </a>
+      <nav class="nav">
+        <a aria-current="page" href="./docs.html">Docs</a>
+        <a href="./privacy.html">Confidentialité</a>
+        <a href="./terms.html">Conditions</a>
+        <a href="mailto:solitaire.blox@gmail.com">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="docs-hero">
+        <div>
+          <p class="eyebrow">Documentation publique</p>
+          <h1>Comprendre les deux bots sans entrer dans le code.</h1>
+          <p>
+            Cette documentation résume les modules, les données utilisées et les commandes principales de
+            WarsNut0 Protect et WarsNuto Support.
+          </p>
+        </div>
+        <div class="api-pill">
+          <span>Source dynamique</span>
+          <code>GET /api/bots.json</code>
+        </div>
+      </section>
+
+      <section class="docs-grid" data-docs-grid>
+        <article class="docs-card">
+          <h2>Chargement...</h2>
+          <p>Les informations publiques des bots arrivent depuis l'API du site.</p>
+        </article>
+      </section>
+
+      <section class="docs-panel">
+        <div>
+          <p class="eyebrow">Configuration serveur</p>
+          <h2>Chaque serveur reste isolé.</h2>
+          <p>
+            Les deux bots sont pensés pour plusieurs serveurs. Les rôles, salons, logs, panels et réglages
+            restent attachés au serveur où ils sont configurés.
+          </p>
+        </div>
+        <ul>
+          <li>Pas de partage de configuration entre serveurs.</li>
+          <li>Pas de publication de la base SQLite.</li>
+          <li>Les données publiques du site sont séparées des données Discord privées.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>WarsNuto Bots</span>
+      <a href="./api/bots.json">API publique</a>
+    </footer>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+{
+  "updatedAt": "2026-08-17",
+  "contact": "solitaire.blox@gmail.com",
+  "bots": [
+    {
+      "name": "WarsNut0 Protect",
+      "badge": "Protect",
+      "theme": "protect",
+      "status": "Production",
+      "storage": "SQLite",
+      "short": "Bot principal: modération, sécurité, niveaux, économie et dashboards serveur.",
+      "description": "WarsNut0 Protect centralise la modération, les sanctions, le système XP, l'économie, l'AutoMod, les rapports staff et la configuration multi-serveurs.",
+      "modules": [
+        "Modération et sanctions",
+        "WarnBan et anti-abus",
+        "Niveaux, caisses XP et leaderboard",
+        "Économie, boutique et blackjack",
+        "Dashboard setup par serveur",
+        "Rapports staff et Staff Of The Week"
+      ],
+      "commands": [
+        "/help",
+        "/dashboard",
+        "/sanctions",
+        "/stat rapport",
+        "/warnban",
+        "/leaderboard",
+        "/blackjack jouer"
+      ],
+      "dataUse": "IDs Discord, configurations serveur, sanctions, statistiques staff, XP, économie et logs nécessaires aux modules activés."
+    },
+    {
+      "name": "WarsNuto Support",
+      "badge": "Support",
+      "theme": "support",
+      "status": "Production",
+      "storage": "SQLite",
+      "short": "Bot tickets: panels customisables, équipes par type, logs et fermeture propre.",
+      "description": "WarsNuto Support gère les tickets multi-types avec équipes différentes, statuts, logs configurables et commandes staff pour fermer ou terminer un ticket.",
+      "modules": [
+        "Panels de tickets personnalisables",
+        "Types de tickets multiples",
+        "Équipes support par type",
+        "Logs configurables",
+        "Commandes /close et /fin",
+        "Configuration isolée par serveur"
+      ],
+      "commands": [
+        "/ticket-dashboard",
+        "/ticket-panel",
+        "/close",
+        "/fin"
+      ],
+      "dataUse": "IDs Discord, configuration ticket, salons créés, type de ticket, statut, équipe support et logs nécessaires au suivi des demandes."
+    }
+  ]
+}
