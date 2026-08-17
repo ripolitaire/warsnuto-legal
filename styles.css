@@ -425,6 +425,32 @@ h2 {
   box-shadow: var(--shadow);
 }
 
+.notice-panel {
+  margin: 18px 0 0;
+  padding: 30px;
+  border: 1px solid rgba(254, 231, 92, 0.28);
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(254, 231, 92, 0.12), transparent 42%),
+    rgba(18, 22, 33, 0.86);
+  box-shadow: var(--shadow);
+}
+
+.notice-panel h2 {
+  font-size: clamp(1.7rem, 3vw, 2.8rem);
+}
+
+.notice-panel p {
+  max-width: 860px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.notice-panel a {
+  color: var(--protect);
+  font-weight: 900;
+}
+
 .product-flow h2 {
   max-width: 620px;
   font-size: clamp(1.8rem, 3vw, 3rem);
@@ -523,7 +549,7 @@ h2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
-  padding: 18px 0 58px;
+  padding: 18px 0 18px;
 }
 
 .metric-card {
