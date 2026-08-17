@@ -476,6 +476,100 @@ h2 {
   backdrop-filter: blur(20px);
 }
 
+.bot-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 28px;
+  align-items: center;
+  margin: 44px 0 22px;
+  padding: 42px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.bot-hero.protect {
+  background:
+    linear-gradient(135deg, rgba(254, 231, 92, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(18, 22, 33, 0.92), rgba(12, 15, 24, 0.95));
+}
+
+.bot-hero.support {
+  background:
+    linear-gradient(135deg, rgba(77, 184, 255, 0.2), transparent 42%),
+    linear-gradient(180deg, rgba(13, 21, 42, 0.92), rgba(9, 14, 27, 0.96));
+}
+
+.bot-hero h1 {
+  font-size: clamp(3rem, 6vw, 6rem);
+}
+
+.bot-hero p {
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.bot-hero img {
+  width: min(100%, 250px);
+  border: 1px solid var(--line);
+  border-radius: 34px;
+  box-shadow: 0 24px 74px rgba(0, 0, 0, 0.36);
+}
+
+.bot-dashboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  padding: 18px 0 58px;
+}
+
+.metric-card {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.metric-card.protect {
+  border-color: rgba(254, 231, 92, 0.28);
+}
+
+.metric-card.support {
+  border-color: rgba(77, 184, 255, 0.3);
+}
+
+.metric-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 22px 0 0;
+}
+
+.metric-card dl div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.metric-card dt {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.metric-card dd {
+  margin: 6px 0 0;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
 .live-card {
   min-height: 220px;
   padding: 28px;
@@ -771,7 +865,21 @@ h2 {
   .live-strip,
   .docs-grid,
   .docs-panel,
+  .bot-dashboard,
   .legal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .bot-hero {
+    grid-template-columns: 1fr;
+    padding: 30px;
+  }
+
+  .bot-hero img {
+    width: 160px;
+  }
+
+  .metric-card dl {
     grid-template-columns: 1fr;
   }
 

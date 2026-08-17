@@ -1,15 +1,32 @@
 {
   "updatedAt": "2026-08-17",
   "contact": "solitaire.blox@gmail.com",
+  "source": "Vercel static API",
   "bots": [
     {
+      "slug": "protect",
       "name": "WarsNut0 Protect",
       "badge": "Protect",
       "theme": "protect",
       "status": "Production",
       "storage": "SQLite",
+      "logo": "/assets/protect-logo.png",
+      "page": "/protect",
+      "privacy": "/privacy",
+      "terms": "/terms",
       "short": "Bot principal: modération, sécurité, niveaux, économie et dashboards serveur.",
       "description": "WarsNut0 Protect centralise la modération, les sanctions, le système XP, l'économie, l'AutoMod, les rapports staff et la configuration multi-serveurs.",
+      "lastUpdate": {
+        "label": "Refonte site public et documentation",
+        "date": "2026-08-17"
+      },
+      "community": {
+        "name": "WarsNuto UNIVERS",
+        "guildId": "1052863089692905493",
+        "membersLabel": "7 795+",
+        "membersSource": "Snapshot public côté serveur",
+        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json"
+      },
       "modules": [
         "Modération et sanctions",
         "WarnBan et anti-abus",
@@ -30,13 +47,29 @@
       "dataUse": "IDs Discord, configurations serveur, sanctions, statistiques staff, XP, économie et logs nécessaires aux modules activés."
     },
     {
+      "slug": "support",
       "name": "WarsNuto Support",
       "badge": "Support",
       "theme": "support",
       "status": "Production",
       "storage": "SQLite",
+      "logo": "/assets/support-logo.png",
+      "page": "/support",
+      "privacy": "/privacy",
+      "terms": "/terms",
       "short": "Bot tickets: panels customisables, équipes par type, logs et fermeture propre.",
       "description": "WarsNuto Support gère les tickets multi-types avec équipes différentes, statuts, logs configurables et commandes staff pour fermer ou terminer un ticket.",
+      "lastUpdate": {
+        "label": "Commandes tickets et statuts renforcés",
+        "date": "2026-08-17"
+      },
+      "community": {
+        "name": "Multi-serveurs",
+        "guildId": null,
+        "membersLabel": "Par serveur",
+        "membersSource": "Configuration isolée",
+        "widgetUrl": null
+      },
       "modules": [
         "Panels de tickets personnalisables",
         "Types de tickets multiples",
