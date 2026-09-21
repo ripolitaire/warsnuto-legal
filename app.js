@@ -1,9 +1,14 @@
 async function loadBotData() {
-  const response = await fetch("/api/bots.json", { cache: "no-store" });
-  if (!response.ok) {
-    throw new Error(`API unavailable: ${response.status}`);
+  const urls = [`/api/bots?ts=${Date.now()}`, `/api/bots.json?ts=${Date.now()}`];
+
+  for (const url of urls) {
+    const response = await fetch(url, { cache: "no-store" }).catch(() => null);
+    if (response?.ok) {
+      return response.json();
+    }
   }
-  return response.json();
+
+  throw new Error("API unavailable");
 }
 
 function formatDate(value) {
@@ -28,7 +33,7 @@ function renderHomeStats(data) {
           <p>${bot.short}</p>
           <dl>
             <div><dt>Statut</dt><dd>${bot.status}</dd></div>
-            <div><dt>Communauté</dt><dd>${bot.community.membersLabel}</dd></div>
+            <div><dt>Serveur</dt><dd>${bot.community.membersLabel} membres</dd></div>
             <div><dt>Mise à jour</dt><dd>${formatDate(bot.lastUpdate.date)}</dd></div>
           </dl>
           <a class="inline-link" href="${bot.page}">Ouvrir la page ${bot.badge}</a>
@@ -91,9 +96,10 @@ async function renderBotDetail(data) {
   if (!bot) return;
 
   const widget = await fetchDiscordWidget(bot);
-  const onlineCount = widget?.presence_count ?? "Non public";
+  const onlineCount = bot.community.onlineLabel || widget?.presence_count || "Widget désactivé";
   const serverName = widget?.name || bot.community.name;
   const memberLabel = bot.community.membersLabel;
+  const sourceLabel = bot.community.membersSource || (widget ? "Discord Widget" : "Snapshot public");
 
   target.innerHTML = `
     <article class="metric-card ${bot.theme}">
@@ -102,7 +108,7 @@ async function renderBotDetail(data) {
       <dl>
         <div><dt>Membres</dt><dd>${memberLabel}</dd></div>
         <div><dt>En ligne</dt><dd>${onlineCount}</dd></div>
-        <div><dt>Source</dt><dd>${widget ? "Discord Widget" : bot.community.membersSource}</dd></div>
+        <div><dt>Source</dt><dd>${sourceLabel}</dd></div>
       </dl>
     </article>
 
@@ -128,6 +134,8 @@ async function renderBotDetail(data) {
       <p class="command-list">${bot.commands.map((item) => `<code>${item}</code>`).join("")}</p>
       <h3>Données utilisées</h3>
       <p>${bot.dataUse}</p>
+      <h3>Usage officiel</h3>
+      <p>${data.officialUse}</p>
     </article>
   `;
 }
