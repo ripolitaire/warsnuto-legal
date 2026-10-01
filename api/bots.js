@@ -1,4 +1,4 @@
-const snapshot = require("./bots.json");
+const snapshot = require("./bots-data.json");
 
 const DISCORD_API = "https://discord.com/api/v10";
 const DEFAULT_INVITE_CODE = "warsnuto";
