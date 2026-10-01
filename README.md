@@ -17,10 +17,10 @@ Contact officiel: `solitaire.blox@gmail.com`.
 
 ## API publique
 
-- `/api/bots`: route dynamique Vercel. Elle essaie de lire le compteur public Discord via l'invite `warsnuto`, puis via `DISCORD_BOT_TOKEN` si la variable existe, puis revient au snapshot.
+- `/api/bots.json`: snapshot public statique servi par GitHub Pages.
 - `/api/bots.json`: snapshot de secours utilisé si la route dynamique ne répond pas.
 
-Variables Vercel optionnelles:
+Note compteur membres:
 
 - `WARSNUTO_INVITE_CODE`: code d'invitation Discord public, par défaut `warsnuto`.
 - `WARSNUTO_GUILD_ID`: ID du serveur WarsNuto.
@@ -28,19 +28,18 @@ Variables Vercel optionnelles:
 
 ## Déploiement Vercel
 
-Le fichier `vercel.json` active les URLs propres:
+GitHub Pages sert le contenu depuis la branche `main`, dossier `/`:
 
 - `/`
-- `/protect`
-- `/support`
-- `/docs`
-- `/privacy`
-- `/terms`
-- `/api/bots`
+- `/protect.html`
+- `/support.html`
+- `/docs.html`
+- `/privacy.html`
+- `/terms.html`
 
 Après publication, ajoute les liens dans le Discord Developer Portal de chaque application:
 
-- Privacy Policy URL: `https://ton-domaine.vercel.app/privacy`
-- Terms of Service URL: `https://ton-domaine.vercel.app/terms`
+- Privacy Policy URL: `https://ripolitaire.github.io/warsnuto-legal/privacy.html`
+- Terms of Service URL: `https://ripolitaire.github.io/warsnuto-legal/terms.html`
 
 Ces pages sont informatives et doivent être adaptées si les bots ajoutent de nouvelles collectes de données ou changent de fonctionnement.

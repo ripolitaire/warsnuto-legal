@@ -1,5 +1,5 @@
 async function loadBotData() {
-  const urls = [`/api/bots?ts=${Date.now()}`, `/api/bots.json?ts=${Date.now()}`];
+  const urls = [`api/bots.json?ts=${Date.now()}`];
 
   for (const url of urls) {
     const response = await fetch(url, { cache: "no-store" }).catch(() => null);

@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-08-24",
+  "updatedAt": "2026-09-21",
   "contact": "solitaire.blox@gmail.com",
-  "source": "Vercel static API",
+  "source": "GitHub Pages static API",
   "officialUse": "WarsNut0 Protect et WarsNuto Support sont réservés aux serveurs officiels ou autorisés par WarsNuto. Toute utilisation non autorisée peut être signalée à solitaire.blox@gmail.com.",
   "bots": [
     {
@@ -11,10 +11,10 @@
       "theme": "protect",
       "status": "Production",
       "storage": "SQLite",
-      "logo": "/assets/protect-logo.webp",
-      "page": "/protect",
-      "privacy": "/privacy",
-      "terms": "/terms",
+      "logo": "assets/protect-logo.webp",
+      "page": "protect.html",
+      "privacy": "privacy.html",
+      "terms": "terms.html",
       "short": "Bot principal: modération, sécurité, niveaux, économie et configuration serveur.",
       "description": "WarsNut0 Protect centralise la modération, les sanctions, le système XP, l'économie, l'AutoMod, les rapports staff et la configuration du serveur WarsNuto.",
       "lastUpdate": {
@@ -25,9 +25,10 @@
         "name": "WarsNuto UNIVERS",
         "guildId": "1052863089692905493",
         "inviteCode": "warsnuto",
-        "membersLabel": "11 322",
-        "membersSource": "Snapshot public côté serveur",
-        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json"
+        "membersLabel": "14 450",
+        "membersSource": "Discord Invite snapshot",
+        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json",
+        "onlineLabel": "1 203"
       },
       "modules": [
         "Modération et sanctions",
@@ -55,10 +56,10 @@
       "theme": "support",
       "status": "Production",
       "storage": "SQLite",
-      "logo": "/assets/support-logo.png",
-      "page": "/support",
-      "privacy": "/privacy",
-      "terms": "/terms",
+      "logo": "assets/support-logo.png",
+      "page": "support.html",
+      "privacy": "privacy.html",
+      "terms": "terms.html",
       "short": "Bot tickets: panels customisables, équipes par type, logs et fermeture propre.",
       "description": "WarsNuto Support gère les tickets multi-types avec équipes différentes, statuts, logs configurables et commandes staff pour fermer ou terminer un ticket.",
       "lastUpdate": {
@@ -69,9 +70,10 @@
         "name": "WarsNuto UNIVERS",
         "guildId": "1052863089692905493",
         "inviteCode": "warsnuto",
-        "membersLabel": "11 322",
-        "membersSource": "Snapshot public côté serveur",
-        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json"
+        "membersLabel": "14 450",
+        "membersSource": "Discord Invite snapshot",
+        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json",
+        "onlineLabel": "1 203"
       },
       "modules": [
         "Panels de tickets personnalisables",
