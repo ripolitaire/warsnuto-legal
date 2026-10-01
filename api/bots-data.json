@@ -1,7 +1,7 @@
 {
   "updatedAt": "2026-09-21",
   "contact": "solitaire.blox@gmail.com",
-  "source": "GitHub Pages static API",
+  "source": "Vercel API",
   "officialUse": "WarsNut0 Protect et WarsNuto Support sont réservés aux serveurs officiels ou autorisés par WarsNuto. Toute utilisation non autorisée peut être signalée à solitaire.blox@gmail.com.",
   "bots": [
     {
@@ -34,7 +34,7 @@
         "Modération et sanctions",
         "WarnBan et anti-abus",
         "Niveaux, caisses XP et leaderboard",
-        "Économie, boutique et blackjack",
+        "économie, boutique et blackjack",
         "Dashboard setup par serveur",
         "Rapports staff et Staff Of The Week"
       ],
@@ -78,7 +78,7 @@
       "modules": [
         "Panels de tickets personnalisables",
         "Types de tickets multiples",
-        "Équipes support par type",
+        "équipes support par type",
         "Logs configurables",
         "Commandes /close et /fin",
         "Configuration isolée par serveur"

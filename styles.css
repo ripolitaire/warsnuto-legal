@@ -2,11 +2,12 @@
   color-scheme: dark;
   --ink: #080a10;
   --night: #0e1320;
-  --panel: rgba(18, 22, 33, 0.86);
-  --panel-strong: #171c2a;
-  --line: rgba(255, 255, 255, 0.11);
+  --panel: rgba(17, 22, 34, 0.82);
+  --panel-strong: #171d2c;
+  --line: rgba(255, 255, 255, 0.12);
   --text: #f7f8fc;
   --muted: #aeb9cf;
+  --muted-strong: #d6def0;
   --protect: #fee75c;
   --protect-soft: #ffc879;
   --support: #4db8ff;
@@ -26,9 +27,9 @@ body {
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background:
-    linear-gradient(115deg, rgba(254, 231, 92, 0.15), transparent 28%),
-    linear-gradient(245deg, rgba(77, 184, 255, 0.18), transparent 32%),
-    linear-gradient(180deg, #090b12 0%, #101522 48%, #0b0f19 100%);
+    radial-gradient(circle at 12% 0%, rgba(254, 231, 92, 0.14), transparent 34%),
+    radial-gradient(circle at 88% 10%, rgba(77, 184, 255, 0.2), transparent 30%),
+    linear-gradient(180deg, #080b12 0%, #101522 48%, #090d16 100%);
 }
 
 body::before {
@@ -88,7 +89,7 @@ main {
   height: 50px;
   place-items: center;
   border: 1px solid rgba(254, 231, 92, 0.55);
-  border-radius: 16px;
+  border-radius: 18px;
   color: #121212;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.28), transparent 42%),
@@ -133,7 +134,7 @@ main {
 .nav a {
   padding: 10px 14px;
   border: 1px solid transparent;
-  border-radius: 14px;
+  border-radius: 999px;
   color: var(--muted);
   font-weight: 800;
   text-decoration: none;
@@ -144,7 +145,9 @@ main {
   color: var(--text);
   border-color: var(--line);
   background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 -2px 0 rgba(254, 231, 92, 0.42);
+  box-shadow:
+    inset 0 -2px 0 rgba(254, 231, 92, 0.42),
+    0 14px 28px rgba(0, 0, 0, 0.16);
 }
 
 .hero {
@@ -171,7 +174,7 @@ main {
   min-height: 560px;
   padding: 56px;
   overflow: hidden;
-  border-radius: 30px;
+  border-radius: 28px;
 }
 
 .hero-copy::after {
@@ -243,7 +246,7 @@ h2 {
   min-height: 50px;
   padding: 0 20px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 999px;
   font-weight: 950;
   text-decoration: none;
 }
@@ -251,12 +254,15 @@ h2 {
 .button.primary {
   color: #101010;
   border-color: var(--protect);
-  background: var(--protect);
+  background:
+    linear-gradient(135deg, #fff4a3, var(--protect));
+  box-shadow: 0 16px 36px rgba(254, 231, 92, 0.2);
 }
 
 .button.secondary {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.07);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.045));
 }
 
 .identity-panel {
@@ -272,7 +278,7 @@ h2 {
   padding: 26px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 22px;
   background: var(--panel-strong);
 }
 
@@ -314,7 +320,7 @@ h2 {
   height: 106px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 26px;
+  border-radius: 24px;
   background: #f4f4f4;
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
 }
@@ -510,7 +516,7 @@ h2 {
 .docs-hero,
 .docs-panel {
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 22px;
   background: var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(20px);
@@ -571,7 +577,7 @@ h2 {
   padding: 28px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 22px;
   background: var(--panel);
   box-shadow: var(--shadow-soft);
 }
@@ -633,18 +639,71 @@ h2 {
 }
 
 .live-card {
-  min-height: 220px;
+  position: relative;
+  min-height: 236px;
   padding: 28px;
+  overflow: hidden;
   transition:
     transform 180ms ease,
     border-color 180ms ease,
     background 180ms ease;
 }
 
+.live-card::after,
+.docs-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075), transparent 30%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.14));
+}
+
+.live-card > *,
+.docs-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.card-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.card-topline .section-number {
+  margin: 0;
+}
+
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid rgba(67, 220, 152, 0.26);
+  border-radius: 999px;
+  color: var(--green);
+  background: rgba(67, 220, 152, 0.08);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.live-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 16px currentColor;
+}
+
 .live-card:hover,
 .docs-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .live-card.protect,
@@ -681,7 +740,7 @@ h2 {
 .live-card dl div {
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.05);
 }
 
@@ -697,6 +756,16 @@ h2 {
   color: var(--text);
   font-size: 1.05rem;
   font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.api-state-card {
+  max-width: 760px;
+  min-height: 0;
+  border-color: rgba(254, 231, 92, 0.26);
+  background:
+    linear-gradient(135deg, rgba(254, 231, 92, 0.11), transparent 42%),
+    var(--panel);
 }
 
 .docs-hero {
@@ -750,7 +819,9 @@ h2 {
 }
 
 .docs-card {
+  position: relative;
   padding: 30px;
+  overflow: hidden;
   transition:
     transform 180ms ease,
     border-color 180ms ease;

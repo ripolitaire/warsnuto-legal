@@ -1,14 +1,21 @@
 async function loadBotData() {
-  const urls = [`api/bots.json?ts=${Date.now()}`];
+  const urls = [`/api/bots?ts=${Date.now()}`, `api/bots?ts=${Date.now()}`];
 
   for (const url of urls) {
     const response = await fetch(url, { cache: "no-store" }).catch(() => null);
-    if (response?.ok) {
-      return response.json();
-    }
+    if (response?.ok) return response.json();
   }
 
   throw new Error("API unavailable");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function formatDate(value) {
@@ -27,16 +34,19 @@ function renderHomeStats(data) {
   target.innerHTML = data.bots
     .map(
       (bot) => `
-        <article class="live-card ${bot.theme}">
-          <span class="section-number">${bot.badge}</span>
-          <h2>${bot.name}</h2>
-          <p>${bot.short}</p>
+        <article class="live-card ${escapeHtml(bot.theme)}">
+          <div class="card-topline">
+            <span class="section-number">${escapeHtml(bot.badge)}</span>
+            <span class="live-status">En production</span>
+          </div>
+          <h2>${escapeHtml(bot.name)}</h2>
+          <p>${escapeHtml(bot.short)}</p>
           <dl>
-            <div><dt>Statut</dt><dd>${bot.status}</dd></div>
-            <div><dt>Serveur</dt><dd>${bot.community.membersLabel} membres</dd></div>
-            <div><dt>Mise à jour</dt><dd>${formatDate(bot.lastUpdate.date)}</dd></div>
+            <div><dt>Statut</dt><dd>${escapeHtml(bot.status)}</dd></div>
+            <div><dt>Serveur</dt><dd>${escapeHtml(bot.community?.membersLabel || "Non public")} membres</dd></div>
+            <div><dt>Mise à jour</dt><dd>${escapeHtml(formatDate(bot.lastUpdate?.date))}</dd></div>
           </dl>
-          <a class="inline-link" href="${bot.page}">Ouvrir la page ${bot.badge}</a>
+          <a class="inline-link" href="${escapeHtml(bot.page)}">Ouvrir la page ${escapeHtml(bot.badge)}</a>
         </article>
       `
     )
@@ -50,20 +60,20 @@ function renderDocs(data) {
   target.innerHTML = data.bots
     .map(
       (bot) => `
-        <article class="docs-card ${bot.theme}">
+        <article class="docs-card ${escapeHtml(bot.theme)}">
           <div class="docs-card-head">
-            <span class="section-number">${bot.badge}</span>
-            <strong>${bot.status}</strong>
+            <span class="section-number">${escapeHtml(bot.badge)}</span>
+            <strong>${escapeHtml(bot.status)}</strong>
           </div>
-          <h2>${bot.name}</h2>
-          <p>${bot.description}</p>
+          <h2>${escapeHtml(bot.name)}</h2>
+          <p>${escapeHtml(bot.description)}</p>
           <h3>Modules</h3>
-          <ul>${bot.modules.map((item) => `<li>${item}</li>`).join("")}</ul>
+          <ul>${(bot.modules || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
           <h3>Commandes clés</h3>
-          <p class="command-list">${bot.commands.map((item) => `<code>${item}</code>`).join("")}</p>
+          <p class="command-list">${(bot.commands || []).map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</p>
           <h3>Données utilisées</h3>
-          <p>${bot.dataUse}</p>
-          <a class="inline-link" href="${bot.page}">Voir la page dédiée</a>
+          <p>${escapeHtml(bot.dataUse)}</p>
+          <a class="inline-link" href="${escapeHtml(bot.page)}">Voir la page dédiée</a>
         </article>
       `
     )
@@ -73,7 +83,7 @@ function renderDocs(data) {
 function renderUpdatedDate(data) {
   const target = document.querySelector("[data-site-updated]");
   if (!target || !data.updatedAt) return;
-  target.textContent = `Dernière mise à jour: ${formatDate(data.updatedAt)}`;
+  target.textContent = `Dernière mise à jour : ${formatDate(data.updatedAt)}`;
 }
 
 async function fetchDiscordWidget(bot) {
@@ -96,46 +106,46 @@ async function renderBotDetail(data) {
   if (!bot) return;
 
   const widget = await fetchDiscordWidget(bot);
-  const onlineCount = bot.community.onlineLabel || widget?.presence_count || "Widget désactivé";
-  const serverName = widget?.name || bot.community.name;
-  const memberLabel = bot.community.membersLabel;
-  const sourceLabel = bot.community.membersSource || (widget ? "Discord Widget" : "Snapshot public");
+  const onlineCount = bot.community?.onlineLabel || widget?.presence_count || "Non public";
+  const serverName = widget?.name || bot.community?.name || "WarsNuto";
+  const memberLabel = bot.community?.membersLabel || "Non public";
+  const sourceLabel = bot.community?.membersSource || (widget ? "Discord Widget" : "Snapshot public");
 
   target.innerHTML = `
-    <article class="metric-card ${bot.theme}">
+    <article class="metric-card ${escapeHtml(bot.theme)}">
       <span class="section-number">Serveur</span>
-      <h2>${serverName}</h2>
+      <h2>${escapeHtml(serverName)}</h2>
       <dl>
-        <div><dt>Membres</dt><dd>${memberLabel}</dd></div>
-        <div><dt>En ligne</dt><dd>${onlineCount}</dd></div>
-        <div><dt>Source</dt><dd>${sourceLabel}</dd></div>
+        <div><dt>Membres</dt><dd>${escapeHtml(memberLabel)}</dd></div>
+        <div><dt>En ligne</dt><dd>${escapeHtml(onlineCount)}</dd></div>
+        <div><dt>Source</dt><dd>${escapeHtml(sourceLabel)}</dd></div>
       </dl>
     </article>
 
-    <article class="metric-card ${bot.theme}">
+    <article class="metric-card ${escapeHtml(bot.theme)}">
       <span class="section-number">Bot</span>
-      <h2>${bot.status}</h2>
+      <h2>${escapeHtml(bot.status)}</h2>
       <dl>
-        <div><dt>Stockage</dt><dd>${bot.storage}</dd></div>
-        <div><dt>Dernière mise à jour</dt><dd>${formatDate(bot.lastUpdate.date)}</dd></div>
-        <div><dt>Note</dt><dd>${bot.lastUpdate.label}</dd></div>
+        <div><dt>Stockage</dt><dd>${escapeHtml(bot.storage)}</dd></div>
+        <div><dt>Dernière mise à jour</dt><dd>${escapeHtml(formatDate(bot.lastUpdate?.date))}</dd></div>
+        <div><dt>Note</dt><dd>${escapeHtml(bot.lastUpdate?.label)}</dd></div>
       </dl>
     </article>
 
-    <article class="docs-card ${bot.theme}">
+    <article class="docs-card ${escapeHtml(bot.theme)}">
       <span class="section-number">Modules</span>
-      <h2>Ce que fait ${bot.badge}</h2>
-      <ul>${bot.modules.map((item) => `<li>${item}</li>`).join("")}</ul>
+      <h2>Ce que fait ${escapeHtml(bot.badge)}</h2>
+      <ul>${(bot.modules || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </article>
 
-    <article class="docs-card ${bot.theme}">
+    <article class="docs-card ${escapeHtml(bot.theme)}">
       <span class="section-number">Commandes</span>
       <h2>Commandes principales</h2>
-      <p class="command-list">${bot.commands.map((item) => `<code>${item}</code>`).join("")}</p>
+      <p class="command-list">${(bot.commands || []).map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</p>
       <h3>Données utilisées</h3>
-      <p>${bot.dataUse}</p>
+      <p>${escapeHtml(bot.dataUse)}</p>
       <h3>Usage officiel</h3>
-      <p>${data.officialUse}</p>
+      <p>${escapeHtml(data.officialUse)}</p>
     </article>
   `;
 }
@@ -150,10 +160,11 @@ loadBotData()
   .catch(() => {
     document.querySelectorAll("[data-bot-stats], [data-docs-grid], [data-bot-detail]").forEach((node) => {
       node.innerHTML = `
-        <article class="live-card">
+        <article class="live-card api-state-card">
           <span class="section-number">Info</span>
           <h2>Données indisponibles</h2>
           <p>La documentation reste accessible, mais l'API publique ne répond pas pour le moment.</p>
+          <a class="inline-link" href="/api/bots">Réessayer l'API</a>
         </article>
       `;
     });

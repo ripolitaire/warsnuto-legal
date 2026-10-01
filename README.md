@@ -9,7 +9,7 @@ Site public pour présenter les bots Discord WarsNuto, publier les pages légale
 - `privacy.html`
 - `terms.html`
 - `api/bots.js`
-- `api/bots.json`
+- `api/bots`
 - `styles.css`
 - `app.js`
 
@@ -17,8 +17,8 @@ Contact officiel: `solitaire.blox@gmail.com`.
 
 ## API publique
 
-- `/api/bots.json`: snapshot public statique servi par GitHub Pages.
-- `/api/bots.json`: snapshot de secours utilisé si la route dynamique ne répond pas.
+- `/api/bots`: snapshot public statique servi par Vercel.
+- `/api/bots`: snapshot de secours utilisé si la route dynamique ne répond pas.
 
 Note compteur membres:
 
@@ -28,7 +28,7 @@ Note compteur membres:
 
 ## Déploiement Vercel
 
-GitHub Pages sert le contenu depuis la branche `main`, dossier `/`:
+Vercel déploie le dossier `legal-site` depuis le dépôt GitHub :
 
 - `/`
 - `/protect.html`
@@ -39,7 +39,7 @@ GitHub Pages sert le contenu depuis la branche `main`, dossier `/`:
 
 Après publication, ajoute les liens dans le Discord Developer Portal de chaque application:
 
-- Privacy Policy URL: `https://ripolitaire.github.io/warsnuto-legal/privacy.html`
-- Terms of Service URL: `https://ripolitaire.github.io/warsnuto-legal/terms.html`
+- Privacy Policy URL: `https://warsnuto-legal.vercel.app/privacy.html`
+- Terms of Service URL: `https://warsnuto-legal.vercel.app/terms.html`
 
 Ces pages sont informatives et doivent être adaptées si les bots ajoutent de nouvelles collectes de données ou changent de fonctionnement.
