@@ -1,7 +1,8 @@
 const fs = require('node:fs'), path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { CEILINGS } = require('./permissions.cjs');
-function openDatabase(filename) {
+function openDatabase(filename, { create = true } = {}) {
+  if (!create && (filename === ':memory:' || !fs.existsSync(filename))) throw Error('Base web absente : restauration ou initialisation CLI explicite requise.');
   if (filename !== ':memory:') fs.mkdirSync(path.dirname(filename), { recursive: true, mode: 0o700 });
   const db = new DatabaseSync(filename);
   const applicationId = db.prepare('PRAGMA application_id').get().application_id;

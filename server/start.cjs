@@ -2,7 +2,7 @@ const { configuration } = require('./config.cjs');
 const { openDatabase } = require('./database.cjs');
 const { createApp } = require('./app.cjs');
 function start() {
-  const config = configuration(), db = openDatabase(config.databasePath), backend = createApp({ db, config });
+  const config = configuration(), db = openDatabase(config.databasePath, { create: !config.production }), backend = createApp({ db, config });
   backend.maintain();
   const timer = setInterval(() => { try { backend.maintain(); } catch { console.error('{"event":"web.maintenance_failure"}'); } }, 60000).unref();
   const server = backend.app.listen(config.port, config.host, () => console.log(`WarsNuto web : http://${config.host}:${config.port}`));

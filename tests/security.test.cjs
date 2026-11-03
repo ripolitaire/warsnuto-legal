@@ -32,6 +32,11 @@ test('database refuses bot databases and preserves their content', () => {
     assert.equal(check.prepare('SELECT id FROM sanctions').get().id, 'preserve'); assert.equal(check.prepare('PRAGMA user_version').get().user_version, 0); check.close();
   } finally { fs.rmSync(directory, { recursive: true }); }
 });
+test('production refuses a missing database instead of silently recreating accounts', () => {
+  const filename = path.join(os.tmpdir(), 'wn-never-created-' + require('node:crypto').randomUUID() + '.sqlite');
+  assert.throws(() => openDatabase(filename, { create: false }), /Base web absente/);
+  assert.equal(fs.existsSync(filename), false);
+});
 test('API errors never expose database messages, env values or authentication headers', async t => {
   const f = fixture(); await f.listen(); t.after(() => f.close()); const owner = await f.login('OWNER');
   f.db.exec('DROP TABLE audit_logs');

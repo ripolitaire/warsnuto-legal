@@ -134,6 +134,8 @@ Les Snowflakes restent des chaînes. Migration SQL et seed des rôles sont
 transactionnels. `user_version=1` et `application_id` identifient la base web : une
 base existante d'un autre projet est refusée sans migration ; un schéma plus récent
 est aussi refusé. Aucun import des données de jeu, sanctions ou tickets n'est fait.
+En production, le backend refuse une base absente au lieu de recréer des comptes
+vides. L'initialisation du premier propriétaire par CLI doit précéder son démarrage.
 
 Les changements de comptes, permissions et réglages utilisent des versions et des
 transactions `BEGIN IMMEDIATE`. Les requêtes sont paramétrées. Les métadonnées
@@ -196,9 +198,10 @@ pour tester ou lancer un deuxième bot de production.
 4. Créer `.env.web` privé, lancer `npm ci` et `npm run build`. Configurer le proxy
    TLS vers `127.0.0.1:3100`, avec certificat valide et remplacement de
    `X-Forwarded-Proto` par `https`. Ne jamais désactiver la validation TLS.
-5. Définir `WEB_NODE_BINARY` vers Node 24 lors du chargement de
+5. Initialiser le premier OWNER par la commande CLI contrôlée ci-dessus, avant
+   tout démarrage de production. Définir `WEB_NODE_BINARY` vers Node 24 au chargement de
    `ecosystem.web.config.cjs`, puis démarrer seulement `warsnuto-web`.
-6. Enregistrer l'URI Discord, créer le premier OWNER, configurer les variables
+6. Enregistrer l'URI Discord, configurer les variables
    Vercel de Production et réaliser une recette réelle avant l'ouverture.
 7. Vérifier cookies, révocation, réponses 401/403, expirations, permissions disque,
    logs et conservation des comptes après redémarrage.
