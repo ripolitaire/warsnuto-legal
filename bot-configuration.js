@@ -3,7 +3,12 @@
   let dirty = false;
   window.addEventListener('beforeunload', event => { if (dirty) { event.preventDefault(); event.returnValue = ''; } });
   window.wnBotConfiguration = async ({ content, request, write, confirmAction, notice, action, icon, E, icons }) => {
-    const catalog = await request('admin/bot-config'), query = new URLSearchParams(location.search);
+    const query = new URLSearchParams(location.search), directory = await request('servers');
+    if (!query.get('guild')) return window.wnMemberSpace.servers({ content, request, E, icon, icons }, directory, true);
+    const selectedGuild = directory.guilds.find(g => g.id === query.get('guild'));
+    const available = selectedGuild?.bots.filter(bot => bot.canConfigure) || [];
+    if (!available.length) return window.wnMemberSpace.servers({ content, request, E, icon, icons }, directory, true);
+    const catalog = { bots: available };
     const model = { bot: catalog.bots.some(b => b.id === query.get('bot')) ? query.get('bot') : catalog.bots[0].id, guilds: [], guild: '', section: '', meta: null, values: {}, revision: '' };
     let inFlight = false;
     const base = () => 'admin/bot-config/' + model.bot;
@@ -113,13 +118,14 @@
       loading(); model.guild = ''; model.meta = null;
       let data;
       try { data = await request(base() + '/guilds'); } catch (error) { loadError(loadGuilds); throw error; }
+      data.guilds = data.guilds.filter(g => g.id === selectedGuild.id);
       model.guilds = data.guilds;
       const select = content.querySelector('[data-config-guild]'); select.innerHTML = data.guilds.map(g => `<option value="${E(g.id)}">${E(g.name)}</option>`).join('');
       if (!data.guilds.length) { content.querySelector('[data-config-editor]').innerHTML = '<p class="notice">Aucun serveur accessible : la permission Administrateur Discord est requise sur un serveur où ce bot est présent.</p>'; content.querySelector('[data-config-section]').innerHTML = ''; model.guild = ''; return; }
       model.guild = data.guilds.some(g => g.id === query.get('guild')) ? query.get('guild') : data.guilds[0].id; select.value = model.guild;
       await loadGuild();
     }
-    content.innerHTML = `<section class="workspace-section"><div class="config-selectors"><label>Bot<select data-config-bot>${catalog.bots.map(b => `<option value="${E(b.id)}">${E(b.name)}</option>`).join('')}</select></label><label>Serveur Discord<select data-config-guild></select></label><label>Rubrique<select data-config-section></select></label></div></section><section class="workspace-section" data-config-editor></section>`;
+    content.innerHTML = `<section class="workspace-section"><div class="section-heading"><a href="/admin/configuration" class="button">${icon('arrow-left')} Serveurs</a><strong>${E(selectedGuild.name)}</strong>${selectedGuild.bots.some(bot => bot.id === 'game') ? `<a href="/profile/game?guild=${E(selectedGuild.id)}" class="button">${icon('gamepad-2')} Mon Game</a>` : ''}</div><div class="config-selectors"><label>Bot<select data-config-bot>${catalog.bots.map(b => `<option value="${E(b.id)}">${E(b.name)}</option>`).join('')}</select></label><label hidden>Serveur Discord<select data-config-guild></select></label><label>Rubrique<select data-config-section></select></label></div></section><section class="workspace-section" data-config-editor></section>`;
     const botSelect = content.querySelector('[data-config-bot]'), guildSelect = content.querySelector('[data-config-guild]'), sectionSelect = content.querySelector('[data-config-section]');
     botSelect.value = model.bot;
     botSelect.onchange = () => { const value = botSelect.value; void run(async () => { if (!await discard()) { botSelect.value = model.bot; return; } dirty = false; model.bot = value; await loadGuilds(); }); };

@@ -8,7 +8,7 @@ async function build() {
   }
   fs.mkdirSync(dist);
   await require('esbuild').build({ entryPoints: [path.join(root, 'ui/icons.js')], bundle: true, minify: true, format: 'iife', outfile: path.join(root, 'assets/platform-icons.js'), legalComments: 'inline' });
-  const files = fs.readdirSync(root).filter(file => file.endsWith('.html')).concat(['app.js', 'styles.css', 'platform.js', 'platform.css', 'bot-configuration.js', 'robots.txt', 'sitemap.xml']);
+  const files = fs.readdirSync(root).filter(file => file.endsWith('.html')).concat(['app.js', 'styles.css', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js', 'robots.txt', 'sitemap.xml']);
   for (const file of files) fs.copyFileSync(path.join(root, file), path.join(dist, file));
   fs.cpSync(path.join(root, 'assets'), path.join(dist, 'assets'), { recursive: true, filter: file => !fs.lstatSync(file).isSymbolicLink() && !path.basename(file).startsWith('.') && (fs.statSync(file).isDirectory() || /\.(?:png|webp|jpg|jpeg|gif|svg|ico|js)$/.test(file)) });
   console.log('Static build: ' + files.length + ' public files plus assets. No backend, env or database.');

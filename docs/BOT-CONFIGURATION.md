@@ -3,21 +3,20 @@
 ## Accès
 
 Page : `https://warsnuto.com/admin/configuration`.
-Choisir le bot, un serveur Discord accessible et la rubrique de configuration.
+Choisir d'abord un serveur Discord accessible, puis le bot et sa rubrique de configuration.
 Les changements sont appliqués dans le bot concerné après confirmation et motif,
 puis les valeurs réellement enregistrées sont relues. Aucun redémarrage n'est
 nécessaire pour modifier ces réglages.
 
-Soli, premier OWNER, reçoit la permission `bots:configure`. Les autres
-administrateurs du site ne la reçoivent pas automatiquement : un OWNER peut
-l'attribuer au rôle ADMIN dans « Équipe et permissions ». Les permissions
-personnelles sont relues à chaque requête. USER et MODERATOR ne peuvent pas
-recevoir cette permission.
+Depuis l'espace serveurs, l'accès suit les droits réels du serveur : propriétaire,
+permission Discord **Administrateur**, ou rôle administrateur déjà configuré dans
+Protect, gestionnaire Support ou administrateur Game existant. La double
+autorisation manuelle par un OWNER du site n'est plus nécessaire. Ces droits
+n'accordent pas la gestion globale du site, de son équipe ou de ses utilisateurs.
 
-Le compte doit aussi posséder **Administrateur sur le serveur Discord choisi**, ou
-en être le propriétaire. Le bot vérifie cette permission directement auprès de
-Discord, y compris juste avant une écriture. Le rôle OWNER du site ne contourne
-pas les autorisations Discord. Une connexion Discord au site datant de moins de
+Le bot vérifie ces autorisations directement auprès de Discord, y compris juste
+avant une écriture. Le rôle OWNER du site ne contourne pas les autorisations
+Discord. Une connexion Discord au site datant de moins de
 dix minutes est nécessaire pour enregistrer ; sinon, confirmer à nouveau avec
 Discord depuis le lien affiché.
 
@@ -57,6 +56,8 @@ Le second argument est `game` ou `support` dans les autres bots.
 Les fichiers canoniques sont dans `ops/bot-config/` ; les fichiers installés sont
 `utils/webDashboard.cjs`, `utils/webDashboardSchema.cjs` et
 `utils/webDashboardAdapter.cjs` (adaptateur propre au bot).
+Game charge également `utils/webGameProfile.cjs`, pour lire le personnage sans
+créer de compte ou modifier les données de jeu.
 
 Variable non secrète côté bots :
 

@@ -4,15 +4,15 @@ const { fixture, ids } = require('./helpers.cjs');
 const { createBotConfigFixture, guildId, roleId } = require('./bot-config-fixture.cjs');
 const route = bot => '/api/platform/admin/bot-config/' + bot + '/' + guildId + '/general';
 const body = revision => ({ revision, operationId: randomUUID(), reason: 'Configuration de test', confirmation: 'ENREGISTRER', values: { title: 'Titre modifié' } });
-test('configuration is OWNER-only by default and administrator access is explicitly delegated', async t => {
+test('configuration follows live Discord permissions without granting global site staff access', async t => {
   const bots = createBotConfigFixture(ids), f = fixture({ botTransport: bots.transport }); t.after(() => f.close()); await f.listen();
   assert.equal((await f.request('/api/platform/admin/bot-config')).status, 401);
   for (const role of ['USER', 'MODERATOR', 'ADMIN']) {
-    const login = await f.login(role); assert.equal((await f.request('/admin/configuration', login)).status, 403);
-    assert.equal((await f.request('/api/platform/admin/bot-config', login)).status, 403);
+    const login = await f.login(role); assert.equal((await f.request('/admin/configuration', login)).status, 200);
+    assert.equal((await f.request('/api/platform/admin/bot-config', login)).status, 200);
+    assert.equal((await f.request(route('game'), login)).status, role === 'ADMIN' ? 200 : 403);
   }
   const owner = await f.login('OWNER'); assert.equal((await f.request('/admin/configuration', owner)).status, 200);
-  f.db.prepare("INSERT INTO role_permissions(role,permission) VALUES('ADMIN','bots:configure')").run();
   assert.equal((await f.request('/api/platform/admin/bot-config', await f.login('ADMIN'))).status, 200);
 });
 for (const bot of ['protect', 'game', 'support']) test('persistent API round trip for ' + bot + ' and audit without configuration values', async t => {

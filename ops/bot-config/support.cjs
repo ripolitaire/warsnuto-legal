@@ -12,7 +12,7 @@ module.exports = root => {
     db.transaction(() => { const keys = new Set(values.types.map(t => t.key)); for (const old of types.getTicketTypes(g.id)) if (!old.isDefault && !keys.has(old.key)) types.deleteTicketType(g.id, old.key); values.types.forEach((type, sortOrder) => types.upsertTicketType(g.id, { ...type, sortOrder })); })();
   }));
   db.exec('CREATE TABLE IF NOT EXISTS web_configuration_audit(id INTEGER PRIMARY KEY,guild_id TEXT NOT NULL,actor_id TEXT NOT NULL,section TEXT NOT NULL,operation_id TEXT NOT NULL,created_at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS web_configuration_audit_time ON web_configuration_audit(created_at)');
-  return { sections,
+  return { sections, canConfigure: (guild, member) => settings.getGuildSettings(guild.id).managerRoleIds.some(id => member.roles.cache.has(id)),
     async afterWrite(guild, section) {
       if (!['appearance', 'types'].includes(section)) return;
       if (!await load('ticketService').refreshPanel(guild)) return 'Configuration enregistrée. Aucun panneau public existant à actualiser ; sa publication reste disponible dans Discord.';

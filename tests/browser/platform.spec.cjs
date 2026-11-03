@@ -27,7 +27,7 @@ async function blockExternal(context) {
     return route.abort();
   });
 }
-for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/admin', 'État des services'], ['/admin/configuration', 'Titre du module'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
+for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/profile/game', 'Niveau 42'], ['/servers', 'Tes serveurs WarsNuto'], ['/admin', 'État des services'], ['/admin/configuration', 'Choisir un serveur'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
   test('responsive page ' + route, async ({ browser }, info) => {
     const { context, page } = await prepare(browser, 'OWNER');
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -46,6 +46,34 @@ test('account menu uses actual profile and USER cannot see or reach administrati
   await expect(page.locator('.wn-account-dropdown')).toContainText(ids.USER);
   await expect(page.locator('.wn-account-dropdown a[href="/admin"]')).toHaveCount(0);
   await page.goto('/admin'); await expect(page.getByRole('heading', { name: 'Accès réservé' })).toBeVisible(); await context.close();
+});
+
+test('server-first navigation filters servers and does not expose configuration to ordinary members', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'USER'); await page.goto('/servers');
+  await expect(page.locator('.server-item')).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Configurer', exact: true })).toHaveCount(0);
+  await page.getByLabel('Rechercher un serveur').fill('introuvable'); await expect(page.locator('.server-item')).not.toBeVisible();
+  await page.getByLabel('Rechercher un serveur').fill('test'); await expect(page.locator('.server-item')).toBeVisible();
+  await page.getByRole('link', { name: 'Ma progression', exact: true }).click(); await expect(page.locator('[data-game-data]')).toContainText('Niveau 42');
+  await expect(page.locator('[data-game-mode="admin"]')).not.toBeVisible();
+  await page.screenshot({ path: info.outputPath('member-game.png'), fullPage: true }); await context.close();
+});
+
+test('real Game profile shows XP, equipment and separated Admin Mod with refresh and safe outage state', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/profile/game');
+  await expect(page.locator('[data-game-data]')).toContainText('Fruit Nika');
+  await expect(page.locator('progress')).toHaveAttribute('value', '85');
+  await expect(page.locator('.inventory-grid')).toContainText('Clé de raid');
+  await page.getByRole('button', { name: 'Admin Mod', exact: true }).click(); await expect(page.locator('[data-game-data] h2')).toContainText('10');
+  await expect(page.locator('[data-game-data]')).toContainText('progression séparée');
+  await page.getByRole('button', { name: 'Normal', exact: true }).click(); await expect(page.locator('[data-game-data] h2')).toHaveText('Niveau 42');
+  await page.route('**/api/platform/me/game/**', route => route.fulfill({ status: 503, json: { error: 'Game indisponible pour ce test' } }));
+  await page.getByRole('button', { name: 'Actualiser ma progression', exact: true }).click();
+  await expect(page.locator('[data-game-data]')).toContainText('Game indisponible'); await expect(page.locator('progress')).toHaveCount(0);
+  await page.unroute('**/api/platform/me/game/**'); await page.getByRole('button', { name: 'Actualiser ma progression', exact: true }).click();
+  await expect(page.locator('[data-game-data]')).toContainText('Niveau 42');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('game-profile.png'), fullPage: true }); await context.close();
 });
 test('profile preferences save and confirmation can be cancelled without mutating', async ({ browser }) => {
   const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/profile/settings');
@@ -97,6 +125,7 @@ test('bot monitoring renders individual live and stale states and refreshes safe
 });
 test('bot configuration saves real settings, keeps them after reload and switches bots', async ({ browser }, info) => {
   const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/configuration');
+  await page.getByRole('link', { name: 'Configurer', exact: true }).click();
   await expect(page.getByLabel('Titre du module')).toBeVisible();
   await page.getByLabel('Titre du module').fill('Réglage navigateur ' + info.project.name);
   await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
@@ -116,6 +145,7 @@ test('bot configuration saves real settings, keeps them after reload and switche
 });
 test('unavailable bot clears the previous editor and supports retry without saving into another bot', async ({ browser }) => {
   const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/configuration');
+  await page.getByRole('link', { name: 'Configurer', exact: true }).click();
   await expect(page.getByLabel('Titre du module')).toBeVisible();
   await page.route('**/api/platform/admin/bot-config/game/guilds', route => route.fulfill({ status: 503, json: { error: 'Game indisponible pour ce test' } }));
   await page.getByRole('combobox', { name: 'Bot', exact: true }).selectOption('game');

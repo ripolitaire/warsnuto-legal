@@ -41,7 +41,7 @@ function text(value, max, min = 0) {
   return value.trim();
 }
 function snowflake(value) { return typeof value === 'string' && /^\d{17,20}$/.test(value) && BigInt(value) > 0n && BigInt(value) < (1n << 64n); }
-function nextPath(value) { return typeof value === 'string' && /^\/(?:profile(?:\/settings)?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?)$/.test(value) ? value : '/profile'; }
+function nextPath(value) { return typeof value === 'string' && /^\/(?:servers|profile(?:\/(?:settings|game))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?)$/.test(value) ? value : '/profile'; }
 function headers(req, res, next) {
   res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',

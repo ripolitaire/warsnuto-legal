@@ -2,12 +2,29 @@ const http = require('node:http'), net = require('node:net'), fs = require('node
 const S = require('./webDashboardSchema.cjs');
 const ADMINISTRATOR = 8n, MANAGE_ROLES = 268435456n;
 function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
-  const locks = new Set();
-  async function authorize(guildId, actor) {
+  const locks = new Set(), members = new Map(), pending = new Map();
+  async function membership(guildId, actor, fresh = false) {
     if (!/^\d{17,20}$/.test(actor || '')) S.fail('Identité Discord requise.', 403);
     const guild = client.guilds.cache.get(guildId); if (!guild) S.fail('Serveur indisponible pour ce bot.', 404);
-    const member = await guild.members.fetch({ user: actor, force: true, cache: false }).catch(() => null);
-    if (!member || (guild.ownerId !== actor && !member.permissions.has(ADMINISTRATOR))) S.fail('La permission Administrateur Discord est requise sur ce serveur.', 403);
+    const key = guildId + ':' + actor, cached = members.get(key);
+    if (!fresh && cached?.until > now()) return { guild, member: cached.member };
+    if (!fresh && pending.has(key)) return pending.get(key);
+    const work = (async () => {
+      let member;
+      try { member = await guild.members.fetch({ user: actor, force: true, cache: false }); }
+      catch (error) { if (error.code === 10007) member = null; else S.fail('Vérification Discord indisponible. Réessaie dans un instant.', 503); }
+      if (members.size >= 5000) members.delete(members.keys().next().value);
+      members.set(key, { member, until: now() + 30000 });
+      return { guild, member };
+    })();
+    if (!fresh) pending.set(key, work);
+    try { return await work; } finally { if (!fresh) pending.delete(key); }
+  }
+  const canConfigure = (guild, member, actor) => Boolean(member && (guild.ownerId === actor || member.permissions.has(ADMINISTRATOR) || adapter.canConfigure?.(guild, member, actor)));
+  const describe = guild => ({ id: guild.id, name: guild.name, icon: guild.iconURL?.({ extension: 'png', size: 128 }) || null, memberCount: guild.memberCount || null });
+  async function authorize(guildId, actor) {
+    const { guild, member } = await membership(guildId, actor, true);
+    if (!canConfigure(guild, member, actor)) S.fail('Un rôle administrateur du bot ou la permission Administrateur Discord est requis sur ce serveur.', 403);
     return guild;
   }
   async function references(guild, values, fields) {
@@ -36,6 +53,21 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
     if (!client.isReady()) S.fail('Ce bot se reconnecte à Discord. Réessaie dans un instant.', 503);
     const url = new URL(req.url, 'http://localhost'), actor = req.headers['x-wn-actor'];
     if (url.search || !['GET', 'PATCH'].includes(req.method)) S.fail('Route indisponible.', 404);
+    if (url.pathname === '/member/servers' && req.method === 'GET') {
+      const guilds = [];
+      for (const entry of client.guilds.cache.values()) {
+        const { guild, member } = await membership(entry.id, actor);
+        if (member) guilds.push({ ...describe(guild), canConfigure: canConfigure(guild, member, actor) });
+      }
+      return { guilds };
+    }
+    const profile = /^\/member\/(\d{17,20})\/profile\/(normal|admin)$/.exec(url.pathname);
+    if (profile && req.method === 'GET') {
+      const { guild, member } = await membership(profile[1], actor, true);
+      if (!member) S.fail('Tu ne fais pas partie de ce serveur.', 403);
+      if (!adapter.profile) S.fail('Ce bot ne propose pas de profil Game.', 404);
+      return { guild: describe(guild), ...await adapter.profile(guild.id, actor, profile[2], now()) };
+    }
     if (url.pathname === '/guilds' && req.method === 'GET') {
       const guilds = [];
       for (const entry of client.guilds.cache.values()) { try { const guild = await authorize(entry.id, actor); guilds.push({ id: guild.id, name: guild.name }); } catch (error) { if (error.status !== 403) throw error; } }

@@ -46,7 +46,7 @@
     menu.className = 'wn-account';
     menu.innerHTML = session?.user ? `<details><summary aria-label="Compte de ${E(session.user.displayName)}"><img src="${E(session.user.avatar)}" alt=""><span>${E(session.user.displayName)}</span>${icon('chevron-down')}</summary>
       <div class="wn-account-dropdown"><strong>${E(session.user.displayName)}</strong><span>@${E(session.user.username || session.user.id)}</span><small>ID Discord : ${E(session.user.id)}</small>
-      <a href="/profile">${icon('user-round')} Mon espace</a><a href="/profile/settings">${icon('settings-2')} Mon compte</a>
+      <a href="/profile">${icon('user-round')} Mon espace</a><a href="/profile/game">${icon('gamepad-2')} Ma progression Game</a><a href="/servers">${icon('server')} Mes serveurs</a><a href="/profile/settings">${icon('settings-2')} Mon compte</a>
       ${session.permissions.includes('admin:read') ? `<a href="/admin">${icon('shield-check')} Administration</a>` : session.permissions.includes('moderation:read') ? `<a href="/admin/moderation">${icon('shield-check')} Modération</a>` : ''}<button type="button" data-logout>${icon('log-out')} Se déconnecter</button></div></details>`
       : `<a class="wn-login" href="/auth/discord/start?next=${encodeURIComponent(route || '/profile')}">${icon('log-in')} Se connecter</a>`;
     menu.querySelector('[data-logout]')?.addEventListener('click', async () => { try { await write('logout', {}); location.assign('/'); } catch (error) { fail(error); } });
@@ -127,7 +127,7 @@
   async function profile() {
     const data = await request('me'), user = data.user;
     if (route.endsWith('/settings')) {
-      content.innerHTML = `<section class="workspace-section"><h2>Informations Discord</h2><div class="setting-line"><div><strong>@${E(user.username || user.id)}</strong><p>ID : ${E(user.id)}</p></div><a class="button" href="/auth/discord/start?next=/profile/settings">${icon('refresh-cw')} Actualiser avec Discord</a></div></section>
+      content.innerHTML = `<section class="workspace-section"><div class="section-heading"><h2>Ton aventure WarsNuto</h2><a href="/profile/game" class="button primary">${icon('gamepad-2')} Ma progression Game</a></div></section><section class="workspace-section"><h2>Informations Discord</h2><div class="setting-line"><div><strong>@${E(user.username || user.id)}</strong><p>ID : ${E(user.id)}</p></div><a class="button" href="/auth/discord/start?next=/profile/settings">${icon('refresh-cw')} Actualiser avec Discord</a></div></section>
         <section class="workspace-section"><h2>Préférences</h2><form id="preferences-form"><label class="checkbox-line"><input type="checkbox" name="reducedMotion" ${user.preferences.reducedMotion ? 'checked' : ''}>Réduire les animations de mon espace</label><button class="primary" type="submit">${icon('save')} Enregistrer</button></form></section>
         <section class="workspace-section"><div class="section-heading"><h2>Sessions actives</h2><button type="button" data-revoke-others>${icon('monitor-x')} Révoquer les autres</button></div>
         ${table(['Navigateur', 'Connexion', 'Dernière activité', 'Expiration', 'Session'], data.sessions.map(item => `<tr><td>${E(item.browser)}</td><td>${E(date(item.created_at))}</td><td>${E(date(item.last_seen_at))}</td><td>${E(date(item.expires_at))}</td><td>${item.current ? '<span class="status positive">Actuelle</span>' : 'Autre session'}</td></tr>`))}<p class="muted">Expiration après 30 minutes d’inactivité, ou 2 heures après la connexion.</p></section>`;
@@ -142,8 +142,11 @@
     }
     content.innerHTML = `<section class="profile-identity">${user.banner ? `<img class="profile-banner" src="${E(user.banner)}" alt="Bannière Discord">` : ''}<div class="profile-person"><img class="profile-avatar" src="${E(user.avatar)}" alt="Avatar Discord"><div><h2>${E(user.displayName)}</h2><p>@${E(user.username || user.id)}</p><span class="status positive">Compte actif</span></div><a class="button" href="/profile/settings">${icon('settings-2')} Mon compte</a></div></section>
       <section class="workspace-section"><h2>Ton compte</h2><dl class="profile-facts">${[['Identifiant Discord', user.id], ['Rôle sur le site', roles[user.role]], ['Compte Discord créé le', date(user.accountCreatedAt)], ['Première connexion au site', date(user.firstLoginAt)], ['Dernière connexion', date(user.lastLoginAt)]].map(([label, value]) => `<div><dt>${E(label)}</dt><dd>${E(value)}</dd></div>`).join('')}</dl></section>
-      <section class="workspace-section"><h2>L’écosystème WarsNuto</h2><p class="muted">Les statistiques personnelles de Protect, Game et Support ne sont pas encore reliées à cet espace.</p><div class="inline-links"><a href="/game">Game ${icon('arrow-up-right')}</a><a href="/protect">Protect ${icon('arrow-up-right')}</a><a href="/support">Support ${icon('arrow-up-right')}</a></div></section>`;
+      <div data-profile-game></div>`;
+    try { await window.wnMemberSpace.game(memberUI(content.querySelector('[data-profile-game]')), true); }
+    catch { content.querySelector('[data-profile-game]').innerHTML = '<p class="notice">Progression Game indisponible. <a href="/profile/game">Réessayer</a></p>'; }
   }
+  const memberUI = (target = content) => ({ content: target, request, E, icon, icons, notice });
   async function users(staff = false) {
     const query = new URLSearchParams(location.search); query.set('page', listPage);
     const data = await request('admin/' + (staff ? 'staff' : 'users') + '?' + query);
@@ -213,7 +216,9 @@
       if (!session.user) { if (route) expire(); return; }
       document.body.classList.toggle('reduced-motion', session.user.preferences.reducedMotion);
       if (!route) return;
-      if (route.startsWith('/profile')) await profile();
+      if (route === '/profile/game') await window.wnMemberSpace.game(memberUI());
+      else if (route === '/servers') await window.wnMemberSpace.servers(memberUI());
+      else if (route.startsWith('/profile')) await profile();
       else if (route === '/admin') await overview();
       else if (route === '/admin/bots') await botMonitoring();
       else if (route === '/admin/configuration') await window.wnBotConfiguration({ content, request, write, confirmAction, notice, action, icon, E, icons });

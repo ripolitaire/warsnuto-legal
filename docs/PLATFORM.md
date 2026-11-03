@@ -159,6 +159,8 @@ le nom, la maintenance et la révision, pas les anciennes descriptions complète
 ## Pages et intégrations
 
 - `/profile`, `/profile/settings` : profil, actualisation Discord, préférences et sessions.
+- `/profile/game` : progression réelle Game, profil normal et Admin Mod séparés.
+- `/servers` : liste des serveurs communs avec l'écosystème et accès aux configurations autorisées par les bots.
 - `/admin` : compteurs SQL réels, activité récente et disponibilité backend/base.
 - `/admin/bots` : connexion Discord, latence, mémoire, disponibilité et activité des trois bots.
 - `/admin/configuration` : configuration réelle par bot et serveur Discord autorisé.

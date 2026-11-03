@@ -3,11 +3,11 @@ const { error, object, text, snowflake } = require('./security.cjs');
 const { audit } = require('./database.cjs');
 const BOTS = Object.freeze({ protect: 'WarsNuto Protect', game: 'WarsNuto Game', support: 'WarsNuto Support' });
 function createBotConfiguration(db, config, transport) {
-  async function send(bot, route, actor, body) {
+  async function send(bot, route, actor, body, timeout = 12000) {
     if (!Object.hasOwn(BOTS, bot)) throw error(404, 'Bot inconnu.');
     if (!snowflake(actor)) throw error(403, 'Identité Discord invalide.');
     if (!config.botSocketDirectory && !transport) throw error(503, 'La liaison de configuration des bots n’est pas activée.');
-    if (!/^\/(?:guilds|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) throw error(404, 'Rubrique inconnue.');
+    if (!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/profile\/(?:normal|admin)|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) throw error(404, 'Rubrique inconnue.');
     const options = { socketPath: path.join(config.botSocketDirectory || '.', bot + '.sock'), path: route,
       method: body ? 'PATCH' : 'GET', headers: { 'x-wn-actor': actor, ...(body ? { 'content-type': 'application/json' } : {}) } };
     if (transport) return transport(options, body);
@@ -27,12 +27,13 @@ function createBotConfiguration(db, config, transport) {
           } catch { reject(unavailable()); }
         });
       });
-      const timer = setTimeout(() => request.destroy(unavailable()), 12000); timer.unref();
+      const timer = setTimeout(() => request.destroy(unavailable()), timeout); timer.unref();
       request.on('error', () => reject(unavailable())); request.on('close', () => clearTimeout(timer));
       request.end(body ? JSON.stringify(body) : undefined);
     });
   }
   return {
+    send,
     catalog() { return { bots: Object.entries(BOTS).map(([id, name]) => ({ id, name })) }; },
     async guilds(bot, session) { return send(bot, '/guilds', session.user.id); },
     async read(bot, guild, section, session) {

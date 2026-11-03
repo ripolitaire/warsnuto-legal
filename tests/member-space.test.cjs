@@ -1,0 +1,64 @@
+const test = require('node:test'), assert = require('node:assert/strict');
+const { fixture, ids } = require('./helpers.cjs');
+const { createBotConfigFixture, guildId } = require('./bot-config-fixture.cjs');
+const { createDashboardHandler } = require('../ops/bot-config/webDashboard.cjs');
+const { createGameProfile } = require('../ops/bot-config/webGameProfile.cjs');
+const { DatabaseSync } = require('node:sqlite');
+test('member servers merge the ecosystem and never grant configuration to ordinary members', async t => {
+  const bots = createBotConfigFixture(ids), f = fixture({ botTransport: bots.transport }); t.after(() => f.close()); await f.listen();
+  assert.equal((await f.request('/api/platform/servers')).status, 401);
+  const user = await f.login('USER'), result = await (await f.request('/api/platform/servers', user)).json();
+  assert.equal(result.guilds.length, 1); assert.equal(result.guilds[0].bots.length, 3);
+  assert.ok(result.guilds[0].bots.every(bot => !bot.canConfigure));
+  assert.equal((await f.request('/admin/users', user)).status, 403);
+  const admin = await f.login('ADMIN');
+  assert.ok((await (await f.request('/api/platform/servers', admin)).json()).guilds[0].bots.every(bot => bot.canConfigure));
+});
+test('configured bot admin role works for a site USER, with immediate revocation on reads and writes', async t => {
+  const bots = createBotConfigFixture(ids), member = { roles: { cache: new Map([['admin', {}]]) }, permissions: { has: () => false } };
+  bots.guild.members.fetch = async () => member;
+  const handler = createDashboardHandler(bots.client, { sections: [], canConfigure: (g, m) => m.roles.cache.has('admin') });
+  const req = path => ({ method: 'GET', url: path, headers: { 'x-wn-actor': ids.USER } });
+  assert.equal((await handler.dispatch(req('/member/servers'))).guilds[0].canConfigure, true);
+  assert.equal((await handler.dispatch(req('/guilds'))).guilds.length, 1);
+  member.roles.cache.clear();
+  await assert.rejects(handler.dispatch(req('/config/' + guildId)), { status: 403 });
+});
+test('Game API binds actor to the session and isolates observed normal/Admin Mod history', async t => {
+  const bots = createBotConfigFixture(ids), f = fixture({ botTransport: bots.transport }); t.after(() => f.close()); await f.listen();
+  const user = await f.login('USER'), owner = await f.login('OWNER');
+  const path = '/api/platform/me/game/' + guildId;
+  const normal = await (await f.request(path + '?actor=' + ids.OWNER, user)).json();
+  assert.equal(normal.player.level, 42); assert.equal(bots.calls.at(-1).options.headers['x-wn-actor'], ids.USER);
+  assert.equal((await f.request(path + '?mode=admin', user)).status, 403);
+  assert.equal((await f.request(path + '?mode=other', user)).status, 400);
+  const admin = await (await f.request(path + '?mode=admin', owner)).json(); assert.equal(admin.history[0].level, 10000);
+  f.advance(31 * 60000); const relogin = await f.login('USER');
+  const later = await (await f.request(path, relogin)).json(); assert.equal(later.history.length, 2); assert.ok(later.history.every(p => p.level === 42));
+  assert.equal(f.db.prepare('SELECT count(*) n FROM game_observations WHERE actor=?').get(ids.OWNER).n, 1);
+  bots.guild.members.fetch = async () => { throw Object.assign(Error('unknown member'), { code: 10007 }); };
+  assert.equal((await f.request(path, relogin)).status, 403);
+});
+test('partial bot outage keeps reachable servers, while Discord outages are not missing memberships', async t => {
+  const bots = createBotConfigFixture(ids), f = fixture({ botTransport: (options, body) => options.socketPath.includes('support') ? Promise.reject(Error('offline')) : bots.transport(options, body) });
+  t.after(() => f.close()); await f.listen(); const login = await f.login('USER');
+  const result = await (await f.request('/api/platform/servers', login)).json();
+  assert.equal(result.guilds[0].bots.length, 2); assert.deepEqual(result.unavailable, ['WarsNuto Support']);
+  bots.guild.members.fetch = async () => { throw Error('Discord offline'); };
+  assert.equal((await f.request('/api/platform/me/game/' + guildId, login)).status, 503);
+});
+test('raw Game profile reads never create players, regenerate stored energy or mix partitions', t => {
+  const db = new DatabaseSync(':memory:'); t.after(() => db.close());
+  db.exec(`CREATE TABLE players(guild_id TEXT,user_id TEXT,level INTEGER,xp INTEGER,class_id TEXT,class_xp INTEGER,berries INTEGER,prime INTEGER,energy INTEGER,max_energy INTEGER,last_energy_at INTEGER,fruit_id TEXT,fruit_mastery INTEGER,fruit_awakened INTEGER,equipped_weapon TEXT,equipped_accessory TEXT,created_at INTEGER,updated_at INTEGER);
+    CREATE TABLE inventory(guild_id TEXT,user_id TEXT,item_id TEXT,quantity INTEGER);
+    CREATE TABLE transactions(id INTEGER,guild_id TEXT,user_id TEXT,type TEXT,amount INTEGER,created_at INTEGER);`);
+  const insert = db.prepare('INSERT INTO players(guild_id,user_id,level,xp,energy,max_energy,last_energy_at) VALUES(?,?,?,20,10,100,0)');
+  insert.run(guildId, ids.USER, 2); insert.run(`adminmod|${guildId}|${ids.USER}`, ids.USER, 10000); insert.run(guildId, ids.OWNER, 90);
+  const read = createGameProfile({ db, isGameAdminMember: () => true, getCrewByUser: () => null }, {});
+  assert.equal(read(guildId, ids.USER, 'normal', 480000).player.energy, 11);
+  assert.equal(read(guildId, ids.USER, 'normal').player.level, 2);
+  assert.equal(read(guildId, ids.USER, 'admin').player.level, 10000);
+  assert.equal(read(guildId, ids.MODERATOR, 'normal').player, null);
+  assert.equal(db.prepare('SELECT count(*) n FROM players').get().n, 3);
+  assert.equal(db.prepare('SELECT energy FROM players LIMIT 1').get().energy, 10);
+});

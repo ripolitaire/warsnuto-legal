@@ -9,6 +9,7 @@ const views = require('./views.cjs');
 function createApp({ db, config, fetcher, botTransport, logger = console }) {
   const app = express(), auth = createAuth(db, config, fetcher), service = createService(db, config);
   const botConfiguration = require('./botConfiguration.cjs').createBotConfiguration(db, config, botTransport);
+  const memberSpace = require('./memberSpace.cjs').createMemberSpace(db, config, botConfiguration);
   app.disable('x-powered-by'); app.set('query parser', 'simple');
   app.use(headers);
   app.use((req, res, next) => {
@@ -71,6 +72,11 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.post('/api/platform/logout', (req, res) => { object(req.body, []); auth.logout(req.session); res.set('Set-Cookie', auth.clearCookie()).json({ ok: true }); });
   app.post('/api/platform/activity', (req, res) => { object(req.body, []); res.json({ ok: true }); });
   app.get('/api/platform/me', (req, res) => res.json({ user: req.session.user, sessions: service.sessions(req.session) }));
+  app.get('/api/platform/servers', async (req, res) => res.json(await memberSpace.servers(req.session)));
+  app.get('/api/platform/me/game/:guild', async (req, res) => {
+    limit('game-read:' + req.session.user.id, 15);
+    res.json(await memberSpace.game(req.session, req.params.guild, req.query.mode || 'normal'));
+  });
   app.patch('/api/platform/me/preferences', (req, res) => res.json(service.preferences(req.session, req.body)));
   app.post('/api/platform/me/sessions/revoke-others', (req, res) => {
     object(req.body, ['confirmation']); if (req.body.confirmation !== 'REVOQUER') throw error(400, 'Confirmation requise.');
@@ -78,11 +84,12 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   });
   app.get('/api/platform/admin/overview', permit('admin:read'), async (req, res) => res.json(await service.overview()));
   app.get('/api/platform/admin/bots', permit('admin:read'), async (req, res) => res.json(await service.botMonitor()));
-  app.get('/api/platform/admin/bot-config', permit('bots:configure'), (req, res) => res.json(botConfiguration.catalog()));
-  app.get('/api/platform/admin/bot-config/:bot/guilds', permit('bots:configure'), async (req, res) => res.json(await botConfiguration.guilds(req.params.bot, req.session)));
-  app.get('/api/platform/admin/bot-config/:bot/:guild', permit('bots:configure'), async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, null, req.session)));
-  app.get('/api/platform/admin/bot-config/:bot/:guild/:section', permit('bots:configure'), async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, req.params.section, req.session)));
-  app.patch('/api/platform/admin/bot-config/:bot/:guild/:section', permit('bots:configure'), fresh, async (req, res) => res.json(await botConfiguration.save(req.params.bot, req.params.guild, req.params.section, req.session, req.body)));
+  // Bot permissions are checked live on Discord, independently of site staff roles.
+  app.get('/api/platform/admin/bot-config', (req, res) => res.json(botConfiguration.catalog()));
+  app.get('/api/platform/admin/bot-config/:bot/guilds', async (req, res) => res.json(await botConfiguration.guilds(req.params.bot, req.session)));
+  app.get('/api/platform/admin/bot-config/:bot/:guild', async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, null, req.session)));
+  app.get('/api/platform/admin/bot-config/:bot/:guild/:section', async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, req.params.section, req.session)));
+  app.patch('/api/platform/admin/bot-config/:bot/:guild/:section', fresh, async (req, res) => res.json(await botConfiguration.save(req.params.bot, req.params.guild, req.params.section, req.session, req.body)));
   app.get('/api/platform/admin/users', permit('users:read'), (req, res) => res.json(service.users(new URL(req.originalUrl, config.origin).searchParams)));
   app.get('/api/platform/admin/users/:id', permit('users:read'), (req, res) => res.json(service.detail(req.params.id)));
   app.patch('/api/platform/admin/users/:id/status', permit('users:moderate'), fresh, (req, res) => res.json(service.status(req.session, req.params.id, req.body)));
@@ -93,7 +100,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.get('/api/platform/admin/logs', permit('audit:read'), (req, res) => res.json(service.logs(new URL(req.originalUrl, config.origin).searchParams)));
   app.get('/api/platform/admin/settings', permit('settings:write'), (req, res) => res.json(service.settings()));
   app.patch('/api/platform/admin/settings', permit('settings:write'), fresh, (req, res) => res.json(service.updateSettings(req.session, req.body)));
-  const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/configuration': 'bots:configure', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
+  const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
   for (const route of Object.keys(views.pages)) app.get(route, (req, res) => {
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(route)));
     if (pagePermissions[route]) requirePermission(req.session, pagePermissions[route]);
@@ -101,7 +108,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     res.type('html').send(views.page(route, req.session, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'platform.js', 'platform.css', 'bot-configuration.js'];
+  const publicFiles = ['app.js', 'styles.css', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {

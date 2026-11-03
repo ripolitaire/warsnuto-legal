@@ -15,8 +15,11 @@ Sans configuration de liaison valide, les espaces privés restent fermés.
 Le [suivi des trois bots](docs/BOT-MONITORING-2026-11-03.md) est accessible aux
 administrateurs sur `/admin/bots`, sans accès direct à leurs bases ni à leurs secrets.
 La [configuration des bots](docs/BOT-CONFIGURATION.md) est distincte du suivi :
-`/admin/configuration`, accès OWNER ou délégation explicite, avec contrôle des
-permissions Discord du serveur.
+`/servers` puis choix du serveur et de son bot, avec contrôle des permissions
+Discord et des rôles administrateurs propres à chaque bot. Les droits globaux
+du site ne sont pas accordés automatiquement aux administrateurs Discord.
+`/profile/game` affiche la progression réelle du membre, séparée de son éventuel
+profil Admin Mod. Voir le [journal espace membre](RELEASE-SERVER-HUB-2026-11-03.md).
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

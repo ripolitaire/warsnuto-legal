@@ -27,5 +27,7 @@ module.exports = root => {
     database.db.transaction(() => { for (const [key, value] of Object.entries(patch)) { database.setSetting(g.id, 'game_role_' + key, value || ''); database.logAdminAction(g.id, actor, null, 'game_role_config', key + ' modifié depuis le site.'); } })();
     if (patch.notifications) load('gameNotifications').scheduleNotifications(g.id, actor);
   }));
-  return { sections, audit: (guildId, actor, section, fields, operationId) => database.logAdminAction(guildId, actor, null, 'web:config', JSON.stringify({ section, fields, operationId })) };
+  return { sections, canConfigure: (guild, member, actor) => database.isGameAdminMember(guild.id, actor),
+    profile: require('./webGameProfile.cjs').createGameProfile(database, catalog),
+    audit: (guildId, actor, section, fields, operationId) => database.logAdminAction(guildId, actor, null, 'web:config', JSON.stringify({ section, fields, operationId })) };
 };
