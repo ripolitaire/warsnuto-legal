@@ -1,45 +1,45 @@
-# WarsNuto public site
+﻿# WarsNuto public site
 
-Site public pour présenter les bots Discord WarsNuto, publier les pages légales et exposer une API légère sans donnée sensible.
+Site public des bots Discord WarsNuto. Il présente Protect et Support, héberge les pages légales, et expose seulement des données publiques.
 
-- `index.html`
-- `protect.html`
-- `support.html`
-- `docs.html`
-- `privacy.html`
-- `terms.html`
-- `api/bots.js`
-- `api/bots`
-- `styles.css`
-- `app.js`
-
-Contact officiel: `solitaire.blox@gmail.com`.
-
-## API publique
-
-- `/api/bots`: snapshot public statique servi par Vercel.
-- `/api/bots`: snapshot de secours utilisé si la route dynamique ne répond pas.
-
-Note compteur membres:
-
-- `WARSNUTO_INVITE_CODE`: code d'invitation Discord public, par défaut `warsnuto`.
-- `WARSNUTO_GUILD_ID`: ID du serveur WarsNuto.
-- `DISCORD_BOT_TOKEN`: token serveur uniquement si tu veux récupérer les compteurs via l'API Discord bot. Ne jamais l'exposer côté client.
-
-## Déploiement Vercel
-
-Vercel déploie le dossier `legal-site` depuis le dépôt GitHub :
+## Pages
 
 - `/`
-- `/protect.html`
-- `/support.html`
-- `/docs.html`
-- `/privacy.html`
-- `/terms.html`
+- `/bots`
+- `/docs`
+- `/privacy`
+- `/terms`
 
-Après publication, ajoute les liens dans le Discord Developer Portal de chaque application:
+## API
 
-- Privacy Policy URL: `https://warsnuto-legal.vercel.app/privacy.html`
-- Terms of Service URL: `https://warsnuto-legal.vercel.app/terms.html`
+- `GET /api/bots`: données publiques du site et compteurs publics Discord via l'invitation du serveur.
+- `GET /api/visits`: statistiques Vercel Web Analytics. Cette route doit être protégée avec `SITE_STATS_API_KEY`.
 
-Ces pages sont informatives et doivent être adaptées si les bots ajoutent de nouvelles collectes de données ou changent de fonctionnement.
+Le site ne doit jamais contenir le token Discord du bot. Les routes publiques ne pilotent aucune commande Discord et ne donnent pas accès à la base du bot.
+
+## Chargement Discord
+
+La page affiche d'abord les données locales ou un cache navigateur de 30 secondes maximum, sans attendre le scan des membres. Les compteurs (`/api/bots?live=1&staff=0`), les couleurs (`?roles=1`) et la hiérarchie (`?live=1`) sont ensuite chargés séparément. Les compteurs ne lisent ni les rôles ni la liste des membres.
+
+Les compteurs s'actualisent toutes les 30 secondes, les rôles et le staff toutes les 60 secondes, et au retour dans l'onglet. Une requête déjà en cours est partagée, pas relancée. Une réponse de snapshot ou un scan lent ne peut pas écraser des compteurs Discord plus récents. Les fiches bots ne bloquent plus sur un widget Discord supplémentaire.
+
+Le scan complet reste soumis aux délais et limites Discord. Ses quatre plages d'identifiants couvrent tous les membres, mais seuls les comptes ayant un rôle staff sont conservés en mémoire. Le compte CRB `974031935510818866` est exclu explicitement de la hiérarchie ; WarsNuto est identifié par `689040179943702547`. Aucun rôle ni compte Discord n'est modifié.
+
+Tests : `node --test scripts/test-site-staff.js scripts/test-site-refresh.js scripts/test-economy-removal.js`.
+
+## Variables Vercel
+
+- `WARSNUTO_INVITE_CODE`: code d'invitation Discord public, par défaut `warsnuto`.
+- `VERCEL_ANALYTICS_TOKEN`: token Vercel pour lire Web Analytics côté serveur.
+- `VERCEL_ANALYTICS_PROJECT_ID`: ID du projet Vercel.
+- `VERCEL_ANALYTICS_TEAM_ID`: ID de l'équipe Vercel si le projet est dans une équipe.
+- `VERCEL_ANALYTICS_TEAM_SLUG`: slug de l'équipe Vercel si nécessaire.
+- `SITE_STATS_API_KEY`: clé privée partagée avec le bot pour `/site-stats`.
+
+## Liens Developer Portal
+
+- Privacy Policy URL: `https://warsnuto.com/privacy`
+- Terms of Service URL: `https://warsnuto.com/terms`
+
+Ces pages doivent être mises à jour si les bots ajoutent de nouvelles données collectées ou changent de fonctionnement.
+

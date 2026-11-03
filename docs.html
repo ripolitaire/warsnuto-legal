@@ -3,44 +3,71 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Documentation officielle - WarsNuto Bots</title>
+    <title>Documentation Protect, Support et Game - WarsNuto</title>
     <meta
       name="description"
-      content="Documentation publique des bots Discord WarsNut0 Protect et WarsNuto Support."
+      content="Documentation Protect, Support et Game: moderation, tickets, aventure One Piece, commandes et donnees utilisees."
     />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="WarsNuto Bots" />
-    <meta property="og:title" content="Documentation - WarsNuto Bots" />
-    <meta property="og:description" content="Modules, commandes clés et données publiques des bots WarsNut0 Protect et WarsNuto Support." />
-    <meta property="og:url" content="https://warsnuto-legal.vercel.app/docs.html" />
-    <meta property="og:image" content="https://warsnuto-legal.vercel.app/assets/og-warsnuto.png?v=4" />
+    <meta property="og:site_name" content="WarsNuto" />
+    <meta property="og:title" content="Documentation Protect, Support et Game - WarsNuto" />
+    <meta property="og:description" content="Protect, Support et Game: modules, commandes cles et donnees utilisees." />
+    <meta property="og:url" content="https://warsnuto.com/docs" />
+    <meta property="og:image" content="https://warsnuto.com/assets/og-warsnuto.png?v=12" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="fr_FR" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#fee75c" />
-    <link rel="canonical" href="https://warsnuto-legal.vercel.app/docs.html" />
-    <link rel="icon" href="./assets/protect-logo.webp" />
+    <meta name="theme-color" content="#ffcc4d" />
+    <link rel="canonical" href="https://warsnuto.com/docs" />
+    <link rel="icon" type="image/png" href="./assets/warsnuto-favicon-round.png" />
     <link rel="stylesheet" href="./styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "@id": "https://warsnuto.com/docs#article",
+        "headline": "Documentation Protect, Support et Game - WarsNuto",
+        "name": "Documentation Protect, Support et Game - WarsNuto",
+        "url": "https://warsnuto.com/docs",
+        "description": "Documentation des bots Protect, Support et Game: moderation, tickets et aventure One Piece.",
+        "author": {
+          "@type": "Organization",
+          "name": "WarsNuto",
+          "url": "https://warsnuto.com/"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "WarsNuto",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://warsnuto.com/assets/warsnuto-icon.png"
+          }
+        },
+        "inLanguage": "fr-FR"
+      }
+    </script>
   </head>
   <body class="docs-page">
     <header class="site-header">
-      <a class="brand" href="./" aria-label="Accueil WarsNuto Bots">
+      <a class="brand" href="./" aria-label="Accueil WarsNuto">
         <span class="brand-mark">
-          <img src="./assets/protect-logo.webp" alt="" onerror="this.remove()" />
+          <img src="./assets/warsnuto-icon.png" alt="" />
           <span>WN</span>
         </span>
         <span>
-          <strong>WarsNuto Bots</strong>
-          <small>Protect & Support</small>
+          <strong>WarsNuto</strong>
+          <small>Protect / Support / Game</small>
         </span>
       </a>
       <nav class="nav">
-        <a href="./protect.html">Protect</a>
-        <a href="./support.html">Support</a>
-        <a aria-current="page" href="./docs.html">Documentation</a>
-        <a href="./privacy.html">Confidentialité</a>
-        <a href="./terms.html">Conditions</a>
+        <a href="./discord">Discord</a>
+        <a href="./youtube">YouTube</a>
+        <a href="./bots">Bots</a>
+        <a aria-current="page" href="./docs">Documentation</a>
+        <a href="./privacy">Confidentialit&eacute;</a>
+        <a href="./terms">Conditions</a>
         <a href="mailto:solitaire.blox@gmail.com">Contact</a>
       </nav>
     </header>
@@ -49,11 +76,16 @@
       <section class="docs-hero">
         <div>
           <p class="eyebrow">Documentation officielle</p>
-          <h1>Fonctionnalités, données et commandes essentielles.</h1>
+          <h1>Protect, Support et Game.</h1>
           <p>
-            Cette documentation résume les modules, les données utilisées et les commandes principales de
-            WarsNut0 Protect et WarsNuto Support.
+            Protect gere la moderation, l'XP et les outils serveur. Support gere les tickets,
+            les equipes et le suivi des demandes. Game propose une aventure One Piece avec sa propre progression.
           </p>
+          <div class="doc-actions">
+            <a class="button primary yellow" href="#protect-doc">Documentation Protect</a>
+            <a class="button" href="#support-doc">Documentation Support</a>
+            <a class="button" href="#game-doc">Documentation Game</a>
+          </div>
         </div>
         <div class="api-pill">
           <span>Source dynamique</span>
@@ -73,7 +105,7 @@
           <p class="eyebrow">Configuration serveur</p>
           <h2>Chaque serveur reste isolé.</h2>
           <p>
-            Les deux bots sont pensés pour plusieurs serveurs. Les rôles, salons, logs, panels et réglages
+            Les bots sont pensés pour plusieurs serveurs. Les rôles, salons, logs, panels et réglages
             restent attachés au serveur où ils sont configurés.
           </p>
         </div>
@@ -85,19 +117,25 @@
       </section>
 
       <section class="notice-panel">
-        <p class="eyebrow">Usage officiel</p>
-        <h2>Les bots ne sont pas publics.</h2>
+        <p class="eyebrow">Acces public</p>
+        <h2>Les bots sont disponibles pour votre serveur.</h2>
         <p>
-          Ils sont réservés aux serveurs officiels ou autorisés par WarsNuto. Toute utilisation ailleurs peut
-          être signalée à <a href="mailto:solitaire.blox@gmail.com">solitaire.blox@gmail.com</a>.
+          Protect, Support et Game peuvent etre ajoutes a plusieurs serveurs Discord. Chaque installation
+          dispose de sa propre configuration et de ses propres donnees.
         </p>
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>WarsNuto Bots</span>
+      <span>WarsNuto</span>
       <a href="/api/bots">API publique</a>
     </footer>
+    <script src="/_vercel/insights/script.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>
+
+
+
+
+

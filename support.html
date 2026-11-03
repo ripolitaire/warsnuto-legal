@@ -3,85 +3,99 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WarsNuto Support - Bot tickets</title>
+    <title>WarsNuto Support - Bot tickets et equipes</title>
     <meta
       name="description"
-      content="Présentation officielle de WarsNuto Support: tickets Discord, équipes par type, logs et configuration serveur."
+      content="Page dediee a WarsNuto Support: tickets, panels, equipes, suivi des demandes, logs et reouverture controlee."
     />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="WarsNuto Bots" />
-    <meta property="og:title" content="WarsNuto Support - Bot tickets" />
-    <meta property="og:description" content="Tickets, équipes par type, logs configurables et suivi support pour l'écosystème WarsNuto." />
-    <meta property="og:url" content="https://warsnuto-legal.vercel.app/support.html" />
-    <meta property="og:image" content="https://warsnuto-legal.vercel.app/assets/og-warsnuto.png?v=4" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="WarsNuto" />
+    <meta property="og:title" content="WarsNuto Support - Bot tickets officiel" />
+    <meta property="og:description" content="Tickets, equipes, panels, suivi des demandes et reouverture controlee pour WarsNuto." />
+    <meta property="og:url" content="https://warsnuto.com/support" />
+    <meta property="og:image" content="https://warsnuto.com/assets/og-warsnuto.png?v=12" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#4db8ff" />
-    <link rel="canonical" href="https://warsnuto-legal.vercel.app/support.html" />
-    <link rel="icon" href="./assets/support-logo.png" />
+    <meta name="theme-color" content="#ffcc4d" />
+    <link rel="canonical" href="https://warsnuto.com/support" />
+    <link rel="icon" type="image/png" href="./assets/warsnuto-favicon-round.png" />
     <link rel="stylesheet" href="./styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "@id": "https://warsnuto.com/support#app",
+        "name": "WarsNuto Support",
+        "url": "https://warsnuto.com/support",
+        "image": "https://warsnuto.com/assets/support-logo.png",
+        "applicationCategory": "Discord bot",
+        "operatingSystem": "Discord",
+        "description": "Bot officiel WarsNuto pour les tickets, les panels, les equipes support, les logs, les fermetures et les reouvertures controlees.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "WarsNuto",
+          "url": "https://warsnuto.com/"
+        },
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "WarsNuto",
+          "url": "https://warsnuto.com/"
+        }
+      }
+    </script>
   </head>
-  <body class="bot-page support-page" data-bot-page="support">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Accueil WarsNuto Bots">
-        <span class="brand-mark">
-          <img src="./assets/support-logo.png" alt="" onerror="this.remove()" />
-          <span>WN</span>
-        </span>
-        <span>
-          <strong>WarsNuto Bots</strong>
-          <small>Protect & Support</small>
-        </span>
+  <body class="site-v2 bot-detail-v2" data-bot-page="support">
+    <header class="v2-header">
+      <a class="v2-brand" href="./" aria-label="Accueil WarsNuto">
+        <span class="v2-brand-mark"><img src="./assets/warsnuto-icon.png" alt="" /></span>
+        <span><strong>WarsNuto</strong><small>Support</small></span>
       </a>
-      <nav class="nav">
-        <a href="./protect.html">Protect</a>
-        <a aria-current="page" href="./support.html">Support</a>
-        <a href="./docs.html">Documentation</a>
-        <a href="./privacy.html">Confidentialité</a>
-        <a href="./terms.html">Conditions</a>
+      <nav class="v2-nav" aria-label="Navigation principale">
+        <a href="./">Accueil</a>
+        <a href="./discord">Discord</a>
+        <a href="./youtube">YouTube</a>
+        <a aria-current="page" href="./bots">Bots</a>
+        <a href="./docs">Docs</a>
       </nav>
     </header>
 
-    <main>
-      <section class="bot-hero support">
+    <main class="v2-main">
+      <section class="bot-hero support-hero">
         <div>
-          <p class="eyebrow">Bot tickets</p>
-          <h1>WarsNuto Support</h1>
+          <p class="v2-kicker">WarsNuto Support</p>
+          <h1>Tickets, equipes et suivi des demandes.</h1>
           <p>
-            Le bot dédié aux tickets: panels customisables, équipes différentes par type, logs configurables
-            et commandes staff propres.
+            Support gere les panels de tickets, les types de demandes, les equipes appelees,
+            les logs et les reouvertures quand un dossier doit reprendre.
           </p>
-          <div class="hero-actions">
-            <a class="button primary" href="./docs.html">Voir la documentation</a>
-            <a class="button secondary" href="./terms.html">Conditions d'utilisation</a>
+          <div class="v2-actions">
+            <a class="v2-button primary yellow" href="./docs#support-doc">Documentation Support</a>
+            <a class="v2-button ghost" href="./protect">Voir Protect</a>
           </div>
         </div>
-        <img src="./assets/support-logo.png" alt="Logo WarsNuto Support" />
+        <img src="./assets/support-logo.png" alt="WarsNuto Support" />
       </section>
 
       <section class="bot-dashboard" data-bot-detail>
-        <article class="live-card support">
-          <span class="section-number">API</span>
-          <h2>Chargement des données Support...</h2>
+        <article class="metric-card support">
+          <p class="v2-kicker">Support</p>
+          <h2>Chargement des donnees publiques...</h2>
         </article>
-      </section>
-
-      <section class="notice-panel">
-        <p class="eyebrow">Usage officiel</p>
-        <h2>Support est réservé aux serveurs WarsNuto.</h2>
-        <p>
-          Toute utilisation sur un serveur non autorisé doit être reportée à
-          <a href="mailto:solitaire.blox@gmail.com">solitaire.blox@gmail.com</a>.
-        </p>
       </section>
     </main>
 
-    <footer class="site-footer">
+    <a class="floating-join" href="https://discord.gg/warsnuto" target="_blank" rel="noopener noreferrer" aria-label="Rejoindre le Discord WarsNuto">
+      <span class="discord-glyph" aria-hidden="true"></span>
+      Rejoindre
+    </a>
+    <footer class="v2-footer">
       <span>WarsNuto Support</span>
-      <a href="/api/bots">API publique</a>
+      <a href="./bots">Bots</a>
+      <a href="./privacy">Confidentialite</a>
+      <a href="./terms">Conditions</a>
     </footer>
+    <script src="/_vercel/insights/script.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>
+

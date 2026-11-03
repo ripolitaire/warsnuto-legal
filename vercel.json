@@ -1,7 +1,117 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/game.html",
+      "destination": "/game",
+      "permanent": true
+    },
+    {
+      "source": "/protect",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-bots.vercel.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/protect",
+      "permanent": true
+    },
+    {
+      "source": "/support",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-bots.vercel.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/support",
+      "permanent": true
+    },
+    {
+      "source": "/protect",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-bots-.*\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/protect",
+      "permanent": true
+    },
+    {
+      "source": "/support",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-bots-.*\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/support",
+      "permanent": true
+    },
+    {
+      "source": "/protect.html",
+      "destination": "/protect",
+      "permanent": true
+    },
+    {
+      "source": "/support.html",
+      "destination": "/support",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-bots.vercel.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-bots-.*\\.vercel\\.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "warsnuto-legal.vercel.app"
+        }
+      ],
+      "destination": "https://warsnuto.com/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
+    {
+      "source": "/game",
+      "destination": "/game.html"
+    },
+    {
+      "source": "/discord",
+      "destination": "/discord.html"
+    },
+    {
+      "source": "/youtube",
+      "destination": "/youtube.html"
+    },
+    {
+      "source": "/bots",
+      "destination": "/bots.html"
+    },
     {
       "source": "/protect",
       "destination": "/protect.html"
@@ -38,11 +148,19 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self'; img-src 'self' data: https://*.ytimg.com https://yt3.googleusercontent.com; connect-src 'self' https://discord.com https://discordapp.com https://vitals.vercel-insights.com; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
         }
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/visits",
       "headers": [
         {
           "key": "Cache-Control",
@@ -50,5 +168,10 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/bots.js": {
+      "maxDuration": 60
+    }
+  }
 }

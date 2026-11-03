@@ -1,8 +1,318 @@
 {
-  "updatedAt": "2026-09-21",
+  "updatedAt": "2026-10-11",
   "contact": "solitaire.blox@gmail.com",
   "source": "Vercel API",
-  "officialUse": "WarsNut0 Protect et WarsNuto Support sont réservés aux serveurs officiels ou autorisés par WarsNuto. Toute utilisation non autorisée peut être signalée à solitaire.blox@gmail.com.",
+  "officialUse": "Protect, Support et Game sont des bots publics multi-serveurs. Chaque serveur dispose de ses propres reglages et donnees.",
+  "discord": {
+    "name": "WarsNuto UNIVERS",
+    "description": "Bienvenue sur le serveur de WarsNuto, youtubeur a plus de 50k abonnes. Le Discord rassemble les annonces, les videos, les salons communautaires, Roblox, les vocaux, les suggestions et les animations gerees par les bots.",
+    "botsLabel": "19",
+    "staff": {
+      "title": "Equipe staff",
+      "description": "Une lecture publique de l'organisation du serveur avec la creation, l'administration, l'encadrement et la moderation.",
+      "source": "Roles Discord publics lus par le bot WarsNuto",
+      "updatedAt": "2026-10-08",
+      "tiers": [
+        {
+          "label": "Creation",
+          "icon": "WN",
+          "summary": "La tete de l'ecosysteme WarsNuto.",
+          "nodes": [
+            {
+              "name": "WarsNuto",
+              "role": "Leader",
+              "tag": "WarsNuto",
+              "note": "Leader de la communaute et point central du serveur.",
+              "iconType": "crown",
+              "color": "#ffcc4d"
+            }
+          ],
+          "iconType": "crown",
+          "color": "#ffcc4d"
+        },
+        {
+          "label": "Administration",
+          "icon": "AD",
+          "summary": "Gestion serveur, bots et equipe staff.",
+          "nodes": [
+            {
+              "name": "Soli",
+              "role": "Admin bot",
+              "tag": "1solitaire",
+              "note": "Developpement, maintenance et configuration des bots officiels.",
+              "iconType": "tools",
+              "color": "#d84a4a"
+            },
+            {
+              "name": "Killer_flow",
+              "role": "Admin serveur",
+              "tag": "killer_flow10",
+              "note": "Organisation globale du Discord, salons et decisions serveur.",
+              "iconType": "tools",
+              "color": "#d84a4a"
+            },
+            {
+              "name": "RSam",
+              "role": "Admin staff",
+              "tag": "riocat.chat",
+              "note": "Encadrement de l'equipe staff, moderation et suivi interne.",
+              "iconType": "tools",
+              "color": "#d84a4a"
+            }
+          ],
+          "iconType": "tools",
+          "color": "#d84a4a"
+        },
+        {
+          "label": "Encadrement",
+          "icon": "RG",
+          "summary": "Responsables et managers qui structurent la moderation.",
+          "nodes": [
+            {
+              "name": "W-Sariel",
+              "role": "Responsable moderation",
+              "tag": "sarielvv",
+              "note": "Suivi des moderateurs et cadre moderation.",
+              "iconType": "tools",
+              "color": "#4cadd0"
+            },
+            {
+              "name": "Wael",
+              "role": "Manager YouTube, partenariat, video",
+              "tag": "double_you350",
+              "note": "Coordination YouTube, partenariats et suivi video.",
+              "iconType": "tools",
+              "color": "#16d669"
+            }
+          ],
+          "iconType": "tools",
+          "color": "#4cadd0"
+        },
+        {
+          "label": "Moderation confirmee",
+          "icon": "CM",
+          "summary": "Les C-MODO qui gerent le terrain et accompagnent l'equipe.",
+          "nodes": [
+            {
+              "name": "Nuange",
+              "role": "C-MODO",
+              "tag": "nuange",
+              "note": "Moderation confirmee.",
+              "iconType": "tools",
+              "color": "#e70de3"
+            },
+            {
+              "name": "Imu",
+              "role": "C-MODO",
+              "tag": "imu.3",
+              "note": "Moderation confirmee.",
+              "iconType": "tools",
+              "color": "#e70de3"
+            },
+            {
+              "name": "Sha",
+              "role": "C-MODO",
+              "tag": "shadow_150111",
+              "note": "Moderation confirmee.",
+              "iconType": "tools",
+              "color": "#e70de3"
+            },
+            {
+              "name": "AYDEN",
+              "role": "C-MODO",
+              "tag": "ayden_mdr",
+              "note": "Moderation confirmee et staff of the week.",
+              "iconType": "tools",
+              "color": "#e70de3"
+            }
+          ],
+          "iconType": "tools",
+          "color": "#e70de3"
+        },
+        {
+          "label": "Moderation",
+          "icon": "MO",
+          "summary": "Les MODO actifs qui gardent les salons lisibles.",
+          "nodes": [
+            {
+              "name": "W-Poulemans",
+              "role": "MODO",
+              "tag": "poulmans",
+              "note": "Moderation et aide.",
+              "iconType": "tools",
+              "color": "#ffffff"
+            },
+            {
+              "name": "Adri",
+              "role": "MODO",
+              "tag": "adri_mdrr.",
+              "note": "Moderation serveur.",
+              "iconType": "tools",
+              "color": "#ffffff"
+            },
+            {
+              "name": "Zessop",
+              "role": "MODO",
+              "tag": "zessop_flm",
+              "note": "Moderation serveur.",
+              "iconType": "tools",
+              "color": "#ffffff"
+            },
+            {
+              "name": "Natrox",
+              "role": "MODO",
+              "tag": "natrox2020",
+              "note": "Moderation serveur.",
+              "iconType": "tools",
+              "color": "#ffffff"
+            }
+          ],
+          "iconType": "tools",
+          "color": "#ffffff"
+        },
+        {
+          "label": "Modo test",
+          "icon": "MT",
+          "summary": "Role d'essai pour les futurs moderateurs.",
+          "nodes": [],
+          "iconType": "tools",
+          "color": "#ff7800"
+        }
+      ]
+    },
+    "areas": [
+      {
+        "title": "Bienvenue et verification",
+        "channels": [
+          "bienvenue",
+          "aurevoir",
+          "verification",
+          "tuto-verif",
+          "aide-verification"
+        ],
+        "description": "Un parcours d'arrivee simple pour comprendre le serveur et rejoindre la communaute proprement."
+      },
+      {
+        "title": "Important et videos",
+        "channels": [
+          "reglement",
+          "annonce",
+          "video",
+          "giveaway",
+          "tournage"
+        ],
+        "description": "Les informations officielles, les sorties video, les giveaways et les moments importants restent faciles a retrouver."
+      },
+      {
+        "title": "Salons textuels",
+        "channels": [
+          "blabla",
+          "media",
+          "niveau",
+          "suggestions",
+          "commandes",
+          "memes",
+          "comptage"
+        ],
+        "description": "Des espaces pour discuter, partager, proposer des idees, utiliser les commandes et suivre l'activite du serveur."
+      },
+      {
+        "title": "Roblox",
+        "channels": [
+          "general",
+          "media",
+          "demande-aide",
+          "trading",
+          "profile",
+          "evenement-horaire"
+        ],
+        "description": "Une zone dediee aux joueurs Roblox pour parler, demander de l'aide, partager et organiser les activites."
+      },
+      {
+        "title": "Vocaux et temporaires",
+        "channels": [
+          "musique",
+          "vocal 1",
+          "vocal 2",
+          "vocal 3",
+          "duo",
+          "trio",
+          "quatuor",
+          "join to create"
+        ],
+        "description": "Des vocaux publics et des salons temporaires pour jouer, discuter ou creer son propre espace."
+      },
+      {
+        "title": "Helper et cybersecurite",
+        "channels": [
+          "reglement-helper",
+          "annonce-helper",
+          "general-helper",
+          "forms-helper",
+          "general-securite"
+        ],
+        "description": "Des espaces specialises pour l'aide, les annonces internes publiques et les sujets securite."
+      }
+    ]
+  },
+  "latestAdditions": [
+    {
+      "bot": "game",
+      "date": "2026-10-12",
+      "title": "Grand Line infinie",
+      "description": "Un mode sans energie ni cooldown permet de naviguer d'ile en ile avec des combats en plusieurs tours, des tempetes, des tresors pieges et des ports marchands. Les choix modifient les PV et la cargaison; les bonus de berrys et d'XP restent limites tandis que les records sont illimites.",
+      "public": true
+    },
+    {
+      "bot": "protect",
+      "date": "2026-10-11",
+      "title": "Retrait du systeme economique de Protect",
+      "description": "Le systeme economique de Protect a ete retire: gains de monnaie, boutique, daily et blackjack ne sont plus disponibles sur ce bot. Protect conserve la moderation, les niveaux XP et les outils serveur. L'economie et l'aventure se poursuivent dans WarsNuto Game, avec une progression distincte.",
+      "public": true
+    },
+    {
+      "bot": "game",
+      "date": "2026-10-11",
+      "title": "WarsNuto Game rejoint le site",
+      "description": "Un jeu One Piece sur Discord: classes, missions, exploration, fruits, equipages et combats de boss au tour par tour. La beta jouable dispose maintenant de sa page dediee.",
+      "public": true
+    },
+    {
+      "bot": "all",
+      "date": "2026-10-08",
+      "title": "WarsNuto.com devient le hub officiel",
+      "description": "Le site presente maintenant le Discord officiel du youtubeur WarsNuto, ses videos YouTube, les bots officiels et les pages publiques au meme endroit.",
+      "public": true
+    },
+    {
+      "bot": "all",
+      "date": "2026-10-04",
+      "title": "Nouvelle interface publique",
+      "description": "Le site rassemble Protect, Support, les infos publiques du serveur et les nouveautes utiles.",
+      "public": true
+    },
+    {
+      "bot": "support",
+      "date": "2026-10-04",
+      "title": "Reouverture de ticket",
+      "description": "Quand une demande doit reprendre, l'equipe ticket peut rouvrir le salon au lieu de repartir de zero.",
+      "public": true
+    },
+    {
+      "bot": "protect",
+      "date": "2026-10-04",
+      "title": "Patch notes publics plus propres",
+      "description": "Les annonces automatiques restent centrees sur ce que les membres doivent vraiment savoir.",
+      "public": true
+    },
+    {
+      "bot": "protect",
+      "date": "2026-10-03",
+      "title": "Commandes membres",
+      "description": "Profil et suggestions ajoutent plus de vie au serveur sans compliquer l'utilisation.",
+      "public": true
+    }
+  ],
   "bots": [
     {
       "slug": "protect",
@@ -12,42 +322,39 @@
       "status": "Production",
       "storage": "SQLite",
       "logo": "assets/protect-logo.webp",
-      "page": "protect.html",
-      "privacy": "privacy.html",
-      "terms": "terms.html",
-      "short": "Bot principal: modération, sécurité, niveaux, économie et configuration serveur.",
-      "description": "WarsNut0 Protect centralise la modération, les sanctions, le système XP, l'économie, l'AutoMod, les rapports staff et la configuration du serveur WarsNuto.",
+      "page": "protect",
+      "privacy": "privacy",
+      "terms": "terms",
+      "short": "Le bot principal: il aide a moderer, faire vivre le serveur et garder la configuration au propre.",
+      "description": "WarsNut0 Protect accompagne la gestion de WarsNuto au quotidien: moderation, sanctions, XP, AutoMod, modules membres et configuration serveur.",
       "lastUpdate": {
-        "label": "Refonte site public et documentation",
-        "date": "2026-08-17"
+        "label": "Protect recentre sur la moderation, l'XP et la configuration",
+        "date": "2026-10-11"
       },
       "community": {
         "name": "WarsNuto UNIVERS",
         "guildId": "1052863089692905493",
         "inviteCode": "warsnuto",
-        "membersLabel": "14 450",
-        "membersSource": "Discord Invite snapshot",
+        "membersLabel": "14 986+",
+        "membersSource": "Discord API",
         "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json",
-        "onlineLabel": "1 203"
+        "onlineLabel": "766"
       },
       "modules": [
-        "Modération et sanctions",
-        "WarnBan et anti-abus",
-        "Niveaux, caisses XP et leaderboard",
-        "économie, boutique et blackjack",
-        "Dashboard setup par serveur",
-        "Rapports staff et Staff Of The Week"
+        "Moderation plus simple a suivre",
+        "WarnBan et protection anti-abus",
+        "Niveaux, caisses XP et classement",
+        "AutoMod et logs serveur",
+        "Profil et suggestions",
+        "Configuration claire par serveur"
       ],
       "commands": [
         "/help",
-        "/dashboard",
-        "/sanctions",
-        "/stat rapport",
-        "/warnban",
-        "/leaderboard",
-        "/blackjack jouer"
+        "/profil",
+        "/suggestion",
+        "/leaderboard"
       ],
-      "dataUse": "IDs Discord, configurations serveur, sanctions, statistiques staff, XP, économie et logs nécessaires aux modules activés."
+      "dataUse": "Le bot utilise les donnees necessaires aux modules actives: IDs Discord, configuration serveur, sanctions, XP, suggestions et traces utiles au bon fonctionnement. Les donnees des anciens modules retires restent archivees."
     },
     {
       "slug": "support",
@@ -57,39 +364,75 @@
       "status": "Production",
       "storage": "SQLite",
       "logo": "assets/support-logo.png",
-      "page": "support.html",
-      "privacy": "privacy.html",
-      "terms": "terms.html",
-      "short": "Bot tickets: panels customisables, équipes par type, logs et fermeture propre.",
-      "description": "WarsNuto Support gère les tickets multi-types avec équipes différentes, statuts, logs configurables et commandes staff pour fermer ou terminer un ticket.",
+      "page": "support",
+      "privacy": "privacy",
+      "terms": "terms",
+      "short": "Le bot ticket: il range les demandes, previent la bonne equipe et garde le suivi lisible.",
+      "description": "WarsNuto Support garde les demandes propres: types de tickets, equipes dediees, statuts, logs configurables, fermeture et reouverture controlee.",
       "lastUpdate": {
-        "label": "Commandes tickets et statuts renforcés",
-        "date": "2026-08-17"
+        "label": "Reouverture de ticket et suivi plus propre",
+        "date": "2026-10-04"
       },
       "community": {
         "name": "WarsNuto UNIVERS",
         "guildId": "1052863089692905493",
         "inviteCode": "warsnuto",
-        "membersLabel": "14 450",
-        "membersSource": "Discord Invite snapshot",
+        "membersLabel": "14 986+",
+        "membersSource": "Discord API",
         "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json",
-        "onlineLabel": "1 203"
+        "onlineLabel": "766"
       },
       "modules": [
         "Panels de tickets personnalisables",
-        "Types de tickets multiples",
-        "équipes support par type",
-        "Logs configurables",
-        "Commandes /close et /fin",
-        "Configuration isolée par serveur"
+        "Demandes separees par type",
+        "Bonne equipe appelee automatiquement",
+        "Suivi et logs configurables",
+        "Fermeture et suivi par l'equipe support",
+        "Reouverture controlee si besoin"
       ],
-      "commands": [
-        "/ticket-dashboard",
-        "/ticket-panel",
-        "/close",
-        "/fin"
+      "commands": [],
+      "dataUse": "Le bot conserve les informations necessaires au suivi des demandes: IDs Discord, configuration ticket, salons crees, type, statut, equipe assignee et logs."
+    },
+    {
+      "slug": "game",
+      "name": "WarsNuto Game",
+      "badge": "Game",
+      "theme": "game",
+      "status": "Beta jouable",
+      "storage": "SQLite",
+      "logo": "assets/game-logo.png",
+      "page": "game",
+      "privacy": "privacy",
+      "terms": "terms",
+      "short": "Ton aventure One Piece: classes, exploration, boss et Grand Line infinie sans cooldown.",
+      "description": "WarsNuto Game est un RPG communautaire inspire de One Piece. Developpe ton personnage, collectionne fruits et armes, affronte des boss au tour par tour et navigue sans limite dans la Grand Line. La progression reste propre a chaque serveur.",
+      "lastUpdate": {
+        "label": "Grand Line infinie: routes, cargaison, records et economie plafonnee",
+        "date": "2026-10-12"
+      },
+      "community": {
+        "name": "WarsNuto UNIVERS",
+        "guildId": "1052863089692905493",
+        "inviteCode": "warsnuto",
+        "membersLabel": "14 986+",
+        "membersSource": "Discord API",
+        "widgetUrl": "https://discord.com/api/guilds/1052863089692905493/widget.json",
+        "onlineLabel": "766"
+      },
+      "modules": [
+        "10 classes et leurs specialites",
+        "6 missions et 5 zones d'exploration",
+        "9 fruits: maitrise, competences et eveil",
+        "8 armes, inventaire et objets utilisables",
+        "Boss solo, serveur et equipage au tour par tour",
+        "Grand Line infinie sans energie ni cooldown",
+        "Routes a risque, PV persistants et cargaison a securiser",
+        "Equipages, coffre commun et progression",
+        "Saisons, classements et evenements temporaires",
+        "Panel admin: permissions, equilibrage et roles existants"
       ],
-      "dataUse": "IDs Discord, configuration ticket, salons créés, type de ticket, statut, équipe support et logs nécessaires au suivi des demandes."
+      "commands": ["/aventure", "/grand-line", "/profil", "/daily", "/classe", "/mission", "/explorer", "/fruit", "/inventaire", "/objet", "/boutique", "/sell", "/boss", "/boss-serveur", "/equipage", "/guide"],
+      "dataUse": "Game conserve les IDs Discord, la configuration du serveur, les personnages, inventaires, transactions de jeu, combats, equipages et saisons. Les actions administratives sont journalisees. Les profils, classements et panels publics sont visibles dans Discord; la base et ses sauvegardes ne sont pas publiees sur le site."
     }
   ]
 }

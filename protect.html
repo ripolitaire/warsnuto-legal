@@ -3,85 +3,99 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WarsNut0 Protect - Bot principal</title>
+    <title>WarsNut0 Protect - Bot moderation, XP et configuration</title>
     <meta
       name="description"
-      content="Présentation officielle de WarsNut0 Protect: modération, niveaux, économie, sécurité et dashboards serveur."
+      content="Page dediee a WarsNut0 Protect: moderation, logs, XP, suggestions, dashboard et protections du serveur WarsNuto."
     />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="WarsNuto Bots" />
-    <meta property="og:title" content="WarsNut0 Protect - Bot principal" />
-    <meta property="og:description" content="Modération, sécurité, niveaux, économie et dashboards serveur pour l'écosystème WarsNuto." />
-    <meta property="og:url" content="https://warsnuto-legal.vercel.app/protect.html" />
-    <meta property="og:image" content="https://warsnuto-legal.vercel.app/assets/og-warsnuto.png?v=4" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="WarsNuto" />
+    <meta property="og:title" content="WarsNut0 Protect - Bot officiel WarsNuto" />
+    <meta property="og:description" content="Moderation, logs, XP et configuration serveur pour WarsNuto." />
+    <meta property="og:url" content="https://warsnuto.com/protect" />
+    <meta property="og:image" content="https://warsnuto.com/assets/og-warsnuto.png?v=12" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#fee75c" />
-    <link rel="canonical" href="https://warsnuto-legal.vercel.app/protect.html" />
-    <link rel="icon" href="./assets/protect-logo.webp" />
+    <meta name="theme-color" content="#ffcc4d" />
+    <link rel="canonical" href="https://warsnuto.com/protect" />
+    <link rel="icon" type="image/png" href="./assets/warsnuto-favicon-round.png" />
     <link rel="stylesheet" href="./styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "@id": "https://warsnuto.com/protect#app",
+        "name": "WarsNut0 Protect",
+        "url": "https://warsnuto.com/protect",
+        "image": "https://warsnuto.com/assets/protect-logo.webp",
+        "applicationCategory": "Discord bot",
+        "operatingSystem": "Discord",
+        "description": "Bot officiel WarsNuto pour la moderation, les logs, l'XP, les suggestions, l'AutoMod et la configuration serveur.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "WarsNuto",
+          "url": "https://warsnuto.com/"
+        },
+        "isPartOf": {
+          "@type": "WebSite",
+          "name": "WarsNuto",
+          "url": "https://warsnuto.com/"
+        }
+      }
+    </script>
   </head>
-  <body class="bot-page protect-page" data-bot-page="protect">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Accueil WarsNuto Bots">
-        <span class="brand-mark">
-          <img src="./assets/protect-logo.webp" alt="" onerror="this.remove()" />
-          <span>WN</span>
-        </span>
-        <span>
-          <strong>WarsNuto Bots</strong>
-          <small>Protect & Support</small>
-        </span>
+  <body class="site-v2 bot-detail-v2" data-bot-page="protect">
+    <header class="v2-header">
+      <a class="v2-brand" href="./" aria-label="Accueil WarsNuto">
+        <span class="v2-brand-mark"><img src="./assets/warsnuto-icon.png" alt="" /></span>
+        <span><strong>WarsNuto</strong><small>Protect</small></span>
       </a>
-      <nav class="nav">
-        <a aria-current="page" href="./protect.html">Protect</a>
-        <a href="./support.html">Support</a>
-        <a href="./docs.html">Documentation</a>
-        <a href="./privacy.html">Confidentialité</a>
-        <a href="./terms.html">Conditions</a>
+      <nav class="v2-nav" aria-label="Navigation principale">
+        <a href="./">Accueil</a>
+        <a href="./discord">Discord</a>
+        <a href="./youtube">YouTube</a>
+        <a aria-current="page" href="./bots">Bots</a>
+        <a href="./docs">Docs</a>
       </nav>
     </header>
 
-    <main>
-      <section class="bot-hero protect">
+    <main class="v2-main">
+      <section class="bot-hero">
         <div>
-          <p class="eyebrow">Bot principal</p>
-          <h1>WarsNut0 Protect</h1>
+          <p class="v2-kicker">WarsNut0 Protect</p>
+          <h1>Moderation, XP et configuration serveur.</h1>
           <p>
-            Le bot de gestion serveur: modération, sécurité, niveaux, économie, rapports staff et panels de
-            configuration multi-serveurs.
+            Protect est le bot principal de gestion WarsNuto: sanctions, logs, classement XP,
+            suggestions, AutoMod et panneaux de configuration.
           </p>
-          <div class="hero-actions">
-            <a class="button primary" href="./docs.html">Voir la documentation</a>
-            <a class="button secondary" href="./privacy.html">Données utilisées</a>
+          <div class="v2-actions">
+            <a class="v2-button primary yellow" href="./docs#protect-doc">Documentation Protect</a>
+            <a class="v2-button ghost" href="./support">Voir Support</a>
           </div>
         </div>
-        <img src="./assets/protect-logo.webp" alt="Logo WarsNut0 Protect" />
+        <img src="./assets/protect-logo.webp" alt="WarsNut0 Protect" />
       </section>
 
       <section class="bot-dashboard" data-bot-detail>
-        <article class="live-card protect">
-          <span class="section-number">API</span>
-          <h2>Chargement des données Protect...</h2>
+        <article class="metric-card protect">
+          <p class="v2-kicker">Protect</p>
+          <h2>Chargement des donnees publiques...</h2>
         </article>
-      </section>
-
-      <section class="notice-panel">
-        <p class="eyebrow">Usage officiel</p>
-        <h2>Protect est réservé aux serveurs WarsNuto.</h2>
-        <p>
-          Toute utilisation sur un serveur non autorisé doit être reportée à
-          <a href="mailto:solitaire.blox@gmail.com">solitaire.blox@gmail.com</a>.
-        </p>
       </section>
     </main>
 
-    <footer class="site-footer">
+    <a class="floating-join" href="https://discord.gg/warsnuto" target="_blank" rel="noopener noreferrer" aria-label="Rejoindre le Discord WarsNuto">
+      <span class="discord-glyph" aria-hidden="true"></span>
+      Rejoindre
+    </a>
+    <footer class="v2-footer">
       <span>WarsNut0 Protect</span>
-      <a href="/api/bots">API publique</a>
+      <a href="./bots">Bots</a>
+      <a href="./privacy">Confidentialite</a>
+      <a href="./terms">Conditions</a>
     </footer>
+    <script src="/_vercel/insights/script.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>
+
