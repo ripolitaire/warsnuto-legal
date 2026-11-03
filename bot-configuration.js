@@ -27,7 +27,7 @@
       }
       if (f.type === 'list') return `<fieldset class="config-repeater"><legend>${E(f.label)}</legend><div data-config-rows>${(value || []).map(row => rowHTML(f, row)).join('')}</div><button type="button" data-add-row="${E(f.key)}">${icon('plus')} Ajouter</button></fieldset>`;
       if (['ids', 'lines'].includes(f.type) || f.multiline) return `<label>${E(f.label)}<textarea${common} rows="4" maxlength="${f.type === 'ids' ? 2200 : f.type === 'lines' ? 11000 : f.maxLength}">${E(Array.isArray(value) ? value.join('\n') : value)}</textarea></label>`;
-      if (f.type === 'number') return `<label>${E(f.label)}<input${common} type="number" min="${f.min}" max="${f.max}" step="${f.step}" value="${E(value)}" required></label>`;
+      if (f.type === 'number') return `<label>${E(f.label)}<input${common} type="number" min="${f.min}" max="${f.max}" step="${f.step === 1 ? 1 : 'any'}" value="${E(value)}" required></label>`;
       let display = value, type = f.type === 'color' ? 'color' : f.type === 'url' ? 'url' : 'text';
       if (f.type === 'datetime') { type = 'datetime-local'; if (value) { const d = new Date(value); display = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); } }
       return `<label>${E(f.label)}<input${common} type="${type}" value="${E(display)}" ${f.maxLength ? 'maxlength="' + f.maxLength + '"' : ''} ${f.pattern ? 'pattern="' + E(f.pattern) + '"' : ''}></label>`;

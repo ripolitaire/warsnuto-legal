@@ -114,6 +114,17 @@ test('bot configuration saves real settings, keeps them after reload and switche
   await page.screenshot({ path: info.outputPath('bot-configuration.png'), fullPage: true });
   await context.close();
 });
+test('unavailable bot clears the previous editor and supports retry without saving into another bot', async ({ browser }) => {
+  const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/configuration');
+  await expect(page.getByLabel('Titre du module')).toBeVisible();
+  await page.route('**/api/platform/admin/bot-config/game/guilds', route => route.fulfill({ status: 503, json: { error: 'Game indisponible pour ce test' } }));
+  await page.getByRole('combobox', { name: 'Bot', exact: true }).selectOption('game');
+  await expect(page.getByRole('heading', { name: 'Configuration indisponible' })).toBeVisible();
+  await expect(page.getByLabel('Titre du module')).toHaveCount(0);
+  await page.unroute('**/api/platform/admin/bot-config/game/guilds');
+  await page.getByRole('button', { name: 'Réessayer', exact: true }).click();
+  await expect(page.getByLabel('Titre du module')).toHaveValue('game de test'); await context.close();
+});
 test('public home keeps existing navigation and animations with the account menu', async ({ browser }, info) => {
   const { context, page } = await prepare(browser, 'OWNER');
   await page.route('**/api/bots**', route => route.fulfill({ json: require('../../api/bots-data.json') }));
