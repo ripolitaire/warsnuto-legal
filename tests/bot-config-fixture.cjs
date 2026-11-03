@@ -3,7 +3,8 @@ const { createDashboardHandler } = require('../ops/bot-config/webDashboard.cjs')
 const guildId = '661720242585600500', roleId = '661720242585600501', channelId = '661720242585600502';
 function createBotConfigFixture(ids) {
   const calls = [], writes = [], audits = [], configs = new Map();
-  const member = actor => ({ roles: { cache: new Map() }, permissions: { has: () => [ids.OWNER, ids.ADMIN].includes(actor) } });
+  const tiers = new Map([[ids.OWNER, 'admin'], [ids.ADMIN, 'admin'], [ids.MODERATOR, 'mod-test']]);
+  const member = actor => ({ roles: { cache: new Map() }, protectTier: tiers.get(actor) || 'public', permissions: { has: () => [ids.OWNER, ids.ADMIN].includes(actor) } });
   const safeRole = { id: roleId, name: 'Rôle de test', managed: false, position: 1, permissions: { has: () => false } };
   const roleNames = ['Administrateur', 'Modérateur confirmé', 'Modérateur', 'Modérateur en test', 'Responsable support', 'Équipe événement', 'Notifications', 'Membre'];
   const extraRoles = roleNames.map((name, i) => ({ ...safeRole, id: String(661720242585600610n + BigInt(i)), name }));
@@ -24,6 +25,11 @@ function createBotConfigFixture(ids) {
           fruit: { name: 'Fruit Nika', mastery: 340, awakened: 1 }, crew: { name: 'Les aventuriers', level: 12 }, weapon: 'Katana', accessory: null, inventory: [{ name: 'Clé de raid', quantity: 3 }], activity: [], seasonPoints: 25 } };
       } : undefined };
     if (bot === 'protect') {
+      adapter.memberAccess = (g, member) => {
+        const tier = member.protectTier || 'public', level = ['public', 'mod-test', 'mod', 'responsible-mod', 'admin'].indexOf(tier);
+        return { tier, level, label: ['Membre', 'Modérateur test', 'Modérateur', 'Responsable modération', 'Administrateur Protect'][level], canModerate: level > 0, canConfigure: level === 4, commands: level ? ['mute', 'kick', ...(level >= 2 ? ['give-role'] : []), ...(level >= 3 ? ['ban'] : []), ...(level === 4 ? ['dashboard'] : [])] : [] };
+      };
+      adapter.canConfigure = (g, member) => member.protectTier === 'admin';
       const access = { adminRoleIds: [extraRoles[0].id], confirmedModRoleIds: [extraRoles[1].id], modRoleIds: [extraRoles[2].id], testModRoleIds: [extraRoles[3].id], staffOfTheWeekRoleId: null, warnBanRoleId: null, warnBanDurationDays: 7 };
       adapter.sections.push(S.section('access', 'Équipes et accès', [S.roles('adminRoleIds', 'Administrateurs du bot'), S.roles('confirmedModRoleIds', 'Modérateurs confirmés'), S.roles('modRoleIds', 'Modérateurs'), S.roles('testModRoleIds', 'Modérateurs en test'), S.role('staffOfTheWeekRoleId', 'Staff de la semaine'), S.role('warnBanRoleId', 'Rôle WarnBan'), S.number('warnBanDurationDays', 'Durée WarnBan, en jours', 0, 3650)], () => access, (g, next, actor, patch) => { Object.assign(access, patch); writes.push({ bot, actor, patch }); }));
       const logs = { moderationLogChannelId: channelId, logSanctionsChannelId: channelId };
@@ -37,6 +43,6 @@ function createBotConfigFixture(ids) {
     calls.push({ options, body }); const bot = require('node:path').basename(options.socketPath, '.sock');
     return adapters[bot].dispatch({ url: options.path, method: options.method, headers: options.headers }, body);
   };
-  return { transport, calls, writes, audits, configs, guild, client, adapters, guildId, roleId, channelId };
+  return { transport, calls, writes, audits, configs, tiers, guild, client, adapters, guildId, roleId, channelId };
 }
 module.exports = { createBotConfigFixture, guildId, roleId, channelId };

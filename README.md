@@ -20,6 +20,9 @@ Discord et des rôles administrateurs propres à chaque bot. Les droits globaux
 du site ne sont pas accordés automatiquement aux administrateurs Discord.
 `/profile/game` affiche la progression réelle du membre, séparée de son éventuel
 profil Admin Mod. Voir le [journal espace membre](RELEASE-SERVER-HUB-2026-11-03.md).
+Les [grades Protect](RELEASE-PROTECT-ACCESS-2026-11-04.md) ouvrent aussi l'espace
+de modération du serveur correspondant, sans promotion du compte web. La charte
+du site public et du panel est centralisée dans `theme.css`.
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

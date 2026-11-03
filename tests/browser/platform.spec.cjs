@@ -3,7 +3,7 @@ const { ids } = require('../helpers.cjs');
 let states;
 test.beforeAll(async ({ browser, baseURL }) => {
   states = {};
-  for (const role of ['OWNER', 'USER']) {
+  for (const role of ['OWNER', 'USER', 'MODERATOR']) {
     const context = await browser.newContext(); const page = await context.newPage();
     await blockExternal(context);
     const started = await context.request.get(baseURL + '/auth/discord/start?next=/profile', { maxRedirects: 0 });
@@ -239,4 +239,39 @@ test('moderation workspace links to real Protect modules and handles an outage h
   await expect(page.locator('.moderation-module')).toHaveCount(0);
   await page.unroute('**/api/platform/admin/bot-config/protect/661720242585600500'); await page.getByRole('button', { name: 'Actualiser Protect', exact: true }).click();
   await expect(page.locator('.moderation-module')).toHaveCount(3); await context.close();
+});
+
+test('Protect moderators see their actual grade but no administration or configuration controls', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'MODERATOR'); let configReads = 0;
+  page.on('request', request => { if (request.url().includes('/api/platform/admin/bot-config/')) configReads++; });
+  await page.goto('/servers'); await expect(page.locator('.protect-server-grade')).toContainText('Modérateur test');
+  await expect(page.getByRole('link', { name: 'Configurer', exact: true })).toHaveCount(0);
+  await page.locator('.server-item').getByRole('link', { name: 'Modération', exact: true }).click();
+  await expect(page.locator('.protect-grade')).toContainText('Niveau 1 / 4');
+  await expect(page.locator('.protect-access-lines')).toContainText('Configuration réservée');
+  await expect(page.getByRole('link', { name: 'Tous les réglages' })).toHaveCount(0); expect(configReads).toBe(0);
+  await page.locator('.protect-command-list summary').click(); await expect(page.locator('.protect-command-list')).toContainText('/mute');
+  await expect(page.locator('.protect-command-list')).not.toContainText('/ban');
+  await page.locator('.wn-account summary').click(); await expect(page.locator('.wn-account-dropdown a[href="/admin"]')).toHaveCount(0);
+  await page.locator('.wn-account summary').click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('protect-moderator.png'), fullPage: true });
+  await page.route('**/api/platform/moderation/**', route => route.fulfill({ status: 403, json: { error: 'Rôle Protect retiré' } }));
+  await page.getByRole('button', { name: 'Actualiser Protect', exact: true }).click();
+  await expect(page.locator('.protect-command-list')).toHaveCount(0); await expect(page.locator('.protect-grade')).toHaveCount(0);
+  await context.close();
+});
+
+test('public website and private panel share their visual theme and typography', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER');
+  await page.route('**/api/bots**', route => route.fulfill({ json: require('../../api/bots-data.json') }));
+  await page.route('**/api/youtube', route => route.fulfill({ json: { videos: [], channel: {} } }));
+  const theme = () => page.evaluate(() => { const css = getComputedStyle(document.documentElement); return { gold: css.getPropertyValue('--gold').trim(), bg: css.getPropertyValue('--bg').trim(), line: css.getPropertyValue('--line').trim(), font: getComputedStyle(document.body).fontFamily, radius: css.getPropertyValue('--button-radius').trim() }; });
+  await page.goto('/'); const publicTheme = await theme();
+  await page.goto('/admin/configuration?bot=protect&guild=661720242585600500&section=access');
+  await expect(page.locator('.config-editor-heading')).toContainText('Équipes et accès');
+  expect(await theme()).toEqual(publicTheme);
+  expect(await page.locator('[data-save-config]').evaluate(node => getComputedStyle(node).borderRadius)).toBe(publicTheme.radius);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('shared-site-theme.png'), fullPage: true }); await context.close();
 });

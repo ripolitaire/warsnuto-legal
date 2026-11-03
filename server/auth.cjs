@@ -108,7 +108,7 @@ function createAuth(db, config, fetcher = fetch) {
         db.prepare(`UPDATE sessions SET revoked_at=? WHERE token_hash IN (SELECT token_hash FROM sessions WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at DESC,token_hash DESC LIMIT -1 OFFSET 10)`)
           .run(now, user.id);
         const role = db.prepare('SELECT role FROM user_roles WHERE user_id=?').get(user.id).role;
-        destination = flow.destination.startsWith('/admin') && flow.destination !== '/admin/configuration' && !permissions(db, user.id, role).includes('admin:read') ? '/profile' : flow.destination;
+        destination = flow.destination.startsWith('/admin') && !['/admin/configuration', '/admin/moderation'].includes(flow.destination) && !permissions(db, user.id, role).includes('admin:read') ? '/profile' : flow.destination;
         audit(db, now, identity.id, 'auth.login', identity.id);
       });
       return { location: destination, cookies: [cookie(sessionName, signed(tokenId, config.secret), config.secure, config.sessionMaxMs / 1000), cookie(stateName, '', config.secure, 0)] };

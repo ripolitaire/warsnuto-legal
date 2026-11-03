@@ -56,10 +56,17 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
     if (url.pathname === '/member/servers' && req.method === 'GET') {
       const guilds = [];
       for (const entry of client.guilds.cache.values()) {
-        const { guild, member } = await membership(entry.id, actor);
-        if (member) guilds.push({ ...describe(guild), canConfigure: canConfigure(guild, member, actor) });
+        const { guild, member } = await membership(entry.id, actor, Boolean(adapter.memberAccess));
+        if (member) guilds.push({ ...describe(guild), canConfigure: canConfigure(guild, member, actor), ...(adapter.memberAccess ? { access: adapter.memberAccess(guild, member, actor) } : {}) });
       }
       return { guilds };
+    }
+    const access = /^\/member\/(\d{17,20})\/access$/.exec(url.pathname);
+    if (access && req.method === 'GET') {
+      const { guild, member } = await membership(access[1], actor, true);
+      if (!member) S.fail('Tu ne fais pas partie de ce serveur.', 403);
+      if (!adapter.memberAccess) S.fail('Ce bot ne propose pas de droits de modération.', 404);
+      return { guild: describe(guild), access: adapter.memberAccess(guild, member, actor) };
     }
     const profile = /^\/member\/(\d{17,20})\/profile\/(normal|admin)$/.exec(url.pathname);
     if (profile && req.method === 'GET') {

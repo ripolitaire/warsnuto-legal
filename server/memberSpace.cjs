@@ -1,7 +1,7 @@
 const { error, snowflake } = require('./security.cjs');
 const { BOTS } = require('./botConfiguration.cjs');
 function createMemberSpace(db, config, broker) {
-  const cache = new Map();
+  const cache = new Map(), protectCache = new Map();
   db.exec(`CREATE TABLE IF NOT EXISTS game_observations(
     actor TEXT NOT NULL,guild TEXT NOT NULL,mode TEXT NOT NULL,bucket INTEGER NOT NULL,
     sampled_at INTEGER NOT NULL,level INTEGER NOT NULL,total_xp INTEGER NOT NULL,
@@ -19,7 +19,7 @@ function createMemberSpace(db, config, broker) {
       for (const bot of results) for (const guild of bot.guilds) {
         if (!snowflake(guild.id)) continue;
         if (!guilds.has(guild.id)) guilds.set(guild.id, { id: guild.id, name: guild.name, icon: guild.icon, memberCount: guild.memberCount, bots: [] });
-        guilds.get(guild.id).bots.push({ id: bot.id, name: bot.name, canConfigure: guild.canConfigure === true });
+        guilds.get(guild.id).bots.push({ id: bot.id, name: bot.name, canConfigure: guild.canConfigure === true, ...(bot.id === 'protect' && guild.access ? { access: guild.access } : {}) });
       }
       return { guilds: [...guilds.values()].sort((a, b) => (b.memberCount || 0) - (a.memberCount || 0) || a.name.localeCompare(b.name, 'fr')), unavailable: results.filter(bot => bot.unavailable).map(bot => bot.name) };
     })();
@@ -43,6 +43,25 @@ function createMemberSpace(db, config, broker) {
     const history = db.prepare('SELECT sampled_at AS sampledAt,level,total_xp AS totalXp FROM game_observations WHERE actor=? AND guild=? AND mode=? AND sampled_at>=? ORDER BY sampled_at DESC LIMIT 48').all(actor, guild, mode, time - 30 * 86400000).reverse();
     return { ...result, history };
   }
-  return { servers, game };
+  async function protectSession(session, fresh = false) {
+    const actor = session.user.id, cached = protectCache.get(actor);
+    if (!fresh && cached?.until > config.now()) return cached.work;
+    const work = (async () => {
+      try {
+        const result = await broker.send('protect', '/member/servers', actor, undefined, 2000);
+        const guilds = result.guilds.filter(g => g.access?.canModerate === true).map(g => ({ id: g.id, name: g.name, tier: g.access.tier, level: g.access.level, label: g.access.label }));
+        return { available: true, canModerate: guilds.length > 0, guilds };
+      } catch { return { available: false, canModerate: false, guilds: [] }; }
+    })();
+    if (protectCache.size >= 1000) protectCache.delete(protectCache.keys().next().value);
+    protectCache.set(actor, { until: config.now() + 5000, work }); return work;
+  }
+  async function protect(session, guild) {
+    if (!snowflake(guild)) throw error(400, 'Serveur Discord invalide.');
+    const data = await broker.send('protect', '/member/' + guild + '/access', session.user.id);
+    if (!data.access?.canModerate) throw error(403, 'Un rôle de modération Protect est requis sur ce serveur.');
+    return data;
+  }
+  return { servers, game, protectSession, protect };
 }
 module.exports = { createMemberSpace };

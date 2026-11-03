@@ -7,7 +7,7 @@ function createBotConfiguration(db, config, transport) {
     if (!Object.hasOwn(BOTS, bot)) throw error(404, 'Bot inconnu.');
     if (!snowflake(actor)) throw error(403, 'Identité Discord invalide.');
     if (!config.botSocketDirectory && !transport) throw error(503, 'La liaison de configuration des bots n’est pas activée.');
-    if (!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/profile\/(?:normal|admin)|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) throw error(404, 'Rubrique inconnue.');
+    if (!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) throw error(404, 'Rubrique inconnue.');
     const options = { socketPath: path.join(config.botSocketDirectory || '.', bot + '.sock'), path: route,
       method: body ? 'PATCH' : 'GET', headers: { 'x-wn-actor': actor, ...(body ? { 'content-type': 'application/json' } : {}) } };
     if (transport) return transport(options, body);

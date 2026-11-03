@@ -43,11 +43,13 @@
   function fail(error) { notice(error.name === 'TimeoutError' ? 'La réponse prend trop de temps. Réessaie dans un instant.' : error.message, 'error', error.status === 428); }
   function account() {
     if (!menu) return;
+    const protectModerator = session?.user && (session.permissions.includes('moderation:read') || session.protectAccess?.canModerate);
+    document.querySelectorAll('[data-protect-link]').forEach(node => { node.hidden = !protectModerator; });
     menu.className = 'wn-account';
     menu.innerHTML = session?.user ? `<details><summary aria-label="Compte de ${E(session.user.displayName)}"><img src="${E(session.user.avatar)}" alt=""><span>${E(session.user.displayName)}</span>${icon('chevron-down')}</summary>
       <div class="wn-account-dropdown"><strong>${E(session.user.displayName)}</strong><span>@${E(session.user.username || session.user.id)}</span><small>ID Discord : ${E(session.user.id)}</small>
       <a href="/profile">${icon('user-round')} Mon espace</a><a href="/profile/game">${icon('gamepad-2')} Ma progression Game</a><a href="/servers">${icon('server')} Mes serveurs</a><a href="/profile/settings">${icon('settings-2')} Mon compte</a>
-      ${session.permissions.includes('admin:read') ? `<a href="/admin">${icon('shield-check')} Administration</a>` : session.permissions.includes('moderation:read') ? `<a href="/admin/moderation">${icon('shield-check')} Modération</a>` : ''}<button type="button" data-logout>${icon('log-out')} Se déconnecter</button></div></details>`
+      ${session.permissions.includes('admin:read') ? `<a href="/admin">${icon('shield-check')} Administration</a>` : protectModerator ? `<a href="/admin/moderation">${icon('shield-check')} Modération</a>` : ''}<button type="button" data-logout>${icon('log-out')} Se déconnecter</button></div></details>`
       : `<a class="wn-login" href="/auth/discord/start?next=${encodeURIComponent(route || '/profile')}">${icon('log-in')} Se connecter</a>`;
     menu.querySelector('[data-logout]')?.addEventListener('click', async () => { try { await write('logout', {}); location.assign('/'); } catch (error) { fail(error); } });
     icons();
@@ -142,7 +144,7 @@
     }
     content.innerHTML = `<section class="profile-identity">${user.banner ? `<img class="profile-banner" src="${E(user.banner)}" alt="Bannière Discord">` : ''}<div class="profile-person"><img class="profile-avatar" src="${E(user.avatar)}" alt="Avatar Discord"><div><h2>${E(user.displayName)}</h2><p>@${E(user.username || user.id)}</p><span class="status positive">Compte actif</span></div><a class="button" href="/profile/settings">${icon('settings-2')} Mon compte</a></div></section>
       <section class="workspace-section"><h2>Ton compte</h2><dl class="profile-facts">${[['Identifiant Discord', user.id], ['Rôle sur le site', roles[user.role]], ['Compte Discord créé le', date(user.accountCreatedAt)], ['Première connexion au site', date(user.firstLoginAt)], ['Dernière connexion', date(user.lastLoginAt)]].map(([label, value]) => `<div><dt>${E(label)}</dt><dd>${E(value)}</dd></div>`).join('')}</dl></section>
-      <div data-profile-game></div>`;
+      ${session.protectAccess?.guilds.length ? `<section class="workspace-section"><h2>Tes accès Protect par serveur</h2><div class="service-list">${session.protectAccess.guilds.map(guild => `<div><span>${E(guild.name)}</span><a href="/admin/moderation?guild=${E(guild.id)}">${E(guild.label)} · Niveau ${guild.level} ${icon('arrow-up-right')}</a></div>`).join('')}</div></section>` : ''}<div data-profile-game></div>`;
     try { await window.wnMemberSpace.game(memberUI(content.querySelector('[data-profile-game]')), true); }
     catch { content.querySelector('[data-profile-game]').innerHTML = '<p class="notice">Progression Game indisponible. <a href="/profile/game">Réessayer</a></p>'; }
   }

@@ -53,10 +53,10 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   });
   app.get('/api/platform/public', (req, res) => res.json(service.publicSettings()));
   app.use((req, res, next) => { req.session = auth.read(req.headers.cookie); next(); });
-  app.get('/api/platform/session', (req, res) => {
+  app.get('/api/platform/session', async (req, res) => {
     const session = req.session;
     if (!session) { res.set('Set-Cookie', auth.clearCookie()); return res.json({ user: null, configured: Boolean(config.clientId && config.clientSecret), serverNow: config.now() }); }
-    res.json({ user: session.user, permissions: session.permissions, csrf: session.csrf, expiresAt: session.expiresAt, idleExpiresAt: session.idleExpiresAt, serverNow: config.now() });
+    res.json({ user: session.user, permissions: session.permissions, protectAccess: await memberSpace.protectSession(session), csrf: session.csrf, expiresAt: session.expiresAt, idleExpiresAt: session.idleExpiresAt, serverNow: config.now() });
   });
   app.use('/api/platform', (req, res, next) => {
     try {
@@ -73,6 +73,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.post('/api/platform/activity', (req, res) => { object(req.body, []); res.json({ ok: true }); });
   app.get('/api/platform/me', (req, res) => res.json({ user: req.session.user, sessions: service.sessions(req.session) }));
   app.get('/api/platform/servers', async (req, res) => res.json(await memberSpace.servers(req.session)));
+  app.get('/api/platform/moderation/:guild', async (req, res) => res.json(await memberSpace.protect(req.session, req.params.guild)));
   app.get('/api/platform/me/game/:guild', async (req, res) => {
     limit('game-read:' + req.session.user.id, 15);
     res.json(await memberSpace.game(req.session, req.params.guild, req.query.mode || 'normal'));
@@ -101,14 +102,16 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.get('/api/platform/admin/settings', permit('settings:write'), (req, res) => res.json(service.settings()));
   app.patch('/api/platform/admin/settings', permit('settings:write'), fresh, (req, res) => res.json(service.updateSettings(req.session, req.body)));
   const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
-  for (const route of Object.keys(views.pages)) app.get(route, (req, res) => {
+  for (const route of Object.keys(views.pages)) app.get(route, async (req, res) => {
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(route)));
-    if (pagePermissions[route]) requirePermission(req.session, pagePermissions[route]);
+    if (pagePermissions[route] && route !== '/admin/moderation') requirePermission(req.session, pagePermissions[route]);
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
-    res.type('html').send(views.page(route, req.session, service.publicSettings()));
+    const scoped = { ...req.session, protectAccess: await memberSpace.protectSession(req.session, route === '/admin/moderation') };
+    if (route === '/admin/moderation' && !scoped.protectAccess.canModerate) requirePermission(req.session, 'moderation:read');
+    res.type('html').send(views.page(route, scoped, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js'];
+  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {
