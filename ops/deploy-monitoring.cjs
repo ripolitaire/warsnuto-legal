@@ -50,6 +50,7 @@ async function prepare() {
   run(node, ['/opt/warsnuto-web-runtime/lib/node_modules/npm/bin/npm-cli.js', 'ci', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], {
     cwd: release, env: { PATH: '/opt/warsnuto-web-runtime/bin:/usr/bin:/bin', HOME: '/root', NODE_ENV: 'production' }
   });
+  run('chmod', ['-R', 'a+rX', release]);
   const tests = fs.readdirSync(release + '/tests').filter(n => n.endsWith('.test.cjs')).map(n => 'tests/' + n);
   run(node, ['--test', ...tests], { cwd: release, env: { PATH: '/opt/warsnuto-web-runtime/bin:/usr/bin:/bin', HOME: '/root', NODE_ENV: 'test' } });
   for (const bot of bots) run('/usr/bin/node', ['--check', payload + '/' + bot.id + '-index.js']);
@@ -103,6 +104,21 @@ async function activate() {
     updated.push({ id: bot.id, pid: ready.pid }); console.log(JSON.stringify({ phase: 'bot-connected', bot: bot.id, pid: ready.pid }));
   }
   run('/usr/bin/pm2', ['save']);
+  await activateWeb(m);
+}
+async function activateWeb(m) {
+  const prepared = JSON.parse(fs.readFileSync(work + '/prepared.json'));
+  if (!prepared.backupsVerified || fs.existsSync(work + '/activated.json') || fs.realpathSync(current) !== previous) throw Error('Invalid web activation state');
+  for (const [name, expected] of Object.entries(m.files)) if (hash(release + '/' + name) !== expected) throw Error('Web source changed');
+  for (const bot of bots) {
+    if (hash(bot.root + '/index.js') !== m.bots[bot.id].indexHash || hash(bot.root + '/utils/webTelemetry.cjs') !== m.bots[bot.id].moduleHash) throw Error('Live bot source changed');
+    const signal = JSON.parse(fs.readFileSync(directory + '/' + bot.id + '.json'));
+    if (!signal.gateway.ready || Date.now() - signal.sampledAt > 30000 || !processes().some(p => p.name === bot.name && p.pid === signal.pid && p.status === 'online')) throw Error('Bot not ready for web activation');
+  }
+  run('/usr/sbin/runuser', ['-u', 'warsnutoweb', '--', node, '-e', "require('express');require('oauth4webapi');require('./server/app.cjs')"], { cwd: release });
+  const originalEnv = fs.readFileSync(environmentFile, 'utf8'), env = require('node:util').parseEnv(originalEnv);
+  if (originalEnv !== fs.readFileSync(work + '/runtime.env.before', 'utf8')) throw Error('Backend environment changed');
+  require(release + '/server/config.cjs').configuration({ ...env, WEB_BOT_TELEMETRY_DIRECTORY: directory });
   fs.writeFileSync(environmentFile + '.monitor-next', originalEnv.replace(/\s*$/, '\n') + 'WEB_BOT_TELEMETRY_DIRECTORY=' + directory + '\n', { mode: 0o600, flag: 'wx' });
   fs.renameSync(environmentFile + '.monitor-next', environmentFile);
   fs.symlinkSync(release, current + '.monitor-next'); fs.renameSync(current + '.monitor-next', current);
@@ -126,5 +142,5 @@ async function activate() {
   const report = { at: new Date().toISOString(), commit: m.commit, monitoring, bots: processes(), backupsVerified: true, databaseReset: false };
   writeReport('activated', report); console.log(JSON.stringify({ phase: 'activated', ...report }));
 }
-(async () => { process.umask(0o077); if (process.argv[2] === 'prepare') await prepare(); else if (process.argv[2] === 'activate') await activate(); else throw Error('Choose prepare or activate'); })()
+(async () => { process.umask(0o077); if (process.argv[2] === 'prepare') await prepare(); else if (process.argv[2] === 'activate') await activate(); else if (process.argv[2] === 'activate-web') await activateWeb(manifest()); else throw Error('Choose prepare, activate or activate-web'); })()
   .catch(error => { console.log(JSON.stringify({ ok: false, message: String(error.message).split('\n')[0].slice(0, 180) })); process.exitCode = 1; });
