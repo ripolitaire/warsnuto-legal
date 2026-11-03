@@ -1,6 +1,6 @@
 import { createIcons, LogIn, LogOut, UserRound, Settings2, ShieldCheck, ChevronDown, CircleCheck, Info,
   ChevronLeft, ChevronRight, UsersRound, Monitor, RefreshCw, Save, MonitorX, ArrowUpRight, Search,
-  ArrowRight, UserPlus, X, UserRoundX, UserRoundCheck, ListFilter } from 'lucide';
+  ArrowRight, UserPlus, X, UserRoundX, UserRoundCheck, ListFilter, Plus } from 'lucide';
 window.lucide = { createIcons: () => createIcons({ icons: { LogIn, LogOut, UserRound, Settings2, ShieldCheck,
   ChevronDown, CircleCheck, Info, ChevronLeft, ChevronRight, UsersRound, Monitor, RefreshCw, Save, MonitorX,
-  ArrowUpRight, Search, ArrowRight, UserPlus, X, UserRoundX, UserRoundCheck, ListFilter } }) };
+  ArrowUpRight, Search, ArrowRight, UserPlus, X, UserRoundX, UserRoundCheck, ListFilter, Plus } }) };

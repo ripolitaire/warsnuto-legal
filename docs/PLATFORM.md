@@ -6,6 +6,8 @@ Le site reste dans `ripolitaire/warsnuto-legal`, dossier local
 `WarsNuto Univers/legal-site`. Les changements publics préexistants sont conservés
 dans le commit de base `861e1e6`. CRB Corp reste hors du périmètre. Protect, Game
 et Support publient seulement des signaux opérationnels pour leur suivi privé.
+La configuration réelle est désormais distincte de ce suivi : voir
+[BOT-CONFIGURATION.md](BOT-CONFIGURATION.md) pour les réglages, permissions et sockets privés.
 La plateforme est publiée depuis le 3 novembre 2026 : frontend Vercel
 sur `https://warsnuto.com`, backend isolé sur Hetzner derrière
 `https://origin.warsnuto.com`. La première connexion humaine Discord reste à
@@ -159,6 +161,7 @@ le nom, la maintenance et la révision, pas les anciennes descriptions complète
 - `/profile`, `/profile/settings` : profil, actualisation Discord, préférences et sessions.
 - `/admin` : compteurs SQL réels, activité récente et disponibilité backend/base.
 - `/admin/bots` : connexion Discord, latence, mémoire, disponibilité et activité des trois bots.
+- `/admin/configuration` : configuration réelle par bot et serveur Discord autorisé.
 - `/admin/users` : liste paginée, recherche, fiche, rôles et actions confirmées.
 - `/admin/staff` : équipe privilégiée et permissions ADMIN/MODERATOR.
 - `/admin/logs` : filtres par action, acteur, cible et pagination.

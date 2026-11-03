@@ -27,7 +27,7 @@ async function blockExternal(context) {
     return route.abort();
   });
 }
-for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/admin', 'État des services'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
+for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/admin', 'État des services'], ['/admin/configuration', 'Titre du module'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
   test('responsive page ' + route, async ({ browser }, info) => {
     const { context, page } = await prepare(browser, 'OWNER');
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -94,6 +94,25 @@ test('bot monitoring renders individual live and stale states and refreshes safe
   await page.getByRole('button', { name: 'Actualiser les états' }).click(); await expect.poll(() => calls).toBeGreaterThan(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath('bot-monitoring.png'), fullPage: true }); await context.close();
+});
+test('bot configuration saves real settings, keeps them after reload and switches bots', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/configuration');
+  await expect(page.getByLabel('Titre du module')).toBeVisible();
+  await page.getByLabel('Titre du module').fill('Réglage navigateur ' + info.project.name);
+  await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+  await page.locator('#confirm-dialog textarea[name="reason"]').fill('Test navigateur de configuration');
+  await page.locator('#confirm-dialog input[name="confirmation"]').fill('ENREGISTRER');
+  await page.locator('#confirm-dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
+  await expect(page.locator('[data-notice]')).toContainText('Configuration enregistrée dans le bot');
+  await page.reload(); await expect(page.getByLabel('Titre du module')).toHaveValue('Réglage navigateur ' + info.project.name);
+  await page.getByRole('combobox', { name: 'Bot', exact: true }).selectOption('support');
+  await expect(page.getByLabel('Titre du module')).toHaveValue(/support/);
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByLabel('Nom de la règle').fill('Nouvelle règle');
+  await expect(page.locator('[data-config-changes]')).toContainText('non enregistré');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('bot-configuration.png'), fullPage: true });
+  await context.close();
 });
 test('public home keeps existing navigation and animations with the account menu', async ({ browser }, info) => {
   const { context, page } = await prepare(browser, 'OWNER');

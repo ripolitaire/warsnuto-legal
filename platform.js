@@ -18,9 +18,10 @@
   const uptime = value => { const minutes = Math.max(0, Math.floor(value / 60000)); return minutes >= 1440 ? Math.floor(minutes / 1440) + ' j ' + Math.floor(minutes % 1440 / 60) + ' h' : minutes >= 60 ? Math.floor(minutes / 60) + ' h ' + minutes % 60 + ' min' : minutes + ' min'; };
   const events = { 'auth.login': 'Connexion Discord', 'auth.failure': 'Connexion refusée', 'session.logout': 'Déconnexion', 'session.revoke_others': 'Autres sessions révoquées',
     'staff.role': 'Rôle modifié', 'staff.permissions': 'Permissions modifiées', 'user.status': 'Statut du compte modifié', 'user.sessions_revoke': 'Sessions révoquées',
-    'site.settings': 'Paramètres du site modifiés', 'application.error': 'Erreur du service web', 'request.denied': 'Action refusée', 'owner.bootstrap': 'Propriétaire initial configuré' };
+    'site.settings': 'Paramètres du site modifiés', 'application.error': 'Erreur du service web', 'request.denied': 'Action refusée', 'owner.bootstrap': 'Propriétaire initial configuré',
+    'bot.config.requested': 'Configuration bot demandée', 'bot.config.saved': 'Configuration bot enregistrée', 'bot.config.refused': 'Configuration bot refusée ou à vérifier' };
   const grantLabels = { 'admin:read': 'Vue d’ensemble', 'moderation:read': 'Espace de modération', 'users:read': 'Consulter les comptes', 'users:moderate': 'Suspendre et réactiver les membres',
-    'audit:read': 'Consulter le journal', 'settings:write': 'Modifier les paramètres publics' };
+    'audit:read': 'Consulter le journal', 'settings:write': 'Modifier les paramètres publics', 'bots:configure': 'Configurer les bots sur les serveurs Discord autorisés' };
   let session, serverOffset = 0, listPage = 1, currentUser, settings, grants, busy = false;
   async function request(path, options = {}) {
     const response = await fetch('/api/platform/' + path, { cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(15000), ...options,
@@ -215,6 +216,7 @@
       if (route.startsWith('/profile')) await profile();
       else if (route === '/admin') await overview();
       else if (route === '/admin/bots') await botMonitoring();
+      else if (route === '/admin/configuration') await window.wnBotConfiguration({ content, request, write, confirmAction, notice, action, icon, E, icons });
       else if (route === '/admin/users' || route === '/admin/staff') await users(route.endsWith('/staff'));
       else if (route === '/admin/logs') await logs();
       else if (route === '/admin/settings') await siteSettings();

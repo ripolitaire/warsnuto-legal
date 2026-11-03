@@ -1,18 +1,18 @@
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const pages = { '/profile': ['Mon espace', 'Ton espace WarsNuto'], '/profile/settings': ['Mon compte', 'Paramètres du compte'],
-  '/admin': ['Administration', 'Vue d’ensemble'], '/admin/bots': ['Administration', 'Suivi des bots'], '/admin/users': ['Administration', 'Comptes utilisateurs'],
+  '/admin': ['Administration', 'Vue d’ensemble'], '/admin/bots': ['Administration', 'Suivi des bots'], '/admin/configuration': ['Administration', 'Configuration des bots'], '/admin/users': ['Administration', 'Comptes utilisateurs'],
   '/admin/staff': ['Propriétaire', 'Équipe et permissions'], '/admin/logs': ['Administration', 'Journal administratif'],
   '/admin/settings': ['Administration', 'Paramètres du site'], '/admin/moderation': ['Modération', 'Espace de modération'] };
 function page(route, session, settings = { name: 'WarsNuto' }) {
   const [section, title] = pages[route];
   const admin = route.startsWith('/admin');
-  const links = admin ? [['/admin', 'Vue d’ensemble', 'admin:read'], ['/admin/bots', 'Suivi des bots', 'admin:read'], ['/admin/users', 'Utilisateurs', 'users:read'],
+  const links = admin ? [['/admin', 'Vue d’ensemble', 'admin:read'], ['/admin/configuration', 'Configuration des bots', 'bots:configure'], ['/admin/bots', 'Suivi des bots', 'admin:read'], ['/admin/users', 'Utilisateurs', 'users:read'],
     ['/admin/moderation', 'Modération', 'moderation:read'], ['/admin/staff', 'Équipe et permissions', 'staff:manage'],
     ['/admin/logs', 'Journal', 'audit:read'], ['/admin/settings', 'Paramètres du site', 'settings:write']]
     : [['/profile', 'Mon espace'], ['/profile/settings', 'Mon compte'], ...(session.permissions.includes('admin:read') ? [['/admin', 'Administration']] : session.permissions.includes('moderation:read') ? [['/admin/moderation', 'Modération']] : [])];
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex,nofollow"><title>${escape(title)} · ${escape(settings.name)}</title>
-    <link rel="icon" href="/assets/warsnuto-favicon-round.png"><link rel="stylesheet" href="/platform.css"><script src="/assets/platform-icons.js" defer></script><script src="/platform.js" defer></script></head>
+    <link rel="icon" href="/assets/warsnuto-favicon-round.png"><link rel="stylesheet" href="/platform.css"><script src="/assets/platform-icons.js" defer></script>${route === '/admin/configuration' ? '<script src="/bot-configuration.js" defer></script>' : ''}<script src="/platform.js" defer></script></head>
     <body data-platform-page="${escape(route)}"><header class="platform-header"><a class="platform-brand" href="/"><img src="/assets/warsnuto-icon.png" alt="">${escape(settings.name)}<span>UNIVERS</span></a>
     <div data-account-menu></div></header><div class="platform-shell"><aside class="platform-sidebar"><p>${escape(section)}</p><nav aria-label="Navigation de l’espace">
     ${links.filter(([, , permission]) => !permission || session.permissions.includes(permission)).map(([href, label]) => `<a href="${href}"${href === route ? ' aria-current="page"' : ''}>${escape(label)}</a>`).join('')}

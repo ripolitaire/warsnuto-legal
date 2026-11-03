@@ -466,6 +466,80 @@ body[data-platform-page] p {
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
+.config-selectors,
+.config-fields,
+.config-row-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 22px;
+  min-width: 0;
+}
+.config-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.config-field {
+  min-width: 0;
+}
+.config-field-wide {
+  grid-column: 1 / -1;
+}
+.config-field select[multiple] {
+  min-height: 136px;
+}
+.config-field input[type="color"] {
+  min-height: 44px;
+  max-width: 120px;
+  padding: 5px;
+}
+.config-repeater {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding: 20px 0;
+  min-width: 0;
+}
+.config-repeater legend {
+  padding-right: 12px;
+  font-weight: 650;
+}
+.config-repeater-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+  padding: 18px 0;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.config-repeater-row > button {
+  padding: 8px !important;
+  width: 40px;
+  height: 40px;
+  align-self: start;
+}
+.config-save-bar {
+  background: #141416;
+  padding: 18px 0;
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.config-save-bar > span {
+  margin-right: auto;
+}
+@media (max-width: 780px) {
+  .config-fields,
+  .config-row-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .config-save-bar > span {
+    flex-basis: 100%;
+  }
+}
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;

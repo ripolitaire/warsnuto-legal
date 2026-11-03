@@ -6,8 +6,9 @@ const { createService } = require('./service.cjs');
 const { requirePermission } = require('./permissions.cjs');
 const { audit, maintenance } = require('./database.cjs');
 const views = require('./views.cjs');
-function createApp({ db, config, fetcher, logger = console }) {
+function createApp({ db, config, fetcher, botTransport, logger = console }) {
   const app = express(), auth = createAuth(db, config, fetcher), service = createService(db, config);
+  const botConfiguration = require('./botConfiguration.cjs').createBotConfiguration(db, config, botTransport);
   app.disable('x-powered-by'); app.set('query parser', 'simple');
   app.use(headers);
   app.use((req, res, next) => {
@@ -77,6 +78,11 @@ function createApp({ db, config, fetcher, logger = console }) {
   });
   app.get('/api/platform/admin/overview', permit('admin:read'), async (req, res) => res.json(await service.overview()));
   app.get('/api/platform/admin/bots', permit('admin:read'), async (req, res) => res.json(await service.botMonitor()));
+  app.get('/api/platform/admin/bot-config', permit('bots:configure'), (req, res) => res.json(botConfiguration.catalog()));
+  app.get('/api/platform/admin/bot-config/:bot/guilds', permit('bots:configure'), async (req, res) => res.json(await botConfiguration.guilds(req.params.bot, req.session)));
+  app.get('/api/platform/admin/bot-config/:bot/:guild', permit('bots:configure'), async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, null, req.session)));
+  app.get('/api/platform/admin/bot-config/:bot/:guild/:section', permit('bots:configure'), async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, req.params.section, req.session)));
+  app.patch('/api/platform/admin/bot-config/:bot/:guild/:section', permit('bots:configure'), fresh, async (req, res) => res.json(await botConfiguration.save(req.params.bot, req.params.guild, req.params.section, req.session, req.body)));
   app.get('/api/platform/admin/users', permit('users:read'), (req, res) => res.json(service.users(new URL(req.originalUrl, config.origin).searchParams)));
   app.get('/api/platform/admin/users/:id', permit('users:read'), (req, res) => res.json(service.detail(req.params.id)));
   app.patch('/api/platform/admin/users/:id/status', permit('users:moderate'), fresh, (req, res) => res.json(service.status(req.session, req.params.id, req.body)));
@@ -87,7 +93,7 @@ function createApp({ db, config, fetcher, logger = console }) {
   app.get('/api/platform/admin/logs', permit('audit:read'), (req, res) => res.json(service.logs(new URL(req.originalUrl, config.origin).searchParams)));
   app.get('/api/platform/admin/settings', permit('settings:write'), (req, res) => res.json(service.settings()));
   app.patch('/api/platform/admin/settings', permit('settings:write'), fresh, (req, res) => res.json(service.updateSettings(req.session, req.body)));
-  const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
+  const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/configuration': 'bots:configure', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
   for (const route of Object.keys(views.pages)) app.get(route, (req, res) => {
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(route)));
     if (pagePermissions[route]) requirePermission(req.session, pagePermissions[route]);
@@ -95,7 +101,7 @@ function createApp({ db, config, fetcher, logger = console }) {
     res.type('html').send(views.page(route, req.session, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'platform.js', 'platform.css'];
+  const publicFiles = ['app.js', 'styles.css', 'platform.js', 'platform.css', 'bot-configuration.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {

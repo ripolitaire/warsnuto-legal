@@ -17,7 +17,8 @@ function configuration(env = process.env) {
   if (clientId && !/^\d{17,20}$/.test(clientId)) throw Error('DISCORD_OAUTH_CLIENT_ID invalide.');
   return { root, production, host, port, origin: url.origin, secure: url.protocol === 'https:', secret,
     databasePath: path.resolve(root, env.WEB_DATABASE_PATH || 'data/web.sqlite'), backupPath: path.resolve(root, env.WEB_BACKUP_PATH || 'backups'),
-    telemetryDirectory: env.WEB_BOT_TELEMETRY_DIRECTORY ? path.resolve(root, env.WEB_BOT_TELEMETRY_DIRECTORY) : '', clientId,
+    telemetryDirectory: env.WEB_BOT_TELEMETRY_DIRECTORY ? path.resolve(root, env.WEB_BOT_TELEMETRY_DIRECTORY) : '',
+    botSocketDirectory: env.WEB_BOT_SOCKET_DIRECTORY ? path.resolve(root, env.WEB_BOT_SOCKET_DIRECTORY) : '', clientId,
     clientSecret: env.DISCORD_OAUTH_CLIENT_SECRET || '', originSecret: env.WEB_ORIGIN_SECRET || '',
     requireHttpsProxy: env.WEB_REQUIRE_HTTPS_PROXY === 'true', sessionMaxMs: 2 * 3600000,
     sessionIdleMs: 30 * 60000, now: Date.now };

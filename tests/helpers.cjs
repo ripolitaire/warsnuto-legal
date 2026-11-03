@@ -5,7 +5,7 @@ const { openDatabase } = require('../server/database.cjs');
 const { configuration } = require('../server/config.cjs');
 const { createApp } = require('../server/app.cjs');
 const ids = Object.fromEntries(['USER', 'MODERATOR', 'ADMIN', 'OWNER'].map((role, i) => [role, String((BigInt(Date.UTC(2020, 0, 1) - 1420070400000) << 22n) + BigInt(i + 1))]));
-function fixture({ database = ':memory:', port = 0, telemetryDirectory = '' } = {}) {
+function fixture({ database = ':memory:', port = 0, telemetryDirectory = '', botTransport } = {}) {
   const db = openDatabase(database), config = configuration({ SESSION_SECRET: randomBytes(32).toString('base64url'), DISCORD_OAUTH_CLIENT_ID: ids.OWNER,
     DISCORD_OAUTH_CLIENT_SECRET: randomBytes(32).toString('base64url') });
   let time = Date.now(); config.now = () => time;
@@ -39,7 +39,7 @@ function fixture({ database = ':memory:', port = 0, telemetryDirectory = '' } = 
     async listen() {
       server = http.createServer(); server.listen(port, '127.0.0.1'); await once(server, 'listening');
       base = `http://127.0.0.1:${server.address().port}`; config.origin = base;
-      backend = createApp({ db, config, fetcher, logger }); server.on('request', (req, res) => { this.beforeRequest?.(); backend.app(req, res); });
+      backend = createApp({ db, config, fetcher, botTransport, logger }); server.on('request', (req, res) => { this.beforeRequest?.(); backend.app(req, res); });
       this.backend = backend; this.base = base; return base;
     },
     async login(role = 'USER', code = role + '-' + randomBytes(8).toString('hex'), existing = '') {

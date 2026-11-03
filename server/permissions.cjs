@@ -1,8 +1,8 @@
 const { error } = require('./security.cjs');
 const CEILINGS = Object.freeze({
   USER: [], MODERATOR: ['moderation:read'],
-  ADMIN: ['admin:read', 'moderation:read', 'users:read', 'users:moderate', 'audit:read', 'settings:write'],
-  OWNER: ['admin:read', 'moderation:read', 'users:read', 'users:moderate', 'audit:read', 'settings:write', 'staff:manage', 'permissions:manage', 'settings:critical']
+  ADMIN: ['admin:read', 'moderation:read', 'users:read', 'users:moderate', 'audit:read', 'settings:write', 'bots:configure'],
+  OWNER: ['admin:read', 'moderation:read', 'users:read', 'users:moderate', 'audit:read', 'settings:write', 'staff:manage', 'permissions:manage', 'settings:critical', 'bots:configure']
 });
 function permissions(db, userId, role) {
   const rows = db.prepare('SELECT permission FROM role_permissions WHERE role=? ORDER BY permission').all(role);

@@ -14,6 +14,9 @@ Discord reste à réaliser. Voir le [journal de livraison](docs/RELEASE-2026-11-
 Sans configuration de liaison valide, les espaces privés restent fermés.
 Le [suivi des trois bots](docs/BOT-MONITORING-2026-11-03.md) est accessible aux
 administrateurs sur `/admin/bots`, sans accès direct à leurs bases ni à leurs secrets.
+La [configuration des bots](docs/BOT-CONFIGURATION.md) est distincte du suivi :
+`/admin/configuration`, accès OWNER ou délégation explicite, avec contrôle des
+permissions Discord du serveur.
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

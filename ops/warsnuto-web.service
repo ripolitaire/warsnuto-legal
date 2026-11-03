@@ -30,6 +30,7 @@ CapabilityBoundingSet=
 AmbientCapabilities=
 ReadWritePaths=/var/lib/warsnuto-web
 ReadOnlyPaths=-/run/warsnuto-bot-monitor
+ReadOnlyPaths=-/run/warsnuto-bot-config
 InaccessiblePaths=/opt/warsnuto-bot /opt/warsnuto-game-bot /opt/warsnuto-ticket-bot /opt/warsnuto-game-backups /opt/warsnuto-ticket-backups
 MemoryMax=256M
 CPUQuota=100%

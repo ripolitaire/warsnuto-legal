@@ -16,10 +16,12 @@ function openDatabase(filename, { create = true } = {}) {
     db.exec(fs.readFileSync(path.join(__dirname, 'migrations/001-platform.sql'), 'utf8'));
     for (const [role, grants] of Object.entries(CEILINGS)) {
       db.prepare('INSERT INTO roles(name) VALUES(?)').run(role);
-      for (const permission of grants) db.prepare('INSERT INTO role_permissions(role,permission) VALUES(?,?)').run(role, permission);
+      for (const permission of grants) if (permission !== 'bots:configure' || role === 'OWNER') db.prepare('INSERT INTO role_permissions(role,permission) VALUES(?,?)').run(role, permission);
     }
     db.exec('PRAGMA user_version=1; PRAGMA application_id=1464751938');
   });
+  // Owner capabilities are code-managed; existing ADMIN grants never expand implicitly.
+  db.prepare("INSERT OR IGNORE INTO role_permissions(role,permission) VALUES('OWNER','bots:configure')").run();
   return db;
 }
 function transaction(db, fn) {

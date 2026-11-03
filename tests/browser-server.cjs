@@ -2,7 +2,8 @@
 if (process.env.NODE_ENV === 'production') throw Error('Fixtures are forbidden in production');
 const { fixture } = require('./helpers.cjs');
 (async () => {
-  const f = fixture({ port: Number(process.env.PLAYWRIGHT_PORT || 4317) });
+  const bots = require('./bot-config-fixture.cjs').createBotConfigFixture(require('./helpers.cjs').ids);
+  const f = fixture({ port: Number(process.env.PLAYWRIGHT_PORT || 4317), botTransport: bots.transport });
   // Browser scenarios exercise layout independently; real limiter behavior has its own API tests.
   f.beforeRequest = () => f.db.prepare('DELETE FROM rate_limits').run();
   const base = await f.listen();
