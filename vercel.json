@@ -1,4 +1,7 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": null,
   "cleanUrls": true,
   "trailingSlash": false,
   "redirects": [
@@ -96,6 +99,12 @@
     }
   ],
   "rewrites": [
+    { "source": "/auth/discord/:action", "destination": "/api/platform?route=auth/discord/:action" },
+    { "source": "/api/platform/:rest*", "destination": "/api/platform?route=api/platform/:rest*" },
+    { "source": "/profile", "destination": "/api/platform?route=profile" },
+    { "source": "/profile/:section", "destination": "/api/platform?route=profile/:section" },
+    { "source": "/admin", "destination": "/api/platform?route=admin" },
+    { "source": "/admin/:section", "destination": "/api/platform?route=admin/:section" },
     {
       "source": "/game",
       "destination": "/game.html"
@@ -155,7 +164,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self'; img-src 'self' data: https://*.ytimg.com https://yt3.googleusercontent.com; connect-src 'self' https://discord.com https://discordapp.com https://vitals.vercel-insights.com; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self'; img-src 'self' data: https://*.ytimg.com https://yt3.googleusercontent.com https://cdn.discordapp.com https://media.discordapp.net; connect-src 'self' https://discord.com https://discordapp.com https://vitals.vercel-insights.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
         }
       ]
     },
@@ -170,6 +179,7 @@
     }
   ],
   "functions": {
+    "api/platform.js": { "maxDuration": 60 },
     "api/bots.js": {
       "maxDuration": 60
     }

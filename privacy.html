@@ -22,6 +22,7 @@
     <link rel="canonical" href="https://warsnuto.com/privacy" />
     <link rel="icon" type="image/png" href="./assets/warsnuto-favicon-round.png" />
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="/platform.css" />
   </head>
   <body class="legal-page privacy-page">
     <header class="site-header">
@@ -61,7 +62,7 @@
       </aside>
 
       <article class="legal-card">
-        <p><strong>Dernière mise à jour:</strong> 11 octobre 2026</p>
+        <p><strong>Dernière mise à jour :</strong> 3 novembre 2026</p>
         <p>
           Cette politique concerne les applications Discord <strong>WarsNut0 Protect</strong> et
           <strong>WarsNuto Support</strong>, ainsi que <strong>WarsNuto Game</strong>, ci-dessous nommées "les bots".
@@ -90,6 +91,24 @@
           <li>les tickets, statuts de tickets, équipes support, salons de logs et métadonnées associées.</li>
           <li>pour Game: personnages, classes, fruits, armes, inventaires, transactions de jeu, combats, equipages, saisons et journaux administratifs.</li>
         </ul>
+
+        <h2>2 bis. Compte sur le site WarsNuto</h2>
+        <p>Lorsque l’espace membre est activé, la connexion Discord permet de conserver ton identifiant,
+          ton nom d’utilisateur, ton nom d’affichage, les références de ton avatar et de ta bannière,
+          la date de création de ton compte Discord, tes dates de connexion au site et tes préférences.
+          Aucun mot de passe Discord n’est demandé et aucun accès à tes messages privés n’est demandé.</p>
+        <p>Les sessions du site sont conservées côté serveur avec des identifiants hachés. Le cookie de
+          session est nécessaire à la connexion. La session expire après 30 minutes d’inactivité ou
+          2 heures après la connexion. Tu peux révoquer tes autres sessions depuis ton compte.
+          Les tokens OAuth Discord ne sont pas conservés après la récupération de ton identité.</p>
+        <p>Les actions administratives, leur acteur, leur cible, leur résultat et les motifs saisis sont
+          conservés dans un journal accessible uniquement au personnel autorisé pendant 180 jours.
+          Les métadonnées des sessions expirées ou révoquées sont nettoyées après 7 jours au plus,
+          à partir de leur expiration ou révocation. Les compteurs de limitation des requêtes utilisent
+          des empreintes techniques temporaires. Les informations de compte restent conservées jusqu’à
+          une demande de suppression traitée par le responsable du site, sous réserve des obligations applicables.</p>
+        <p>Le frontend est hébergé sur Vercel. L’espace membre utilise un backend et une base séparée
+          sur Hetzner ; les données privées des bots ne sont pas rendues publiques par cette connexion.</p>
 
         <h2>3. Finalités</h2>
         <p>Ces données sont utilis&eacute;es uniquement pour:</p>
@@ -156,6 +175,8 @@
     </footer>
     <script src="/_vercel/insights/script.js" defer></script>
     <script src="./app.js" defer></script>
+    <script src="/assets/platform-icons.js" defer></script>
+    <script src="/platform.js" defer></script>
   </body>
 </html>
 

@@ -5,3 +5,17 @@ assets/.gitkeep
 
 .vercel
 .env*
+!.env.example
+node_modules/
+data/
+backups/
+test-results/
+playwright-report/
+*.sqlite*
+*.db
+*.pem
+*.key
+.certs/
+dist/
+assets/platform-icons.js
+artifacts/

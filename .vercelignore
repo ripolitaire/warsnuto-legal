@@ -1,0 +1,14 @@
+server/
+tests/
+docs/
+data/
+backups/
+node_modules/
+test-results/
+playwright-report/
+.env*
+*.sqlite*
+*.pem
+*.key
+ecosystem.web.config.cjs
+playwright.config.cjs
