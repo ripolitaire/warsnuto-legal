@@ -5,10 +5,13 @@ Site public des bots Discord WarsNuto. Il présente Protect et Support, héberge
 ## Plateforme membre et administration
 
 Le site public est conservé. Une connexion Discord, les profils et un panel
-administratif sécurisé sont préparés dans ce même dépôt, avec un backend
+administratif sécurisé sont publiés dans ce même dépôt, avec un backend
 indépendant des bots. Voir [la documentation complète](docs/PLATFORM.md) pour
 les variables à ajouter, la création du premier OWNER, les tests et le déploiement.
-La plateforme privée reste indisponible tant que sa liaison n'est pas configurée.
+La production est accessible sur `https://warsnuto.com/profile` depuis le
+3 novembre 2026. Soli est le premier OWNER provisionné ; sa première connexion
+Discord reste à réaliser. Voir le [journal de livraison](docs/RELEASE-2026-11-03.md).
+Sans configuration de liaison valide, les espaces privés restent fermés.
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

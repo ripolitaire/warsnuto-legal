@@ -5,7 +5,10 @@
 Le site reste dans `ripolitaire/warsnuto-legal`, dossier local
 `WarsNuto Univers/legal-site`. Les changements publics préexistants sont conservés
 dans le commit de base `861e1e6`. Ni CRB Corp ni Protect, Game et Support ne sont
-modifiés. Le code nécessite encore configuration et recette sur l'hébergement cible.
+modifiés. La plateforme est publiée depuis le 3 novembre 2026 : frontend Vercel
+sur `https://warsnuto.com`, backend isolé sur Hetzner derrière
+`https://origin.warsnuto.com`. La première connexion humaine Discord reste à
+recetter ; le trajet HTTPS, le démarrage OAuth et les refus anonymes sont vérifiés.
 Sans secrets de liaison, Vercel refuse les espaces privés avec 503 ; le site public
 reste disponible. Ne pas configurer les secrets de production dans les previews.
 
@@ -26,9 +29,10 @@ API. SQLite reste sur le disque persistant du VPS. Le backend utilise Node 24 LT
 indépendamment du Node 20 des bots : ne pas changer leur runtime ni leur démon PM2.
 Les icônes sont un sous-ensemble Lucide construit localement, sans CDN JavaScript.
 
-## Variables à ajouter après publication du code
+## Variables par hébergeur
 
-Backend uniquement, `.env.web` privé, permissions 600 :
+Backend uniquement, `.env.web` privé en local ; en production, fichier
+`/etc/warsnuto-web/runtime.env`, permissions 600, chargé par systemd :
 
 | Variable | Valeur |
 | --- | --- |
@@ -39,7 +43,7 @@ Backend uniquement, `.env.web` privé, permissions 600 :
 | `SESSION_SECRET` | Au moins 32 octets aléatoires encodés en base64url |
 | `WEB_ORIGIN_SECRET` | 32 octets aléatoires en hexadécimal, identiques côté Vercel |
 | `WEB_REQUIRE_HTTPS_PROXY` | `true` |
-| `WEB_DATABASE_PATH` | Base dédiée, par exemple `/opt/warsnuto-web/data/web.sqlite` |
+| `WEB_DATABASE_PATH` | Base dédiée persistante : `/var/lib/warsnuto-web/data/web.sqlite` |
 | `WEB_BACKUP_PATH` | Répertoire de sauvegardes privé et persistant, séparé des releases |
 | `WEB_HOST` | `127.0.0.1` |
 | `WEB_PORT` | Port local libre, par défaut `3100` |
@@ -200,8 +204,9 @@ pour tester ou lancer un deuxième bot de production.
    TLS vers `127.0.0.1:3100`, avec certificat valide et remplacement de
    `X-Forwarded-Proto` par `https`. Ne jamais désactiver la validation TLS.
 5. Initialiser le premier OWNER par la commande CLI contrôlée ci-dessus, avant
-   tout démarrage de production. Définir `WEB_NODE_BINARY` vers Node 24 au chargement de
-   `ecosystem.web.config.cjs`, puis démarrer seulement `warsnuto-web`.
+   tout démarrage de production. Sur ce VPS, utiliser le service systemd isolé
+   décrit ci-dessous. `ecosystem.web.config.cjs` reste une alternative pour une
+   autre installation, pas le superviseur utilisé en production.
 6. Enregistrer l'URI Discord, configurer les variables
    Vercel de Production et réaliser une recette réelle avant l'ouverture.
 7. Vérifier cookies, révocation, réponses 401/403, expirations, permissions disque,
@@ -223,7 +228,7 @@ ne doit jamais écraser des comptes récents.
 
 ## Installation isolée validée pour le VPS
 
-Les fichiers `ops/warsnuto-web.service` et `ops/Caddyfile` préparent un service
+Les fichiers `ops/warsnuto-web.service` et `ops/Caddyfile` définissent le service
 systemd sous l'utilisateur dédié `warsnutoweb`, derrière Caddy et le nom
 `origin.warsnuto.com`. Cette installation remplace le choix PM2 envisagé : elle
 évite de toucher au démon PM2 des bots. Node 24 est dans
@@ -245,6 +250,11 @@ systemctl restart warsnuto-web
 /opt/warsnuto-web-runtime/bin/node --env-file=/etc/warsnuto-web/runtime.env /opt/warsnuto-web/current/server/backup.cjs
 ```
 
+Installation activée le 3 novembre 2026 : Node dédié `v24.22.2`, Caddy `v2.11.7`,
+service `warsnuto-web` activé au démarrage. Les trois bots ont conservé leurs PID
+pendant le déploiement. Soli (`1360350111611228450`) est le seul OWNER initial ;
+son profil Discord sera renseigné lors de sa première connexion réelle.
+
 Les journaux de l'application ne contiennent pas les cookies, tokens ou query OAuth.
 Ne pas partager les fichiers de secrets, bases ou sauvegardes. Les sauvegardes
 externes régulières restent à organiser ; une copie ponctuelle sur le poste local
@@ -252,9 +262,13 @@ n'est pas un système de sauvegarde externe automatisé.
 
 ## Limites
 
-OAuth réel non validé sans secrets et callback configurés. Pas de test d'endurance
-ni de charge de 130 000 utilisateurs simultanés. SQLite vise une instance sur disque
-local ; son débit doit être mesuré avant montée en charge. Sauvegardes externes,
-TLS, isolation système et surveillance demandent une installation explicite.
+Le démarrage OAuth en production est vérifié (scope, PKCE, URI de retour et cookie
+signé), mais aucune connexion humaine Discord complète n'a été effectuée par les
+tests. Pas de test d'endurance ni de charge de 130 000 utilisateurs simultanés.
+SQLite vise une instance sur disque local ; son débit doit être mesuré avant montée
+en charge. TLS et isolation système sont actifs ; la surveillance et les sauvegardes
+externes automatisées restent à organiser. Le disque du VPS avait environ 3,5 Go
+libres au contrôle de publication : surveiller sa capacité sans supprimer les
+données ou sauvegardes des bots.
 La politique légale doit être relue par le responsable avant activation ; aucun
 engagement de conformité juridique globale n'est déduit des tests techniques.
