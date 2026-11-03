@@ -6,7 +6,7 @@ test('Vercel gateway stays disabled without its secret and never calls upstream'
   const res = response(); await proxy({ url: '/api/platform/session', method: 'GET', headers: {} }, res); assert.equal(res.statusCode, 503); assert.equal(res.headers['Cache-Control'], 'private, no-store');
 });
 test('gateway accepts only exact platform routes, never arbitrary destinations', () => {
-  for (const route of ['api/platform/session', 'auth/discord/start', 'profile', 'admin/staff', 'api/platform/admin/users/661720242585600001/role']) assert.ok(proxy.ALLOWED.test(route));
+  for (const route of ['api/platform/session', 'auth/discord/start', 'profile', 'admin/bots', 'api/platform/admin/bots', 'admin/staff', 'api/platform/admin/users/661720242585600001/role']) assert.ok(proxy.ALLOWED.test(route));
   for (const route of ['https://evil.example', '../.env', 'api/platform/../../api/visits', 'api/platform/internal', 'admin/unknown', 'profile?token=x']) assert.equal(proxy.ALLOWED.test(route), false);
 });
 test('gateway forwards private cookies and CSRF without exposing its credential to clients', async t => {

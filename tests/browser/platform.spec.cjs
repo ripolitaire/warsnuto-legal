@@ -27,7 +27,7 @@ async function blockExternal(context) {
     return route.abort();
   });
 }
-for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/admin', 'État des services'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
+for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/admin', 'État des services'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
   test('responsive page ' + route, async ({ browser }, info) => {
     const { context, page } = await prepare(browser, 'OWNER');
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -79,6 +79,21 @@ test('API outage has a retry state and no fake profile data', async ({ browser }
   await expect(page.locator('[data-notice]')).toContainText('Service indisponible pour ce test');
   await page.unroute('**/api/platform/me'); await page.getByRole('button', { name: 'Réessayer' }).click();
   await expect(page.locator('#platform-content')).toContainText('Ton compte'); await context.close();
+});
+test('bot monitoring renders individual live and stale states and refreshes safely', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER'); let calls = 0;
+  await page.route('**/api/platform/admin/bots', route => {
+    calls++; const now = Date.now();
+    return route.fulfill({ json: { checkedAt: now, bots: ['protect', 'game', 'support'].map((id, i) => ({ id, name: 'WarsNuto ' + ['Protect', 'Game', 'Support'][i],
+      status: ['available', 'stale', 'disconnected'][i], sampledAt: now - i * 60000, startedAt: now - 86000000, latencyMs: 42, guildCount: 3, rssBytes: 64000000, commandsSinceStart: calls, lastCommandAt: now - 1000 })) } });
+  });
+  await page.goto('/admin/bots'); await expect(page.locator('.bot-monitor')).toHaveCount(3);
+  await expect(page.locator('.bot-monitor').nth(0)).toContainText('Connecté à Discord');
+  await expect(page.locator('.bot-monitor').nth(1)).toContainText('Signal trop ancien');
+  await expect(page.locator('.bot-monitor').nth(2)).toContainText('Discord déconnecté');
+  await page.getByRole('button', { name: 'Actualiser les états' }).click(); await expect.poll(() => calls).toBeGreaterThan(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('bot-monitoring.png'), fullPage: true }); await context.close();
 });
 test('public home keeps existing navigation and animations with the account menu', async ({ browser }, info) => {
   const { context, page } = await prepare(browser, 'OWNER');

@@ -1,12 +1,12 @@
 const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 const pages = { '/profile': ['Mon espace', 'Ton espace WarsNuto'], '/profile/settings': ['Mon compte', 'Paramètres du compte'],
-  '/admin': ['Administration', 'Vue d’ensemble'], '/admin/users': ['Administration', 'Comptes utilisateurs'],
+  '/admin': ['Administration', 'Vue d’ensemble'], '/admin/bots': ['Administration', 'Suivi des bots'], '/admin/users': ['Administration', 'Comptes utilisateurs'],
   '/admin/staff': ['Propriétaire', 'Équipe et permissions'], '/admin/logs': ['Administration', 'Journal administratif'],
   '/admin/settings': ['Administration', 'Paramètres du site'], '/admin/moderation': ['Modération', 'Espace de modération'] };
 function page(route, session, settings = { name: 'WarsNuto' }) {
   const [section, title] = pages[route];
   const admin = route.startsWith('/admin');
-  const links = admin ? [['/admin', 'Vue d’ensemble', 'admin:read'], ['/admin/users', 'Utilisateurs', 'users:read'],
+  const links = admin ? [['/admin', 'Vue d’ensemble', 'admin:read'], ['/admin/bots', 'Suivi des bots', 'admin:read'], ['/admin/users', 'Utilisateurs', 'users:read'],
     ['/admin/moderation', 'Modération', 'moderation:read'], ['/admin/staff', 'Équipe et permissions', 'staff:manage'],
     ['/admin/logs', 'Journal', 'audit:read'], ['/admin/settings', 'Paramètres du site', 'settings:write']]
     : [['/profile', 'Mon espace'], ['/profile/settings', 'Mon compte'], ...(session.permissions.includes('admin:read') ? [['/admin', 'Administration']] : session.permissions.includes('moderation:read') ? [['/admin/moderation', 'Modération']] : [])];

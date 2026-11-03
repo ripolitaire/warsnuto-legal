@@ -12,6 +12,8 @@ La production est accessible sur `https://warsnuto.com/profile` depuis le
 3 novembre 2026. Soli est le premier OWNER provisionné ; sa première connexion
 Discord reste à réaliser. Voir le [journal de livraison](docs/RELEASE-2026-11-03.md).
 Sans configuration de liaison valide, les espaces privés restent fermés.
+Le [suivi des trois bots](docs/BOT-MONITORING-2026-11-03.md) est accessible aux
+administrateurs sur `/admin/bots`, sans accès direct à leurs bases ni à leurs secrets.
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

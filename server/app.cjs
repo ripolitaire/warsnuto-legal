@@ -75,7 +75,8 @@ function createApp({ db, config, fetcher, logger = console }) {
     object(req.body, ['confirmation']); if (req.body.confirmation !== 'REVOQUER') throw error(400, 'Confirmation requise.');
     res.json(service.revokeOthers(req.session));
   });
-  app.get('/api/platform/admin/overview', permit('admin:read'), (req, res) => res.json(service.overview()));
+  app.get('/api/platform/admin/overview', permit('admin:read'), async (req, res) => res.json(await service.overview()));
+  app.get('/api/platform/admin/bots', permit('admin:read'), async (req, res) => res.json(await service.botMonitor()));
   app.get('/api/platform/admin/users', permit('users:read'), (req, res) => res.json(service.users(new URL(req.originalUrl, config.origin).searchParams)));
   app.get('/api/platform/admin/users/:id', permit('users:read'), (req, res) => res.json(service.detail(req.params.id)));
   app.patch('/api/platform/admin/users/:id/status', permit('users:moderate'), fresh, (req, res) => res.json(service.status(req.session, req.params.id, req.body)));
@@ -86,7 +87,7 @@ function createApp({ db, config, fetcher, logger = console }) {
   app.get('/api/platform/admin/logs', permit('audit:read'), (req, res) => res.json(service.logs(new URL(req.originalUrl, config.origin).searchParams)));
   app.get('/api/platform/admin/settings', permit('settings:write'), (req, res) => res.json(service.settings()));
   app.patch('/api/platform/admin/settings', permit('settings:write'), fresh, (req, res) => res.json(service.updateSettings(req.session, req.body)));
-  const pagePermissions = { '/admin': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
+  const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
   for (const route of Object.keys(views.pages)) app.get(route, (req, res) => {
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(route)));
     if (pagePermissions[route]) requirePermission(req.session, pagePermissions[route]);

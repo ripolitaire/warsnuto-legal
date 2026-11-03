@@ -1,5 +1,5 @@
 const { isIP } = require('node:net');
-const ALLOWED = /^(?:auth\/discord\/(?:start|callback)|profile(?:\/settings)?|admin(?:\/(?:users|staff|logs|settings|moderation))?|api\/platform\/(?:public|session|logout|activity|me(?:\/preferences|\/sessions\/revoke-others)?|admin\/(?:overview|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
+const ALLOWED = /^(?:auth\/discord\/(?:start|callback)|profile(?:\/settings)?|admin(?:\/(?:bots|users|staff|logs|settings|moderation))?|api\/platform\/(?:public|session|logout|activity|me(?:\/preferences|\/sessions\/revoke-others)?|admin\/(?:overview|bots|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');

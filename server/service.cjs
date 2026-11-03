@@ -9,6 +9,7 @@ function pagination(query) {
 }
 function createService(db, config) {
   const now = config.now;
+  const botMonitor = require('./botMonitor.cjs').createBotMonitor(config);
   function user(id) {
     if (!snowflake(id)) throw error(400, 'Identifiant Discord invalide.');
     const row = db.prepare('SELECT u.*,r.role FROM users u JOIN user_roles r ON r.user_id=u.id WHERE discord_id=?').get(id);
@@ -34,15 +35,17 @@ function createService(db, config) {
   }
   return {
     publicSettings() { return db.prepare('SELECT name,description,announcement,maintenance FROM site_settings WHERE id=1').get(); },
-    overview() {
+    botMonitor,
+    async overview() {
+      const monitoring = await botMonitor();
       return { users: db.prepare('SELECT count(*) n FROM users').get().n,
         recentLogins: db.prepare("SELECT count(*) n FROM audit_logs WHERE action='auth.login' AND created_at>=?").get(now() - 86400000).n,
         administrators: db.prepare("SELECT count(*) n FROM user_roles r JOIN users u ON r.user_id=u.id WHERE r.role IN ('ADMIN','OWNER') AND u.status='active'").get().n,
         activeSessions: db.prepare("SELECT count(*) n FROM sessions s JOIN users u ON s.user_id=u.id WHERE s.revoked_at IS NULL AND s.expires_at>? AND s.last_seen_at>? AND u.status='active'").get(now(), now() - config.sessionIdleMs).n,
         activity: db.prepare('SELECT actor_id,action,target_id,created_at,result FROM audit_logs ORDER BY id DESC LIMIT 8').all(),
         applicationErrors: db.prepare("SELECT count(*) n FROM audit_logs WHERE action='application.error' AND created_at>=?").get(now() - 86400000).n,
-        services: [{ name: 'Backend web', status: 'available' }, { name: 'Base du site', status: 'available' },
-          { name: 'Protect / Game / Support', status: 'not_connected' }] };
+        services: [{ name: 'Backend web', status: 'available' }, { name: 'Base du site', status: 'available' }, ...monitoring.bots],
+        monitoringCheckedAt: monitoring.checkedAt };
     },
     users(query, staff = false) {
       const { page, limit, offset } = pagination(query), search = text(query.get('q') || '', 100);

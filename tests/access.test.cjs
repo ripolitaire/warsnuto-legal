@@ -2,14 +2,15 @@ const { test } = require('node:test'), assert = require('node:assert/strict');
 const { fixture } = require('./helpers.cjs');
 for (const role of ['USER', 'MODERATOR', 'ADMIN', 'OWNER']) test('server authorization matrix for ' + role, async t => {
   const f = fixture(); await f.listen(); t.after(() => f.close()); const login = await f.login(role);
-  for (const [route, permitted] of [['/admin', ['ADMIN', 'OWNER'].includes(role)], ['/admin/users', ['ADMIN', 'OWNER'].includes(role)], ['/admin/staff', role === 'OWNER'], ['/admin/settings', ['ADMIN', 'OWNER'].includes(role)]]) {
+  for (const [route, permitted] of [['/admin', ['ADMIN', 'OWNER'].includes(role)], ['/admin/bots', ['ADMIN', 'OWNER'].includes(role)], ['/admin/users', ['ADMIN', 'OWNER'].includes(role)], ['/admin/staff', role === 'OWNER'], ['/admin/settings', ['ADMIN', 'OWNER'].includes(role)]]) {
     assert.equal((await f.request(route, login)).status, permitted ? 200 : 403, route);
   }
   assert.equal((await f.request('/api/platform/admin/users', login)).status, ['ADMIN', 'OWNER'].includes(role) ? 200 : 403);
+  assert.equal((await f.request('/api/platform/admin/bots', login)).status, ['ADMIN', 'OWNER'].includes(role) ? 200 : 403);
 });
 test('anonymous users cannot read private APIs and are redirected on protected pages', async t => {
   const f = fixture(); await f.listen(); t.after(() => f.close());
-  for (const route of ['/api/platform/me', '/api/platform/admin/overview', '/api/platform/admin/users', '/api/platform/admin/settings']) assert.equal((await f.request(route)).status, 401);
+  for (const route of ['/api/platform/me', '/api/platform/admin/overview', '/api/platform/admin/bots', '/api/platform/admin/users', '/api/platform/admin/settings']) assert.equal((await f.request(route)).status, 401);
   const result = await f.request('/admin'); assert.equal(result.status, 303); assert.match(result.headers.get('location'), /^\/auth\/discord\/start\?/);
 });
 test('CSRF, foreign origins and forbidden role input are refused', async t => {

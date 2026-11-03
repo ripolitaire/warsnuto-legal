@@ -5,10 +5,11 @@ const { openDatabase } = require('../server/database.cjs');
 const { configuration } = require('../server/config.cjs');
 const { createApp } = require('../server/app.cjs');
 const ids = Object.fromEntries(['USER', 'MODERATOR', 'ADMIN', 'OWNER'].map((role, i) => [role, String((BigInt(Date.UTC(2020, 0, 1) - 1420070400000) << 22n) + BigInt(i + 1))]));
-function fixture({ database = ':memory:', port = 0 } = {}) {
+function fixture({ database = ':memory:', port = 0, telemetryDirectory = '' } = {}) {
   const db = openDatabase(database), config = configuration({ SESSION_SECRET: randomBytes(32).toString('base64url'), DISCORD_OAUTH_CLIENT_ID: ids.OWNER,
     DISCORD_OAUTH_CLIENT_SECRET: randomBytes(32).toString('base64url') });
   let time = Date.now(); config.now = () => time;
+  config.telemetryDirectory = telemetryDirectory;
   const used = new Set(), calls = [];
   function seed(id, role, name = 'Compte de test') {
     const now = config.now();

@@ -4,8 +4,9 @@
 
 Le site reste dans `ripolitaire/warsnuto-legal`, dossier local
 `WarsNuto Univers/legal-site`. Les changements publics préexistants sont conservés
-dans le commit de base `861e1e6`. Ni CRB Corp ni Protect, Game et Support ne sont
-modifiés. La plateforme est publiée depuis le 3 novembre 2026 : frontend Vercel
+dans le commit de base `861e1e6`. CRB Corp reste hors du périmètre. Protect, Game
+et Support publient seulement des signaux opérationnels pour leur suivi privé.
+La plateforme est publiée depuis le 3 novembre 2026 : frontend Vercel
 sur `https://warsnuto.com`, backend isolé sur Hetzner derrière
 `https://origin.warsnuto.com`. La première connexion humaine Discord reste à
 recetter ; le trajet HTTPS, le démarrage OAuth et les refus anonymes sont vérifiés.
@@ -45,6 +46,7 @@ Backend uniquement, `.env.web` privé en local ; en production, fichier
 | `WEB_REQUIRE_HTTPS_PROXY` | `true` |
 | `WEB_DATABASE_PATH` | Base dédiée persistante : `/var/lib/warsnuto-web/data/web.sqlite` |
 | `WEB_BACKUP_PATH` | Répertoire de sauvegardes privé et persistant, séparé des releases |
+| `WEB_BOT_TELEMETRY_DIRECTORY` | `/run/warsnuto-bot-monitor`, lecture seule, backend uniquement |
 | `WEB_HOST` | `127.0.0.1` |
 | `WEB_PORT` | Port local libre, par défaut `3100` |
 
@@ -156,13 +158,15 @@ le nom, la maintenance et la révision, pas les anciennes descriptions complète
 
 - `/profile`, `/profile/settings` : profil, actualisation Discord, préférences et sessions.
 - `/admin` : compteurs SQL réels, activité récente et disponibilité backend/base.
+- `/admin/bots` : connexion Discord, latence, mémoire, disponibilité et activité des trois bots.
 - `/admin/users` : liste paginée, recherche, fiche, rôles et actions confirmées.
 - `/admin/staff` : équipe privilégiée et permissions ADMIN/MODERATOR.
 - `/admin/logs` : filtres par action, acteur, cible et pagination.
 - `/admin/settings` : nom, description, annonce ; maintenance réservée OWNER.
 - `/admin/moderation` : emplacement protégé, connecteur non activé, aucune sanction inventée.
 
-Les données et la surveillance des trois bots ne sont pas connectées. Les états
+Les données personnelles et les commandes des trois bots ne sont pas connectées.
+Leur surveillance privée utilise des mesures réelles, décrites ci-dessous. Les états
 éditoriaux historiques du site public ne deviennent pas des tests de santé. Le nom
 et la description configurés actualisent la présentation au chargement ; les
 métadonnées SEO statiques restent à maintenir séparément. Les annonces sont rendues
@@ -272,3 +276,46 @@ libres au contrôle de publication : surveiller sa capacité sans supprimer les
 données ou sauvegardes des bots.
 La politique légale doit être relue par le responsable avant activation ; aucun
 engagement de conformité juridique globale n'est déduit des tests techniques.
+
+## Raccordement de surveillance des bots
+
+Le module canonique `ops/botTelemetry.cjs` est installé comme
+`utils/webTelemetry.cjs` dans chacun des trois bots. Leur démarrage appelle
+`startBotTelemetry(client, 'protect' | 'game' | 'support')`. La variable non secrète
+`WARSNUTO_TELEMETRY_DIRECTORY=/run/warsnuto-bot-monitor` active la publication ;
+sans elle, le module ne fait rien. Elle est conservée dans l'environnement PM2.
+Un redémarrage contrôlé de chaque bot est nécessaire à la première installation.
+
+Toutes les quinze secondes, un fichier JSON compact est remplacé atomiquement.
+Le signal utilise `client.isReady()` : un processus simplement démarré n'est pas
+déclaré connecté à Discord. Les seules mesures sont l'identité du bot, la date du
+signal, son démarrage, son PID technique, la connexion Gateway, la latence, le
+nombre de serveurs, la mémoire et le compteur de commandes depuis le démarrage.
+Aucun message, argument, membre, sanction, ticket, secret ou token n'est transmis.
+Le compteur mesure les commandes reçues, pas leur réussite.
+
+Le répertoire appartient à `root:warsnutoweb`, mode 2750, les fichiers sont en 640.
+`ops/warsnuto-bot-monitor.conf` le recrée au démarrage via systemd-tmpfiles. Le site
+peut lire ces trois fichiers, pas les modifier. Ses interdictions d'accès aux
+répertoires et bases des bots restent actives. Aucun port ni endpoint supplémentaire
+n'est ouvert sur les bots ; aucun token Discord supplémentaire n'est requis.
+
+`server/botMonitor.cjs` accepte seulement trois noms fixes, refuse les liens
+symboliques, borne la lecture à 8 ko et valide les mesures avant de les renvoyer.
+Il retire les champs non autorisés et ne révèle ni chemin ni PID aux navigateurs.
+Un signal vieux de plus de 45 secondes est marqué périmé, jamais disponible.
+Fichier absent, illisible ou malformé : signal indisponible. Les résultats sont
+partagés cinq secondes côté backend ; l'écran s'actualise toutes les quinze
+secondes quand il est visible, sans prolonger la session.
+
+`GET /api/platform/admin/bots` et `/admin/bots` nécessitent `admin:read` : les membres
+et les modérateurs sans cette permission n'y ont pas accès. Les réponses restent
+`private, no-store`. Cette liaison est uniquement en lecture ; elle ne permet ni
+redémarrage depuis le navigateur ni exécution de commandes ou sanctions.
+
+Le script ponctuel `ops/deploy-monitoring.cjs` vérifie les empreintes avant toute
+modification, prépare une nouvelle release web, teste le code sous Linux et Node 20,
+sauvegarde les quatre bases avec l'API SQLite online, puis redémarre les bots un
+par un. Le suivant n'est traité qu'après retour d'un vrai signal Discord prêt. Le
+script conserve les anciens points d'entrée et la release web précédente pour
+récupération, sans réinitialiser de base ni toucher aux fichiers `.env` des bots.

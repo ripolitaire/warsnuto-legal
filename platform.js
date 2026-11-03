@@ -13,6 +13,9 @@
   const icon = name => `<i data-lucide="${name}" aria-hidden="true"></i>`;
   const icons = () => window.lucide?.createIcons();
   const roles = { USER: 'Membre', MODERATOR: 'Modérateur', ADMIN: 'Administrateur', OWNER: 'Propriétaire' };
+  const botStatus = { available: 'Connecté à Discord', disconnected: 'Discord déconnecté', stale: 'Signal trop ancien', unavailable: 'Signal indisponible', not_connected: 'Surveillance non connectée' };
+  const statusClass = status => status === 'available' ? 'positive' : ['disconnected', 'unavailable'].includes(status) ? 'negative' : 'warning';
+  const uptime = value => { const minutes = Math.max(0, Math.floor(value / 60000)); return minutes >= 1440 ? Math.floor(minutes / 1440) + ' j ' + Math.floor(minutes % 1440 / 60) + ' h' : minutes >= 60 ? Math.floor(minutes / 60) + ' h ' + minutes % 60 + ' min' : minutes + ' min'; };
   const events = { 'auth.login': 'Connexion Discord', 'auth.failure': 'Connexion refusée', 'session.logout': 'Déconnexion', 'session.revoke_others': 'Autres sessions révoquées',
     'staff.role': 'Rôle modifié', 'staff.permissions': 'Permissions modifiées', 'user.status': 'Statut du compte modifié', 'user.sessions_revoke': 'Sessions révoquées',
     'site.settings': 'Paramètres du site modifiés', 'application.error': 'Erreur du service web', 'request.denied': 'Action refusée', 'owner.bootstrap': 'Propriétaire initial configuré' };
@@ -81,8 +84,44 @@
   async function overview() {
     const data = await request('admin/overview');
     content.innerHTML = `<section class="metric-grid">${[['Comptes', data.users, 'users-round'], ['Connexions · 24 h', data.recentLogins, 'log-in'], ['Administrateurs actifs', data.administrators, 'shield-check'], ['Sessions actives', data.activeSessions, 'monitor']].map(([label, value, glyph]) => `<article class="metric">${icon(glyph)}<span>${label}</span><strong>${number(value)}</strong></article>`).join('')}</section>
-      <section class="workspace-section"><div class="section-heading"><h2>État des services</h2><span>${number(data.applicationErrors)} erreur(s) web · 24 h</span></div><div class="service-list">${data.services.map(service => `<div><span>${E(service.name)}</span><span class="status ${service.status === 'available' ? 'positive' : ''}">${service.status === 'available' ? 'Disponible' : 'Surveillance non connectée'}</span></div>`).join('')}</div></section>
+      <section class="workspace-section"><div class="section-heading"><h2>État des services</h2><span>${number(data.applicationErrors)} erreur(s) web · 24 h</span></div><div class="service-list">${data.services.map(service => `<div ${service.id ? 'data-bot-service="' + E(service.id) + '"' : ''}><span>${E(service.name)}</span><span class="status ${statusClass(service.status)}">${E(service.id ? botStatus[service.status] : 'Disponible')}</span></div>`).join('')}</div><div class="monitoring-toolbar"><span class="muted" data-bot-checked>Vérifié le ${E(date(data.monitoringCheckedAt))}</span><a class="button" href="/admin/bots">${icon('monitor')} Suivi des bots</a></div></section>
       <section class="workspace-section"><h2>Activité récente</h2>${table(['Date', 'Action', 'Acteur', 'Compte concerné', 'Résultat'], logRows(data.activity))}</section>`;
+  }
+  function renderBotMonitoring(data) {
+    if (route === '/admin') {
+      for (const bot of data.bots) {
+        const badge = content.querySelector('[data-bot-service="' + bot.id + '"] .status');
+        if (badge) { badge.className = 'status ' + statusClass(bot.status); badge.textContent = botStatus[bot.status]; }
+      }
+    } else {
+      const grid = content.querySelector('[data-bot-grid]');
+      grid.innerHTML = data.bots.map(bot => `<article class="bot-monitor"><div class="section-heading"><h2>${E(bot.name)}</h2><span class="status ${statusClass(bot.status)}">${E(botStatus[bot.status])}</span></div>
+        <dl class="bot-facts">${[['Latence Discord', bot.latencyMs == null ? '—' : number(bot.latencyMs) + ' ms'],
+          ['Serveurs Discord', bot.guildCount == null ? '—' : number(bot.guildCount)], ['Mémoire du processus', bot.rssBytes == null ? '—' : number(Math.round(bot.rssBytes / 1048576)) + ' Mo'],
+          ['Depuis le démarrage', bot.startedAt == null ? '—' : uptime(bot.sampledAt - bot.startedAt)],
+          ['Commandes depuis le démarrage', bot.commandsSinceStart == null ? '—' : number(bot.commandsSinceStart)],
+          ['Dernière commande', bot.lastCommandAt == null ? (bot.commandsSinceStart == null ? '—' : 'Aucune depuis le démarrage') : date(bot.lastCommandAt)],
+          ['Dernier signal', bot.sampledAt == null ? 'Aucun signal' : date(bot.sampledAt)]].map(([label, value]) => `<div><dt>${E(label)}</dt><dd>${E(value)}</dd></div>`).join('')}</dl></article>`).join('');
+    }
+    content.querySelector('[data-bot-checked]').textContent = 'Vérifié le ' + date(data.checkedAt);
+  }
+  async function botMonitoring() {
+    const data = await request('admin/bots');
+    content.innerHTML = `<section class="workspace-section"><div class="section-heading"><h2>Protect, Game et Support</h2><button type="button" data-refresh-bots title="Actualiser les états" aria-label="Actualiser les états">${icon('refresh-cw')}</button></div><p class="muted" data-bot-checked></p><div class="bot-monitor-grid" data-bot-grid></div></section>`;
+    renderBotMonitoring(data);
+    content.querySelector('[data-refresh-bots]').onclick = () => action(null, async () => renderBotMonitoring(await request('admin/bots')));
+  }
+  let monitoringBusy = false;
+  async function refreshMonitoring() {
+    if (monitoringBusy || busy || !session?.user || document.hidden || !['/admin', '/admin/bots'].includes(route)) return;
+    monitoringBusy = true;
+    try { renderBotMonitoring(await request('admin/bots')); }
+    catch (error) {
+      if (session?.user) {
+        renderBotMonitoring({ checkedAt: Date.now() + serverOffset, bots: [['protect', 'WarsNuto Protect'], ['game', 'WarsNuto Game'], ['support', 'WarsNuto Support']].map(([id, name]) => ({ id, name, status: 'unavailable' })) });
+        fail(error);
+      }
+    } finally { monitoringBusy = false; }
   }
   async function profile() {
     const data = await request('me'), user = data.user;
@@ -175,6 +214,7 @@
       if (!route) return;
       if (route.startsWith('/profile')) await profile();
       else if (route === '/admin') await overview();
+      else if (route === '/admin/bots') await botMonitoring();
       else if (route === '/admin/users' || route === '/admin/staff') await users(route.endsWith('/staff'));
       else if (route === '/admin/logs') await logs();
       else if (route === '/admin/settings') await siteSettings();
@@ -192,6 +232,8 @@
     lastActivity = Date.now(); write('activity', {}).then(() => { session.idleExpiresAt = Date.now() + serverOffset + 30 * 60000; }).catch(fail);
   }, { passive: true });
   setInterval(() => { if (session?.user && Date.now() + serverOffset >= Math.min(session.expiresAt, session.idleExpiresAt)) expire(); }, 5000);
+  setInterval(refreshMonitoring, 15000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) void refreshMonitoring(); });
   setInterval(async () => { if (!session?.user || document.hidden) return; try { const fresh = await request('session'); if (!fresh.user) expire(); else { session = fresh; account(); } } catch (error) { if (route) fail(error); } }, 60000);
   document.addEventListener('click', event => { const details = menu?.querySelector('details'); if (details?.open && !menu.contains(event.target)) details.open = false; });
   if (!route) request('public').then(data => {

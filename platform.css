@@ -423,6 +423,49 @@ body[data-platform-page] p {
   border-color: #6a3540;
   background: #371e25;
 }
+.status.warning {
+  color: #ffe09a;
+  border-color: #66552c;
+  background: #302a1c;
+}
+.monitoring-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 18px;
+}
+.bot-monitor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+}
+.bot-monitor {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.bot-monitor .section-heading {
+  min-height: 60px;
+  align-content: start;
+}
+.bot-facts {
+  margin: 0;
+  display: grid;
+  gap: 16px;
+}
+.bot-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.bot-facts dd {
+  margin: 3px 0 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;
