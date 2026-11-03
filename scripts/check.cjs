@@ -3,7 +3,7 @@ const root = path.resolve(__dirname, '..');
 let count = 0;
 function walk(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if (entry.isDirectory() && ['server', 'api', 'scripts', 'tests'].includes(entry.name)) walk(path.join(directory, entry.name));
+    if (entry.isDirectory() && ['server', 'api', 'scripts', 'tests', 'ops'].includes(entry.name)) walk(path.join(directory, entry.name));
     else if (entry.isFile() && /\.(?:js|cjs)$/.test(entry.name)) { cp.execFileSync(process.execPath, ['--check', path.join(directory, entry.name)], { stdio: 'pipe' }); count++; }
   }
 }

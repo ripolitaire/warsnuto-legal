@@ -40,6 +40,7 @@ Backend uniquement, `.env.web` privé, permissions 600 :
 | `WEB_ORIGIN_SECRET` | 32 octets aléatoires en hexadécimal, identiques côté Vercel |
 | `WEB_REQUIRE_HTTPS_PROXY` | `true` |
 | `WEB_DATABASE_PATH` | Base dédiée, par exemple `/opt/warsnuto-web/data/web.sqlite` |
+| `WEB_BACKUP_PATH` | Répertoire de sauvegardes privé et persistant, séparé des releases |
 | `WEB_HOST` | `127.0.0.1` |
 | `WEB_PORT` | Port local libre, par défaut `3100` |
 
@@ -219,6 +220,35 @@ Conserver des sauvegardes externes privées avec une rotation contrôlée. Pour
 restaurer : arrêter seulement le backend web, garder la base actuelle et ses WAL,
 vérifier la copie et restaurer hors ligne sans mélanger les WAL. Un rollback de code
 ne doit jamais écraser des comptes récents.
+
+## Installation isolée validée pour le VPS
+
+Les fichiers `ops/warsnuto-web.service` et `ops/Caddyfile` préparent un service
+systemd sous l'utilisateur dédié `warsnutoweb`, derrière Caddy et le nom
+`origin.warsnuto.com`. Cette installation remplace le choix PM2 envisagé : elle
+évite de toucher au démon PM2 des bots. Node 24 est dans
+`/opt/warsnuto-web-runtime`, le code dans `/opt/warsnuto-web/releases/`, la base
+dans `/var/lib/warsnuto-web/data/` et les secrets dans
+`/etc/warsnuto-web/runtime.env` (root, 600, chargés par systemd).
+
+Le service ne peut écrire que dans son répertoire persistant ; les répertoires des
+bots sont explicitement inaccessibles. Caddy renouvelle le certificat Let's Encrypt,
+ne produit pas de logs d'accès et retire les objets de requête des logs techniques.
+Le port 3100 reste sur l'interface locale. Aucun secret n'est placé dans Caddy.
+
+Pour exploiter cette installation, en administrateur système :
+
+```sh
+systemctl status warsnuto-web --no-pager
+journalctl -u warsnuto-web --since '10 minutes ago' --no-pager
+systemctl restart warsnuto-web
+/opt/warsnuto-web-runtime/bin/node --env-file=/etc/warsnuto-web/runtime.env /opt/warsnuto-web/current/server/backup.cjs
+```
+
+Les journaux de l'application ne contiennent pas les cookies, tokens ou query OAuth.
+Ne pas partager les fichiers de secrets, bases ou sauvegardes. Les sauvegardes
+externes régulières restent à organiser ; une copie ponctuelle sur le poste local
+n'est pas un système de sauvegarde externe automatisé.
 
 ## Limites
 

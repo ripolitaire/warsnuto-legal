@@ -4,7 +4,7 @@ const { configuration } = require('./config.cjs');
 async function main() {
   const config = configuration();
   if (!fs.existsSync(config.databasePath)) throw Error('Base web absente.');
-  const directory = path.join(config.root, 'backups'); fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  const directory = config.backupPath; fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
   const target = path.join(directory, 'web-' + new Date().toISOString().replace(/[:.]/g, '-') + '-' + require('node:crypto').randomUUID() + '.sqlite');
   const db = new DatabaseSync(config.databasePath, { readOnly: true });
   try { await backup(db, target); } finally { db.close(); }

@@ -1,0 +1,22 @@
+{
+    admin 127.0.0.1:2019
+    log default {
+        format filter {
+            wrap json
+            fields {
+                request delete
+            }
+        }
+    }
+}
+
+origin.warsnuto.com {
+    tls {
+        issuer acme {
+            ca https://acme-v02.api.letsencrypt.org/directory
+        }
+    }
+    reverse_proxy 127.0.0.1:3100 {
+        header_up X-Forwarded-Proto https
+    }
+}
