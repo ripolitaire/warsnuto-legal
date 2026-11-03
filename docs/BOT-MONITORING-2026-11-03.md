@@ -15,8 +15,11 @@
 
 - Points d'entrée locaux comparés au VPS avant modification : empreintes identiques pour les trois bots.
 - Ajout limité à l'observateur opérationnel, sans changer les règles du jeu, les commandes ou les sanctions.
-- Sauvegardes cohérentes des bases et anciens fichiers prévues avant activation.
-- Redémarrage séquentiel avec contrôle d'un signal Discord prêt avant le bot suivant.
+- Sauvegardes cohérentes des quatre bases et anciens fichiers vérifiées sur le VPS avant activation.
+- Protect, Game et Support redémarrés un par un ; un signal Discord prêt a été reçu pour chacun avant le suivant.
+- Les trois signaux sont lisibles sous le compte restreint du backend ; aucune base n'a été réinitialisée.
+- Une première bascule web a été restaurée automatiquement à cause de permissions de dépendances ; elles sont corrigées et contrôlées avant démarrage. Aucun second redémarrage des bots n'a été nécessaire.
+- 72 tests techniques réussis sous Linux, dont le refus des liens symboliques ; 30 scénarios navigateur réussis sur mobile et ordinateur.
 - Tests : droits d'accès, refus des fichiers invalides et liens symboliques, délai de péremption, cache partagé, confidentialité et résistance à une panne d'écriture.
 - Les tests navigateur vérifient la page et ses états sur mobile et ordinateur avec des données simulées.
 - Les rapports et sauvegardes de production restent privés, hors Git.

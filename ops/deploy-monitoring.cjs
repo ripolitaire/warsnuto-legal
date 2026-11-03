@@ -136,11 +136,16 @@ async function activateWeb(m) {
     run('systemctl', ['daemon-reload']); run('systemctl', ['restart', 'warsnuto-web']);
     throw Error('Web health failed; prior web release restored');
   }
+  await verifyWeb(m);
+}
+async function verifyWeb(m) {
+  if (fs.realpathSync(current) !== release || run('systemctl', ['is-active', 'warsnuto-web']).trim() !== 'active') throw Error('Web release not active');
+  for (const [name, expected] of Object.entries(m.files)) if (hash(release + '/' + name) !== expected) throw Error('Live source changed');
   const code = `require('${release}/server/botMonitor.cjs').createBotMonitor({telemetryDirectory:'${directory}',now:Date.now})().then(data=>console.log(JSON.stringify(data)))`;
-  const monitoring = JSON.parse(run('/usr/sbin/runuser', ['-u', 'warsnutoweb', '--', node, '-e', code]));
+  const monitoring = JSON.parse(run('/usr/sbin/runuser', ['-u', 'warsnutoweb', '--', node, '-e', code], { cwd: release }));
   if (monitoring.bots.some(bot => bot.status !== 'available')) throw Error('Web account cannot read current bot snapshots');
   const report = { at: new Date().toISOString(), commit: m.commit, monitoring, bots: processes(), backupsVerified: true, databaseReset: false };
   writeReport('activated', report); console.log(JSON.stringify({ phase: 'activated', ...report }));
 }
-(async () => { process.umask(0o077); if (process.argv[2] === 'prepare') await prepare(); else if (process.argv[2] === 'activate') await activate(); else if (process.argv[2] === 'activate-web') await activateWeb(manifest()); else throw Error('Choose prepare, activate or activate-web'); })()
+(async () => { process.umask(0o077); if (process.argv[2] === 'prepare') await prepare(); else if (process.argv[2] === 'activate') await activate(); else if (process.argv[2] === 'activate-web') await activateWeb(manifest()); else if (process.argv[2] === 'verify-web') await verifyWeb(manifest()); else throw Error('Choose prepare, activate-web, activate or verify-web'); })()
   .catch(error => { console.log(JSON.stringify({ ok: false, message: String(error.message).split('\n')[0].slice(0, 180) })); process.exitCode = 1; });
