@@ -47,6 +47,12 @@ test('partial bot outage keeps reachable servers, while Discord outages are not 
   bots.guild.members.fetch = async () => { throw Error('Discord offline'); };
   assert.equal((await f.request('/api/platform/me/game/' + guildId, login)).status, 503);
 });
+test('maintenance removes expired progression observations even without another Game visit', async t => {
+  const f = fixture(); t.after(() => f.close()); await f.listen();
+  f.db.prepare('INSERT INTO game_observations VALUES(?,?,?,?,?,?,?)').run(ids.USER, guildId, 'normal', 0, f.config.now() - 31 * 86400000, 1, 0);
+  f.backend.maintain();
+  assert.equal(f.db.prepare('SELECT count(*) n FROM game_observations').get().n, 0);
+});
 test('raw Game profile reads never create players, regenerate stored energy or mix partitions', t => {
   const db = new DatabaseSync(':memory:'); t.after(() => db.close());
   db.exec(`CREATE TABLE players(guild_id TEXT,user_id TEXT,level INTEGER,xp INTEGER,class_id TEXT,class_xp INTEGER,berries INTEGER,prime INTEGER,energy INTEGER,max_energy INTEGER,last_energy_at INTEGER,fruit_id TEXT,fruit_mastery INTEGER,fruit_awakened INTEGER,equipped_weapon TEXT,equipped_accessory TEXT,created_at INTEGER,updated_at INTEGER);

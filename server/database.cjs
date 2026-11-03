@@ -38,6 +38,9 @@ function maintenance(db, now, idleMs = 30 * 60000) {
     db.prepare('DELETE FROM rate_limits WHERE expires_at<=?').run(now);
     db.prepare('DELETE FROM sessions WHERE expires_at<? OR revoked_at<? OR last_seen_at<?').run(now - 7 * 86400000, now - 7 * 86400000, now - idleMs - 7 * 86400000);
     db.prepare('DELETE FROM audit_logs WHERE created_at<?').run(now - 180 * 86400000);
+    if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='game_observations'").get()) {
+      db.prepare('DELETE FROM game_observations WHERE sampled_at<?').run(now - 30 * 86400000);
+    }
   });
 }
 module.exports = { openDatabase, transaction, audit, maintenance };

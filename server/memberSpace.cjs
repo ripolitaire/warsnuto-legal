@@ -40,7 +40,7 @@ function createMemberSpace(db, config, broker) {
       db.prepare('DELETE FROM game_observations WHERE sampled_at<?').run(time - 30 * 86400000);
       db.prepare('DELETE FROM game_observations WHERE rowid IN (SELECT rowid FROM game_observations ORDER BY sampled_at DESC LIMIT -1 OFFSET 100000)').run();
     }
-    const history = db.prepare('SELECT sampled_at AS sampledAt,level,total_xp AS totalXp FROM game_observations WHERE actor=? AND guild=? AND mode=? ORDER BY sampled_at DESC LIMIT 48').all(actor, guild, mode).reverse();
+    const history = db.prepare('SELECT sampled_at AS sampledAt,level,total_xp AS totalXp FROM game_observations WHERE actor=? AND guild=? AND mode=? AND sampled_at>=? ORDER BY sampled_at DESC LIMIT 48').all(actor, guild, mode, time - 30 * 86400000).reverse();
     return { ...result, history };
   }
   return { servers, game };
