@@ -5,9 +5,11 @@ function createBotConfigFixture(ids) {
   const calls = [], writes = [], audits = [], configs = new Map();
   const member = actor => ({ roles: { cache: new Map() }, permissions: { has: () => [ids.OWNER, ids.ADMIN].includes(actor) } });
   const safeRole = { id: roleId, name: 'Rôle de test', managed: false, position: 1, permissions: { has: () => false } };
+  const roleNames = ['Administrateur', 'Modérateur confirmé', 'Modérateur', 'Modérateur en test', 'Responsable support', 'Équipe événement', 'Notifications', 'Membre'];
+  const extraRoles = roleNames.map((name, i) => ({ ...safeRole, id: String(661720242585600610n + BigInt(i)), name }));
   const guild = { id: guildId, name: 'Serveur de test', ownerId: ids.OWNER,
     members: { fetch: async ({ user }) => member(user), me: { permissions: { has: () => true }, roles: { highest: { position: 100 } } } },
-    roles: { cache: new Map([[roleId, safeRole]]), fetch: async () => {} },
+    roles: { cache: new Map([safeRole, ...extraRoles].map(role => [role.id, role])), fetch: async () => {} },
     channels: { cache: new Map([[channelId, { id: channelId, guildId, name: 'journal-test', type: 0, permissionsFor: () => ({ has: () => true }) }]]), fetch: async () => {} } };
   const client = { isReady: () => true, guilds: { cache: new Map([[guildId, guild]]) } };
   const adapters = {};
@@ -21,6 +23,14 @@ function createBotConfigFixture(ids) {
         return { mode, adminAvailable, sampledAt: now, player: { level: mode === 'admin' ? 10000 : 42, xp: 85, nextXp: 2355, totalXp: mode === 'admin' ? 9999999 : 49285, className: 'Épéiste', classXp: 1500, berries: 125000, bounty: 4500000, energy: 85, maxEnergy: 120,
           fruit: { name: 'Fruit Nika', mastery: 340, awakened: 1 }, crew: { name: 'Les aventuriers', level: 12 }, weapon: 'Katana', accessory: null, inventory: [{ name: 'Clé de raid', quantity: 3 }], activity: [], seasonPoints: 25 } };
       } : undefined };
+    if (bot === 'protect') {
+      const access = { adminRoleIds: [extraRoles[0].id], confirmedModRoleIds: [extraRoles[1].id], modRoleIds: [extraRoles[2].id], testModRoleIds: [extraRoles[3].id], staffOfTheWeekRoleId: null, warnBanRoleId: null, warnBanDurationDays: 7 };
+      adapter.sections.push(S.section('access', 'Équipes et accès', [S.roles('adminRoleIds', 'Administrateurs du bot'), S.roles('confirmedModRoleIds', 'Modérateurs confirmés'), S.roles('modRoleIds', 'Modérateurs'), S.roles('testModRoleIds', 'Modérateurs en test'), S.role('staffOfTheWeekRoleId', 'Staff de la semaine'), S.role('warnBanRoleId', 'Rôle WarnBan'), S.number('warnBanDurationDays', 'Durée WarnBan, en jours', 0, 3650)], () => access, (g, next, actor, patch) => { Object.assign(access, patch); writes.push({ bot, actor, patch }); }));
+      const logs = { moderationLogChannelId: channelId, logSanctionsChannelId: channelId };
+      adapter.sections.push(S.section('logs', 'Salons et journaux', [S.channel('moderationLogChannelId', 'Journal de modération'), S.channel('logSanctionsChannelId', 'Sanctions')], () => logs, (g, next, actor, patch) => Object.assign(logs, patch)));
+      const automod = { enabled: true, blockInvites: true, maxMentions: 5 };
+      adapter.sections.push(S.section('automod', 'Modération automatique', [S.boolean('enabled', 'Activer l’AutoMod'), S.boolean('blockInvites', 'Bloquer les invitations Discord'), S.number('maxMentions', 'Mentions maximum', 0, 100)], () => automod, (g, next, actor, patch) => Object.assign(automod, patch)));
+    }
     adapters[bot] = createDashboardHandler(client, adapter);
   }
   const transport = async (options, body) => {

@@ -58,5 +58,34 @@
       if (!document.hidden) void load();
     }, 60000);
   }
-  window.wnMemberSpace = { servers, game };
+  async function moderation(ui) {
+    const { content, request, E, icon, icons } = ui, directory = await request('servers');
+    const guilds = directory.guilds.filter(g => g.bots.some(b => b.id === 'protect' && b.canConfigure));
+    if (!guilds.length) {
+      content.innerHTML = `<section class="moderation-empty"><span class="section-symbol">${icon('shield-check')}</span><h2>${directory.unavailable.includes('WarsNuto Protect') ? 'Protect est momentanément indisponible' : 'Aucun serveur administrable avec Protect'}</h2><a href="/servers" class="button">${icon('server')} Mes serveurs</a></section>`; icons(); return;
+    }
+    let selected = guilds.find(g => g.id === new URLSearchParams(location.search).get('guild')) || guilds[0];
+    const modules = { access: ['users-round', 'Équipe', 'Rôles et autorisations'], validation: ['badge-check', 'Équipe', 'Validation et archivage'], automod: ['shield-check', 'Sécurité', 'Filtres et seuils de détection'], 'anti-alt': ['shield-alert', 'Sécurité', 'Quarantaine et alertes'], logs: ['scroll-text', 'Journaux', 'Salons et événements'], 'xp-logs': ['scroll-text', 'Journaux', 'Historique de progression'] };
+    content.innerHTML = `<div class="moderation-toolbar"><div class="moderation-brand"><img src="/assets/protect-logo.png" alt=""><div><strong>WarsNuto Protect</strong><span class="muted">Administration du serveur</span></div></div><label>Serveur<select data-moderation-guild>${guilds.map(g => `<option value="${E(g.id)}" ${g.id === selected.id ? 'selected' : ''}>${E(g.name)}</option>`).join('')}</select></label><button type="button" data-moderation-refresh title="Actualiser Protect" aria-label="Actualiser Protect">${icon('refresh-cw')}</button></div><div data-moderation-content aria-live="polite"></div>`;
+    const target = content.querySelector('[data-moderation-content]'), select = content.querySelector('[data-moderation-guild]'), refresh = content.querySelector('[data-moderation-refresh]');
+    async function load() {
+      select.disabled = true; refresh.disabled = true; target.innerHTML = '<p class="loading-state">Chargement des réglages Protect…</p>';
+      try {
+        const meta = await request('admin/bot-config/protect/' + selected.id), available = meta.sections.filter(s => modules[s.id]);
+        history.replaceState(null, '', '/admin/moderation?' + new URLSearchParams({ guild: selected.id }));
+        const sections = available.length ? available : meta.sections;
+        const base = '/admin/configuration?' + new URLSearchParams({ bot: 'protect', guild: selected.id });
+        target.innerHTML = `<div class="moderation-summary"><div class="server-identity">${guildIcon(selected, E)}<div><h2>${E(selected.name)}</h2><span class="muted">${selected.memberCount ? number(selected.memberCount) + ' membres' : 'Serveur Discord'}</span></div></div><div class="moderation-summary-meta"><strong>${number(sections.length)}</strong><span>rubriques accessibles</span></div><a class="button primary" href="${E(base)}">${icon('settings-2')} Tous les réglages</a></div>
+          <section class="moderation-modules" aria-label="Réglages de modération">${['Sécurité', 'Équipe', 'Journaux', 'Configuration'].map(group => {
+            const entries = sections.filter(s => (modules[s.id]?.[1] || 'Configuration') === group);
+            if (!entries.length) return '';
+            return `<div class="moderation-module-group"><h2>${group}</h2>${entries.map(s => `<a class="moderation-module" href="${E(base + '&section=' + s.id)}"><span class="section-symbol">${icon(modules[s.id]?.[0] || 'settings-2')}</span><span class="moderation-module-name"><strong>${E(s.label)}</strong><small>${E(modules[s.id]?.[2] || s.label)}</small></span><span class="module-field-count">${s.fields.length} paramètres</span>${icon('chevron-right')}</a>`).join('')}</div>`;
+          }).join('')}</section><aside class="moderation-history-note">${icon('info')}<div><strong>Historique des sanctions</strong><p>Consultation et actions disponibles dans Discord. Les dossiers privés ne sont pas reliés à cette page.</p></div></aside>`;
+      } catch (error) {
+        target.innerHTML = `<section class="moderation-empty"><span class="section-symbol">${icon('shield-alert')}</span><h2>Réglages Protect indisponibles</h2><p class="muted">${E(error.message)}</p></section>`;
+      } finally { select.disabled = false; refresh.disabled = false; icons(); }
+    }
+    select.onchange = event => { selected = guilds.find(g => g.id === event.target.value); void load(); }; refresh.onclick = () => void load(); await load();
+  }
+  window.wnMemberSpace = { servers, game, moderation };
 })();

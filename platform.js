@@ -216,6 +216,7 @@
       if (!session.user) { if (route) expire(); return; }
       document.body.classList.toggle('reduced-motion', session.user.preferences.reducedMotion);
       if (!route) return;
+      if (matchMedia('(max-width: 780px)').matches) document.querySelector('.platform-sidebar nav [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
       if (route === '/profile/game') await window.wnMemberSpace.game(memberUI());
       else if (route === '/servers') await window.wnMemberSpace.servers(memberUI());
       else if (route.startsWith('/profile')) await profile();
@@ -225,7 +226,7 @@
       else if (route === '/admin/users' || route === '/admin/staff') await users(route.endsWith('/staff'));
       else if (route === '/admin/logs') await logs();
       else if (route === '/admin/settings') await siteSettings();
-      else if (route === '/admin/moderation') content.innerHTML = `<section class="empty-state">${icon('shield-check')}<h2>Connecteur de modération non activé</h2><p>Aucune sanction privée n’est exposée ici. Les actions de modération restent dans Discord.</p><a class="button" href="/protect">WarsNuto Protect</a></section>`;
+      else if (route === '/admin/moderation') await window.wnMemberSpace.moderation(memberUI());
       icons();
     } catch (error) {
       if (content) content.innerHTML = '<section class="empty-state"><h2>Chargement indisponible</h2><button type="button" data-retry>Réessayer</button></section>';

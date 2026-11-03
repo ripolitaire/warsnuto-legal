@@ -27,7 +27,7 @@ async function blockExternal(context) {
     return route.abort();
   });
 }
-for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/profile/game', 'Niveau 42'], ['/servers', 'Tes serveurs WarsNuto'], ['/admin', 'État des services'], ['/admin/configuration', 'Choisir un serveur'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
+for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/profile/game', 'Niveau 42'], ['/servers', 'Tes serveurs WarsNuto'], ['/admin', 'État des services'], ['/admin/configuration', 'Choisir un serveur'], ['/admin/moderation', 'Tous les réglages'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
   test('responsive page ' + route, async ({ browser }, info) => {
     const { context, page } = await prepare(browser, 'OWNER');
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -134,7 +134,7 @@ test('bot configuration saves real settings, keeps them after reload and switche
   await page.locator('#confirm-dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
   await expect(page.locator('[data-notice]')).toContainText('Configuration enregistrée dans le bot');
   await page.reload(); await expect(page.getByLabel('Titre du module')).toHaveValue('Réglage navigateur ' + info.project.name);
-  await page.getByRole('combobox', { name: 'Bot', exact: true }).selectOption('support');
+  await page.getByRole('tab', { name: 'Support', exact: true }).click();
   await expect(page.getByLabel('Titre du module')).toHaveValue(/support/);
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByLabel('Nom de la règle').fill('Nouvelle règle');
@@ -148,7 +148,7 @@ test('unavailable bot clears the previous editor and supports retry without savi
   await page.getByRole('link', { name: 'Configurer', exact: true }).click();
   await expect(page.getByLabel('Titre du module')).toBeVisible();
   await page.route('**/api/platform/admin/bot-config/game/guilds', route => route.fulfill({ status: 503, json: { error: 'Game indisponible pour ce test' } }));
-  await page.getByRole('combobox', { name: 'Bot', exact: true }).selectOption('game');
+  await page.getByRole('tab', { name: 'Game', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Configuration indisponible' })).toBeVisible();
   await expect(page.getByLabel('Titre du module')).toHaveCount(0);
   await page.unroute('**/api/platform/admin/bot-config/game/guilds');
@@ -163,4 +163,80 @@ test('public home keeps existing navigation and animations with the account menu
   await expect(page.locator('.v2-nav a')).toHaveCount(5); await expect(page.locator('.site-intro')).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath('public-home.png'), fullPage: true }); await context.close();
+});
+
+test('compact role menus search, remove, save and persist without native multiselect boxes', async ({ browser, baseURL }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER');
+  const endpoint = baseURL + '/api/platform/admin/bot-config/protect/661720242585600500/access';
+  const before = await (await context.request.get(endpoint)).json(), session = await (await context.request.get(baseURL + '/api/platform/session')).json();
+  const reset = await context.request.patch(endpoint, { headers: { origin: baseURL, 'x-csrf-token': session.csrf }, data: { values: { adminRoleIds: ['661720242585600610'] }, revision: before.revision, operationId: require('node:crypto').randomUUID(), reason: 'Initialisation du scénario navigateur', confirmation: 'ENREGISTRER' } });
+  expect(reset.status()).toBe(200);
+  await page.goto('/admin/configuration?bot=protect&guild=661720242585600500&section=access');
+  const field = page.locator('[data-config-field="adminRoleIds"]'), picker = field.locator('details');
+  await expect(field.locator('.reference-token')).toContainText('Administrateur');
+  await expect(page.locator('select[multiple]:visible')).toHaveCount(0);
+  await field.locator('summary').click(); await expect(picker).toHaveAttribute('open', '');
+  await field.getByRole('searchbox').fill('équipe');
+  await expect(field.locator('[data-picker-value]:visible')).toHaveCount(1);
+  await field.locator('[data-picker-value]:visible').click();
+  await expect(field.locator('.reference-tokens')).toContainText('Équipe événement');
+  await field.getByRole('searchbox').fill('introuvable'); await expect(field.locator('[data-picker-empty]')).toBeVisible();
+  await field.getByRole('searchbox').fill('');
+  expect(await picker.locator('.reference-popover').evaluate(node => { const b = node.getBoundingClientRect(); return b.left >= 0 && b.right <= innerWidth && b.top >= 64 && b.bottom <= innerHeight; })).toBe(true);
+  await page.screenshot({ path: info.outputPath('roles-search.png'), fullPage: true });
+  await page.keyboard.press('Escape'); await expect(picker).not.toHaveAttribute('open', '');
+  await expect(field.locator('summary')).toBeFocused();
+  await field.getByRole('button', { name: 'Retirer Administrateur', exact: true }).click();
+  await expect(page.locator('[data-config-changes]')).toContainText('1 réglage');
+  await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+  await page.locator('#confirm-dialog textarea[name="reason"]').fill('Vérification des menus de rôles');
+  await page.locator('#confirm-dialog input[name="confirmation"]').fill('ENREGISTRER');
+  await page.locator('#confirm-dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
+  await expect(page.locator('[data-notice]')).toContainText('Configuration enregistrée');
+  await page.reload(); await expect(field.locator('.reference-tokens')).toHaveText(/Équipe événement/);
+  await expect(field.locator('.reference-tokens')).not.toContainText('Administrateur');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('access-settings.png'), fullPage: true }); await context.close();
+});
+
+test('module navigation protects pending edits and custom channel picker can clear a saved channel', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER');
+  await page.goto('/admin/configuration?bot=protect&guild=661720242585600500&section=logs');
+  const field = page.locator('[data-config-field="moderationLogChannelId"]');
+  await field.locator('summary').click(); await field.getByRole('button', { name: 'Aucun', exact: true }).click();
+  await expect(field.locator('[data-picker-caption]')).toHaveText('Aucun');
+  await expect(page.locator('[data-config-changes]')).toContainText('1 réglage');
+  const mobile = info.project.name === 'mobile';
+  if (mobile) await page.getByRole('combobox', { name: 'Rubrique', exact: true }).selectOption('access');
+  else await page.locator('[data-section-link="access"]').click();
+  await expect(page.locator('#confirm-dialog')).toBeVisible(); await page.keyboard.press('Escape');
+  await expect(page).toHaveURL(/section=logs/); await expect(field.locator('[data-picker-caption]')).toHaveText('Aucun');
+  await page.getByRole('button', { name: 'Annuler', exact: true }).click();
+  await expect(field.locator('[data-picker-caption]')).toHaveText('journal-test');
+  await expect(page.locator('[data-save-config]')).toBeDisabled();
+  if (mobile) await page.getByRole('combobox', { name: 'Rubrique', exact: true }).selectOption('automod');
+  else await page.locator('[data-section-link="automod"]').click();
+  await expect(page.getByRole('switch', { name: 'Activer l’AutoMod', exact: true })).toBeChecked();
+  await page.getByRole('switch', { name: 'Activer l’AutoMod', exact: true }).uncheck();
+  await expect(page.locator('[data-config-changes]')).toContainText('1 réglage');
+  await page.getByRole('button', { name: 'Annuler', exact: true }).click();
+  await page.getByRole('tab', { name: 'Protect', exact: true }).focus(); await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'Game', exact: true })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByLabel('Titre du module')).toHaveValue('game de test'); await context.close();
+});
+
+test('moderation workspace links to real Protect modules and handles an outage honestly', async ({ browser }) => {
+  const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/moderation');
+  await expect(page.locator('.moderation-module')).toHaveCount(3);
+  await expect(page.locator('#platform-content')).not.toContainText('Connecteur de modération non activé');
+  await expect(page.locator('.moderation-history-note')).toContainText('ne sont pas reliés');
+  await page.getByRole('link', { name: /Équipes et accès/ }).click();
+  await expect(page).toHaveURL(/section=access/); await expect(page.locator('[data-config-field="adminRoleIds"]')).toBeVisible();
+  await page.goto('/admin/moderation');
+  await page.route('**/api/platform/admin/bot-config/protect/661720242585600500', route => route.fulfill({ status: 503, json: { error: 'Protect indisponible pour ce test' } }));
+  await page.getByRole('button', { name: 'Actualiser Protect', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Réglages Protect indisponibles' })).toBeVisible();
+  await expect(page.locator('.moderation-module')).toHaveCount(0);
+  await page.unroute('**/api/platform/admin/bot-config/protect/661720242585600500'); await page.getByRole('button', { name: 'Actualiser Protect', exact: true }).click();
+  await expect(page.locator('.moderation-module')).toHaveCount(3); await context.close();
 });

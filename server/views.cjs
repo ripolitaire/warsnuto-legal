@@ -6,6 +6,8 @@ const pages = { '/profile': ['Mon espace', 'Ton espace WarsNuto'], '/profile/set
 function page(route, session, settings = { name: 'WarsNuto' }) {
   const [section, title] = pages[route];
   const admin = route.startsWith('/admin') && session.permissions.includes('admin:read');
+  const symbols = { '/admin': 'layout-dashboard', '/servers': 'server', '/admin/configuration': 'sliders-horizontal', '/admin/bots': 'activity', '/admin/users': 'users-round', '/admin/moderation': 'shield-check', '/admin/staff': 'badge-check', '/admin/logs': 'scroll-text', '/admin/settings': 'settings-2', '/profile': 'user-round', '/profile/game': 'swords', '/profile/settings': 'settings-2' };
+  const symbol = name => `<i data-lucide="${name}" aria-hidden="true"></i>`;
   const links = admin ? [['/admin', 'Vue d’ensemble', 'admin:read'], ['/servers', 'Mes serveurs'], ['/admin/configuration', 'Configuration des bots'], ['/admin/bots', 'Suivi des bots', 'admin:read'], ['/admin/users', 'Utilisateurs', 'users:read'],
     ['/admin/moderation', 'Modération', 'moderation:read'], ['/admin/staff', 'Équipe et permissions', 'staff:manage'],
     ['/admin/logs', 'Journal', 'audit:read'], ['/admin/settings', 'Paramètres du site', 'settings:write']]
@@ -15,9 +17,9 @@ function page(route, session, settings = { name: 'WarsNuto' }) {
     <link rel="icon" href="/assets/warsnuto-favicon-round.png"><link rel="stylesheet" href="/platform.css"><script src="/assets/platform-icons.js" defer></script><script src="/member-space.js" defer></script>${route === '/admin/configuration' ? '<script src="/bot-configuration.js" defer></script>' : ''}<script src="/platform.js" defer></script></head>
     <body data-platform-page="${escape(route)}"><header class="platform-header"><a class="platform-brand" href="/"><img src="/assets/warsnuto-icon.png" alt="">${escape(settings.name)}<span>UNIVERS</span></a>
     <div data-account-menu></div></header><div class="platform-shell"><aside class="platform-sidebar"><p>${escape(section)}</p><nav aria-label="Navigation de l’espace">
-    ${links.filter(([, , permission]) => !permission || session.permissions.includes(permission)).map(([href, label]) => `<a href="${href}"${href === route ? ' aria-current="page"' : ''}>${escape(label)}</a>`).join('')}
-    <a href="/">Retour au site</a></nav><div class="sidebar-account"><img src="${escape(session.user.avatar)}" alt=""><span>${escape(session.user.displayName)}<small>${escape(session.user.role)}</small></span></div></aside>
-    <main class="platform-main"><div class="page-heading"><p class="eyebrow">${escape(section)}</p><h1>${escape(title)}</h1><span class="connection-state"><i></i> Espace sécurisé</span></div>
+    ${links.filter(([, , permission]) => !permission || session.permissions.includes(permission)).map(([href, label]) => `<a href="${href}"${href === route ? ' aria-current="page"' : ''}>${symbol(symbols[href])}<span>${escape(label)}</span></a>`).join('')}
+    <a href="/" class="nav-return">${symbol('arrow-up-right')}<span>Retour au site</span></a></nav><div class="sidebar-account"><img src="${escape(session.user.avatar)}" alt=""><span>${escape(session.user.displayName)}<small>${escape(session.user.role)}</small></span></div></aside>
+    <main class="platform-main"><div class="page-heading"><div><p class="eyebrow">${escape(section)}</p><h1>${escape(title)}</h1></div><span class="connection-state"><i></i> Session active</span></div>
     <div role="status" aria-live="polite" data-notice></div><div id="platform-content" aria-busy="true"><p class="loading-state">Chargement…</p></div></main></div>
     <dialog id="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog"><h2 id="confirm-title">Confirmer l’action</h2><p data-confirm-description></p>
     <label>Motif<textarea name="reason" required minlength="3" maxlength="300"></textarea></label><label data-confirm-label>Confirmation<input name="confirmation" required autocomplete="off"></label>
