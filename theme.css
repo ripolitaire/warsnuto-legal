@@ -25,4 +25,40 @@
   --nav-active-bg: rgba(255, 204, 77, 0.08);
   --nav-active-line: rgba(255, 204, 77, 0.22);
   --gold-action: linear-gradient(135deg, var(--gold), #eeb044);
+  --site-background: radial-gradient(circle at 18% -8%, rgba(225, 25, 25, 0.32), transparent 27rem), radial-gradient(circle at 78% 10%, rgba(255, 204, 77, 0.11), transparent 24rem), radial-gradient(circle at 50% 115%, rgba(88, 101, 242, 0.12), transparent 34rem), linear-gradient(180deg, #080808 0%, #050506 52%, #07080b 100%);
+  --gold-button: #ffcc4d;
+  --public-header: rgba(5, 5, 6, 0.88);
+  --public-card: rgba(8, 8, 9, 0.84);
+  --public-card-hover: rgba(10, 10, 11, 0.92);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f8f8fa; --chrome: #ffffff; --surface: #ffffff;
+  --panel: rgba(0, 0, 0, 0.025); --panel-strong: rgba(0, 0, 0, 0.055);
+  --line: rgba(0, 0, 0, 0.12); --line-strong: rgba(0, 0, 0, 0.23);
+  --text: #191919; --muted: #555b66; --faint: #68707d; --gold: #805600;
+  --control-bg: #ffffff; --shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  --nav-active-bg: rgba(227, 166, 28, 0.12); --nav-active-line: rgba(156, 104, 0, 0.32);
+  --gold-action: linear-gradient(135deg, var(--gold-button), #eeb044);
+  --site-background: var(--bg);
+  --public-header: rgba(255, 255, 255, 0.94);
+  --public-card: #ffffff; --public-card-hover: #f1f1f4;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg: #f8f8fa; --chrome: #ffffff; --surface: #ffffff;
+    --panel: rgba(0, 0, 0, 0.025); --panel-strong: rgba(0, 0, 0, 0.055);
+    --line: rgba(0, 0, 0, 0.12); --line-strong: rgba(0, 0, 0, 0.23);
+    --text: #191919; --muted: #555b66; --faint: #68707d; --gold: #805600;
+    --control-bg: #ffffff; --shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    --nav-active-bg: rgba(227, 166, 28, 0.12); --nav-active-line: rgba(156, 104, 0, 0.32);
+    --gold-action: linear-gradient(135deg, var(--gold-button), #eeb044);
+    --site-background: var(--bg);
+    --public-header: rgba(255, 255, 255, 0.94);
+    --public-card: #ffffff; --public-card-hover: #f1f1f4;
+  }
+}
+html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after {
+  animation: none !important; transition: none !important; scroll-behavior: auto !important;
 }

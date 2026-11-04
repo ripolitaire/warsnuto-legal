@@ -31,5 +31,6 @@ module.exports = root => {
   const authorization = load('authorization');
   return { sections, canConfigure: (guild, member) => authorization.getMemberAccessLevel(member) === 'admin',
     memberAccess: require('./webProtectAccess.cjs').createProtectAccess(authorization, settings),
+    profile: require('./webProtectProfile.cjs').createProtectProfile(level, levelStore, load('database').getDatabase),
     audit: (guildId, actor, module, fields, operationId) => load('configAuditLog').recordConfigAudit({ guildId, actor: { id: actor }, module: 'web:' + module, action: 'Configuration depuis le site', details: { fields, operationId } }) };
 };

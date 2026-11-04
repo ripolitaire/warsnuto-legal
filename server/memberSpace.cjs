@@ -62,6 +62,10 @@ function createMemberSpace(db, config, broker) {
     if (!data.access?.canModerate) throw error(403, 'Un rôle de modération Protect est requis sur ce serveur.');
     return data;
   }
-  return { servers, game, protectSession, protect };
+  async function protectProfile(session, guild) {
+    if (!snowflake(guild)) throw error(400, 'Serveur Discord invalide.');
+    return broker.send('protect', '/member/' + guild + '/profile/normal', session.user.id);
+  }
+  return { servers, game, protectSession, protect, protectProfile };
 }
 module.exports = { createMemberSpace };

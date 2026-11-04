@@ -23,6 +23,7 @@ profil Admin Mod. Voir le [journal espace membre](RELEASE-SERVER-HUB-2026-11-03.
 Les [grades Protect](RELEASE-PROTECT-ACCESS-2026-11-04.md) ouvrent aussi l'espace
 de modération du serveur correspondant, sans promotion du compte web. La charte
 du site public et du panel est centralisée dans `theme.css`.
+La rubrique `/profile/protect` affiche ton XP communautaire Protect. Le [journal des préférences](RELEASE-MEMBER-PREFERENCES-2026-11-04.md) décrit les thèmes, la densité et les réglages personnels accessibles depuis Mon compte.
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

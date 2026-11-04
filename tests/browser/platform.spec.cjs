@@ -27,7 +27,7 @@ async function blockExternal(context) {
     return route.abort();
   });
 }
-for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/profile/game', 'Niveau 42'], ['/servers', 'Tes serveurs WarsNuto'], ['/admin', 'État des services'], ['/admin/configuration', 'Choisir un serveur'], ['/admin/moderation', 'Tous les réglages'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
+for (const [route, text] of [['/profile', 'Ton compte'], ['/profile/settings', 'Sessions actives'], ['/profile/protect', 'Niveau 12'], ['/profile/game', 'Niveau 42'], ['/servers', 'Tes serveurs WarsNuto'], ['/admin', 'État des services'], ['/admin/configuration', 'Choisir un serveur'], ['/admin/moderation', 'Tous les réglages'], ['/admin/bots', 'Protect, Game et Support'], ['/admin/users', 'Rechercher un compte'], ['/admin/staff', 'Autorisations des rôles'], ['/admin/logs', 'Toutes les actions'], ['/admin/settings', 'Nom public']]) {
   test('responsive page ' + route, async ({ browser }, info) => {
     const { context, page } = await prepare(browser, 'OWNER');
     const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -81,6 +81,83 @@ test('profile preferences save and confirmation can be cancelled without mutatin
   await expect(page.locator('[data-notice]')).toContainText('Préférences enregistrées');
   await page.getByRole('button', { name: 'Révoquer les autres', exact: false }).click();
   await expect(page.locator('#confirm-dialog')).toBeVisible(); await page.keyboard.press('Escape'); await expect(page.locator('#confirm-dialog')).not.toBeVisible(); await context.close();
+});
+
+async function preferences(context, patch) {
+  const session = await (await context.request.get('/api/platform/session')).json();
+  const result = await context.request.patch('/api/platform/me/preferences', { data: patch, headers: { origin: 'http://127.0.0.1:4317', 'x-csrf-token': session.csrf } });
+  expect(result.ok()).toBe(true);
+}
+const defaults = { theme: 'dark', density: 'comfortable', reducedMotion: false, autoRefresh: true, hideBalances: false, showProfileBanner: true };
+
+test('Protect community XP is separate from Game, read-only, member accessible and clears stale levels on outage', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'USER');
+  await page.goto('/profile');
+  await expect(page.locator('[data-profile-protect]')).toContainText('Niveau 12');
+  await expect(page.locator('[data-profile-game]')).toContainText('Niveau 42');
+  await page.goto('/profile/protect');
+  await expect(page.locator('[data-protect-xp-data]')).toContainText('Dernière XP vocale');
+  await expect(page.locator('progress')).toHaveAttribute('value', '234');
+  await page.route('**/api/platform/me/protect/**', route => route.fulfill({ status: 503, json: { error: 'Protect indisponible pour ce test' } }));
+  await page.getByRole('button', { name: 'Actualiser mon XP Protect', exact: true }).click();
+  await expect(page.locator('[data-protect-xp-data]')).toContainText('Protect indisponible');
+  await expect(page.locator('progress')).toHaveCount(0);
+  await page.unroute('**/api/platform/me/protect/**');
+  await page.getByRole('button', { name: 'Actualiser mon XP Protect', exact: true }).click();
+  await expect(page.locator('[data-protect-xp-data]')).toContainText('Niveau 12');
+  await page.screenshot({ path: info.outputPath('protect-xp.png'), fullPage: true }); await context.close();
+});
+
+test('appearance previews, cancels, saves, follows system and carries to public pages without private storage', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'USER');
+  try {
+    await preferences(context, defaults); await page.goto('/profile/settings');
+    await page.getByLabel('Clair', { exact: true }).check();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 248, 250)');
+    await page.getByRole('button', { name: 'Annuler', exact: true }).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.getByLabel('Clair', { exact: true }).check();
+    await page.getByLabel('Densité de mon espace').selectOption('compact');
+    await page.getByLabel('Masquer mes soldes à l’écran').check();
+    await page.getByLabel('Afficher ma bannière Discord').uncheck();
+    await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await expect(page.locator('[data-notice]')).toContainText('Préférences enregistrées');
+    await page.reload(); await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
+    await expect(page.getByLabel('Clair', { exact: true })).toBeChecked();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: info.outputPath('preferences-light.png'), fullPage: true });
+    await page.goto('/profile/game'); await expect(page.locator('[data-game-data]')).toContainText('Masqué');
+    await expect(page.locator('.game-metrics')).not.toContainText('125');
+    await page.goto('/'); await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+    await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 248, 250)');
+    const local = await page.evaluate(() => JSON.parse(localStorage.getItem('wn-appearance-v1')));
+    expect(Object.keys(local).sort()).toEqual(['density', 'reducedMotion', 'theme']);
+    await expect(page.locator('.site-intro')).toHaveCSS('opacity', '0');
+    await expect(page.locator('.v2-hero-copy')).toHaveCSS('opacity', '1');
+    await page.screenshot({ path: info.outputPath('public-light.png') });
+    await preferences(context, { theme: 'system' }); await page.goto('/profile/settings');
+    await page.emulateMedia({ colorScheme: 'light' }); await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 248, 250)');
+    await page.emulateMedia({ colorScheme: 'dark' }); await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(5, 5, 6)');
+    await preferences(context, { reducedMotion: true }); await page.goto('/profile/settings');
+    await expect(page.getByLabel('Réduire les animations de mon espace')).toBeChecked();
+    await page.goto('/'); await expect(page.locator('.site-intro')).not.toBeVisible();
+    await expect(page.locator('.v2-hero-copy')).toHaveCSS('opacity', '1');
+  } finally { await preferences(context, defaults); await context.close(); }
+});
+
+test('automatic statistics may stop but session validation and manual refresh continue', async ({ browser }) => {
+  const { context, page } = await prepare(browser, 'USER'); let stats = 0, sessions = 0;
+  try {
+    await preferences(context, { autoRefresh: false });
+    page.on('request', request => { if (request.url().includes('/api/platform/me/protect/')) stats++; if (request.url().endsWith('/api/platform/session')) sessions++; });
+    await page.clock.install(); await page.goto('/profile/protect');
+    await expect(page.locator('[data-protect-xp-data]')).toContainText('Niveau 12');
+    const before = sessions; await page.clock.fastForward(61000);
+    await expect.poll(() => sessions).toBeGreaterThan(before); expect(stats).toBe(1);
+    await page.getByRole('button', { name: 'Actualiser mon XP Protect', exact: true }).click();
+    await expect.poll(() => stats).toBe(2);
+  } finally { await preferences(context, defaults); await context.close(); }
 });
 test('member search and journal filters stay functional', async ({ browser }) => {
   const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/users');

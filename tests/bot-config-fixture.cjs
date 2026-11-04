@@ -25,6 +25,10 @@ function createBotConfigFixture(ids) {
           fruit: { name: 'Fruit Nika', mastery: 340, awakened: 1 }, crew: { name: 'Les aventuriers', level: 12 }, weapon: 'Katana', accessory: null, inventory: [{ name: 'Clé de raid', quantity: 3 }], activity: [], seasonPoints: 25 } };
       } : undefined };
     if (bot === 'protect') {
+      adapter.profile = (guild, actor, mode, now) => {
+        if (mode !== 'normal') S.fail('Protect ne possède pas de profil Admin Mod.', 403);
+        return { sampledAt: now, enabled: true, voiceEnabled: true, maxLevel: 100, progression: { level: 12, xp: 234, totalXp: 50834, nextXp: 14400, levelLabel: null, badgeLabel: null, progressLocked: false, reachedMax: false, lastMessageXpAt: now - 60000, lastVoiceXpAt: now - 120000 } };
+      };
       adapter.memberAccess = (g, member) => {
         const tier = member.protectTier || 'public', level = ['public', 'mod-test', 'mod', 'responsible-mod', 'admin'].indexOf(tier);
         return { tier, level, label: ['Membre', 'Modérateur test', 'Modérateur', 'Responsable modération', 'Administrateur Protect'][level], canModerate: level > 0, canConfigure: level === 4, commands: level ? ['mute', 'kick', ...(level >= 2 ? ['give-role'] : []), ...(level >= 3 ? ['ban'] : []), ...(level === 4 ? ['dashboard'] : [])] : [] };

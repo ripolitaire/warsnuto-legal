@@ -78,6 +78,10 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     limit('game-read:' + req.session.user.id, 15);
     res.json(await memberSpace.game(req.session, req.params.guild, req.query.mode || 'normal'));
   });
+  app.get('/api/platform/me/protect/:guild', async (req, res) => {
+    limit('protect-xp-read:' + req.session.user.id, 15);
+    res.json(await memberSpace.protectProfile(req.session, req.params.guild));
+  });
   app.patch('/api/platform/me/preferences', (req, res) => res.json(service.preferences(req.session, req.body)));
   app.post('/api/platform/me/sessions/revoke-others', (req, res) => {
     object(req.body, ['confirmation']); if (req.body.confirmation !== 'REVOQUER') throw error(400, 'Confirmation requise.');
@@ -111,7 +115,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     res.type('html').send(views.page(route, scoped, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js'];
+  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {

@@ -69,8 +69,14 @@ function createService(db, config) {
       audit(db, now(), session.user.id, 'session.revoke_others', session.user.id, { count: Number(result.changes) }); return { ok: true };
     }); },
     preferences(session, input) {
-      object(input, ['reducedMotion']); if (typeof input.reducedMotion !== 'boolean') throw error(400, 'Préférence invalide.');
-      db.prepare('UPDATE users SET preferences=? WHERE id=?').run(JSON.stringify(input), session.userId); return { ok: true };
+      const { normalizePreferences, validatePreferences } = require('./preferences.cjs');
+      validatePreferences(input);
+      return transaction(db, () => {
+        const current = db.prepare('SELECT preferences FROM users WHERE id=?').get(session.userId);
+        const preferences = { ...normalizePreferences(current.preferences), ...input };
+        db.prepare('UPDATE users SET preferences=? WHERE id=?').run(JSON.stringify(preferences), session.userId);
+        return { ok: true, preferences };
+      });
     },
     role(actor, id, input) {
       staffActor(actor);

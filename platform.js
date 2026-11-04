@@ -22,7 +22,7 @@
     'bot.config.requested': 'Configuration bot demandée', 'bot.config.saved': 'Configuration bot enregistrée', 'bot.config.refused': 'Configuration bot refusée ou à vérifier' };
   const grantLabels = { 'admin:read': 'Vue d’ensemble', 'moderation:read': 'Espace de modération', 'users:read': 'Consulter les comptes', 'users:moderate': 'Suspendre et réactiver les membres',
     'audit:read': 'Consulter le journal', 'settings:write': 'Modifier les paramètres publics', 'bots:configure': 'Configurer les bots sur les serveurs Discord autorisés' };
-  let session, serverOffset = 0, listPage = 1, currentUser, settings, grants, busy = false;
+  let session, serverOffset = 0, listPage = 1, currentUser, settings, grants, busy = false, preferenceDirty = false;
   async function request(path, options = {}) {
     const response = await fetch('/api/platform/' + path, { cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(15000), ...options,
       headers: { ...(options.body ? { 'Content-Type': 'application/json', 'X-CSRF-Token': session?.csrf || '' } : {}), ...options.headers } });
@@ -48,7 +48,7 @@
     menu.className = 'wn-account';
     menu.innerHTML = session?.user ? `<details><summary aria-label="Compte de ${E(session.user.displayName)}"><img src="${E(session.user.avatar)}" alt=""><span>${E(session.user.displayName)}</span>${icon('chevron-down')}</summary>
       <div class="wn-account-dropdown"><strong>${E(session.user.displayName)}</strong><span>@${E(session.user.username || session.user.id)}</span><small>ID Discord : ${E(session.user.id)}</small>
-      <a href="/profile">${icon('user-round')} Mon espace</a><a href="/profile/game">${icon('gamepad-2')} Ma progression Game</a><a href="/servers">${icon('server')} Mes serveurs</a><a href="/profile/settings">${icon('settings-2')} Mon compte</a>
+      <a href="/profile">${icon('user-round')} Mon espace</a><a href="/profile/protect">${icon('sparkles')} Mon XP Protect</a><a href="/profile/game">${icon('gamepad-2')} Ma progression Game</a><a href="/servers">${icon('server')} Mes serveurs</a><a href="/profile/settings">${icon('settings-2')} Mon compte</a>
       ${session.permissions.includes('admin:read') ? `<a href="/admin">${icon('shield-check')} Administration</a>` : protectModerator ? `<a href="/admin/moderation">${icon('shield-check')} Modération</a>` : ''}<button type="button" data-logout>${icon('log-out')} Se déconnecter</button></div></details>`
       : `<a class="wn-login" href="/auth/discord/start?next=${encodeURIComponent(route || '/profile')}">${icon('log-in')} Se connecter</a>`;
     menu.querySelector('[data-logout]')?.addEventListener('click', async () => { try { await write('logout', {}); location.assign('/'); } catch (error) { fail(error); } });
@@ -116,7 +116,7 @@
   }
   let monitoringBusy = false;
   async function refreshMonitoring() {
-    if (monitoringBusy || busy || !session?.user || document.hidden || !['/admin', '/admin/bots'].includes(route)) return;
+    if (monitoringBusy || busy || !session?.user || session.user.preferences.autoRefresh === false || document.hidden || !['/admin', '/admin/bots'].includes(route)) return;
     monitoringBusy = true;
     try { renderBotMonitoring(await request('admin/bots')); }
     catch (error) {
@@ -129,26 +129,34 @@
   async function profile() {
     const data = await request('me'), user = data.user;
     if (route.endsWith('/settings')) {
-      content.innerHTML = `<section class="workspace-section"><div class="section-heading"><h2>Ton aventure WarsNuto</h2><a href="/profile/game" class="button primary">${icon('gamepad-2')} Ma progression Game</a></div></section><section class="workspace-section"><h2>Informations Discord</h2><div class="setting-line"><div><strong>@${E(user.username || user.id)}</strong><p>ID : ${E(user.id)}</p></div><a class="button" href="/auth/discord/start?next=/profile/settings">${icon('refresh-cw')} Actualiser avec Discord</a></div></section>
-        <section class="workspace-section"><h2>Préférences</h2><form id="preferences-form"><label class="checkbox-line"><input type="checkbox" name="reducedMotion" ${user.preferences.reducedMotion ? 'checked' : ''}>Réduire les animations de mon espace</label><button class="primary" type="submit">${icon('save')} Enregistrer</button></form></section>
+      preferenceDirty = false;
+      content.innerHTML = `<section class="workspace-section"><div class="section-heading"><h2>Tes progressions</h2><div class="form-actions"><a href="/profile/protect" class="button">${icon('sparkles')} XP Protect</a><a href="/profile/game" class="button">${icon('gamepad-2')} Game</a></div></div></section><section class="workspace-section"><h2>Informations Discord</h2><div class="setting-line"><div><strong>@${E(user.username || user.id)}</strong><p>ID : ${E(user.id)}</p></div><a class="button" href="/auth/discord/start?next=/profile/settings">${icon('refresh-cw')} Actualiser avec Discord</a></div></section>
+        <section class="workspace-section"><h2>Préférences</h2><form id="preferences-form" class="preferences-form"><fieldset class="theme-choices"><legend>Thème du site</legend>${[['dark', 'Sombre', 'moon'], ['light', 'Clair', 'sun'], ['system', 'Système', 'monitor']].map(([value, label, glyph]) => `<label><input type="radio" name="theme" value="${value}" ${user.preferences.theme === value ? 'checked' : ''}><span>${icon(glyph)} ${label}</span></label>`).join('')}</fieldset><label>Densité de mon espace<select name="density"><option value="comfortable" ${user.preferences.density === 'comfortable' ? 'selected' : ''}>Confortable</option><option value="compact" ${user.preferences.density === 'compact' ? 'selected' : ''}>Compacte</option></select></label><div class="preference-toggles">${[['reducedMotion', 'Réduire les animations de mon espace'], ['autoRefresh', 'Actualiser automatiquement mes statistiques'], ['showProfileBanner', 'Afficher ma bannière Discord'], ['hideBalances', 'Masquer mes soldes à l’écran']].map(([key, label]) => `<label class="checkbox-line"><input type="checkbox" name="${key}" ${user.preferences[key] ? 'checked' : ''}>${label}</label>`).join('')}</div><div class="form-actions"><button class="primary" type="submit">${icon('save')} Enregistrer</button><button type="reset">${icon('undo-2')} Annuler</button></div></form></section>
         <section class="workspace-section"><div class="section-heading"><h2>Sessions actives</h2><button type="button" data-revoke-others>${icon('monitor-x')} Révoquer les autres</button></div>
         ${table(['Navigateur', 'Connexion', 'Dernière activité', 'Expiration', 'Session'], data.sessions.map(item => `<tr><td>${E(item.browser)}</td><td>${E(date(item.created_at))}</td><td>${E(date(item.last_seen_at))}</td><td>${E(date(item.expires_at))}</td><td>${item.current ? '<span class="status positive">Actuelle</span>' : 'Autre session'}</td></tr>`))}<p class="muted">Expiration après 30 minutes d’inactivité, ou 2 heures après la connexion.</p></section>`;
-      content.querySelector('#preferences-form').onsubmit = event => action(event, async () => {
-        const reducedMotion = event.currentTarget.elements.reducedMotion.checked;
-        await write('me/preferences', { reducedMotion }, 'PATCH'); document.body.classList.toggle('reduced-motion', reducedMotion); notice('Préférences enregistrées.', 'success');
-      });
+      const form = content.querySelector('#preferences-form');
+      const draft = () => ({ theme: form.elements.theme.value, density: form.elements.density.value, ...Object.fromEntries(['reducedMotion', 'autoRefresh', 'showProfileBanner', 'hideBalances'].map(key => [key, form.elements[key].checked])) });
+      form.onchange = () => { preferenceDirty = true; window.wnAppearance.apply(draft(), { persist: false }); };
+      form.onreset = () => { preferenceDirty = false; window.wnAppearance.apply(user.preferences, { persist: false }); };
+      form.onsubmit = event => { const values = draft(); action(event, async () => {
+        const saved = await write('me/preferences', values, 'PATCH');
+        session.user.preferences = saved.preferences; preferenceDirty = false; window.wnAppearance.apply(saved.preferences);
+        await profile(); notice('Préférences enregistrées.', 'success');
+      }); };
       content.querySelector('[data-revoke-others]').onclick = () => action(null, async () => {
         const result = await confirmAction('Les autres navigateurs devront se reconnecter. Cette session reste active.', 'REVOQUER', false);
         if (!result) return; await write('me/sessions/revoke-others', { confirmation: result.confirmation }); await profile(); notice('Les autres sessions ont été révoquées.', 'success');
       }); return;
     }
-    content.innerHTML = `<section class="profile-identity">${user.banner ? `<img class="profile-banner" src="${E(user.banner)}" alt="Bannière Discord">` : ''}<div class="profile-person"><img class="profile-avatar" src="${E(user.avatar)}" alt="Avatar Discord"><div><h2>${E(user.displayName)}</h2><p>@${E(user.username || user.id)}</p><span class="status positive">Compte actif</span></div><a class="button" href="/profile/settings">${icon('settings-2')} Mon compte</a></div></section>
+    content.innerHTML = `<section class="profile-identity">${user.banner && user.preferences.showProfileBanner ? `<img class="profile-banner" src="${E(user.banner)}" alt="Bannière Discord">` : ''}<div class="profile-person"><img class="profile-avatar" src="${E(user.avatar)}" alt="Avatar Discord"><div><h2>${E(user.displayName)}</h2><p>@${E(user.username || user.id)}</p><span class="status positive">Compte actif</span></div><a class="button" href="/profile/settings">${icon('settings-2')} Mon compte</a></div></section>
       <section class="workspace-section"><h2>Ton compte</h2><dl class="profile-facts">${[['Identifiant Discord', user.id], ['Rôle sur le site', roles[user.role]], ['Compte Discord créé le', date(user.accountCreatedAt)], ['Première connexion au site', date(user.firstLoginAt)], ['Dernière connexion', date(user.lastLoginAt)]].map(([label, value]) => `<div><dt>${E(label)}</dt><dd>${E(value)}</dd></div>`).join('')}</dl></section>
-      ${session.protectAccess?.guilds.length ? `<section class="workspace-section"><h2>Tes accès Protect par serveur</h2><div class="service-list">${session.protectAccess.guilds.map(guild => `<div><span>${E(guild.name)}</span><a href="/admin/moderation?guild=${E(guild.id)}">${E(guild.label)} · Niveau ${guild.level} ${icon('arrow-up-right')}</a></div>`).join('')}</div></section>` : ''}<div data-profile-game></div>`;
+      ${session.protectAccess?.guilds.length ? `<section class="workspace-section"><h2>Tes accès Protect par serveur</h2><div class="service-list">${session.protectAccess.guilds.map(guild => `<div><span>${E(guild.name)}</span><a href="/admin/moderation?guild=${E(guild.id)}">${E(guild.label)} · Niveau ${guild.level} ${icon('arrow-up-right')}</a></div>`).join('')}</div></section>` : ''}<div data-profile-protect></div><div data-profile-game></div>`;
+    try { await window.wnMemberSpace.protectProfile(memberUI(content.querySelector('[data-profile-protect]')), true); }
+    catch { content.querySelector('[data-profile-protect]').innerHTML = '<p class="notice">XP Protect indisponible. <a href="/profile/protect">Réessayer</a></p>'; }
     try { await window.wnMemberSpace.game(memberUI(content.querySelector('[data-profile-game]')), true); }
     catch { content.querySelector('[data-profile-game]').innerHTML = '<p class="notice">Progression Game indisponible. <a href="/profile/game">Réessayer</a></p>'; }
   }
-  const memberUI = (target = content) => ({ content: target, request, E, icon, icons, notice });
+  const memberUI = (target = content) => ({ content: target, request, E, icon, icons, notice, get preferences() { return session?.user?.preferences || {}; } });
   async function users(staff = false) {
     const query = new URLSearchParams(location.search); query.set('page', listPage);
     const data = await request('admin/' + (staff ? 'staff' : 'users') + '?' + query);
@@ -216,10 +224,11 @@
     try {
       session = await request('session'); serverOffset = session.serverNow - Date.now(); account();
       if (!session.user) { if (route) expire(); return; }
-      document.body.classList.toggle('reduced-motion', session.user.preferences.reducedMotion);
+      window.wnAppearance?.apply(session.user.preferences);
       if (!route) return;
       if (matchMedia('(max-width: 780px)').matches) document.querySelector('.platform-sidebar nav [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
       if (route === '/profile/game') await window.wnMemberSpace.game(memberUI());
+      else if (route === '/profile/protect') await window.wnMemberSpace.protectProfile(memberUI());
       else if (route === '/servers') await window.wnMemberSpace.servers(memberUI());
       else if (route.startsWith('/profile')) await profile();
       else if (route === '/admin') await overview();
@@ -244,7 +253,7 @@
   setInterval(() => { if (session?.user && Date.now() + serverOffset >= Math.min(session.expiresAt, session.idleExpiresAt)) expire(); }, 5000);
   setInterval(refreshMonitoring, 15000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) void refreshMonitoring(); });
-  setInterval(async () => { if (!session?.user || document.hidden) return; try { const fresh = await request('session'); if (!fresh.user) expire(); else { session = fresh; account(); } } catch (error) { if (route) fail(error); } }, 60000);
+  setInterval(async () => { if (!session?.user || document.hidden) return; try { const fresh = await request('session'); if (!fresh.user) expire(); else { session = fresh; account(); if (!preferenceDirty) window.wnAppearance?.apply(session.user.preferences); } } catch (error) { if (route) fail(error); } }, 60000);
   document.addEventListener('click', event => { const details = menu?.querySelector('details'); if (details?.open && !menu.contains(event.target)) details.open = false; });
   if (!route) request('public').then(data => {
     if (data.name) { const title = document.querySelector('.v2-brand strong'); if (title) title.textContent = data.name; }

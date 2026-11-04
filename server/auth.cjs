@@ -12,7 +12,7 @@ function publicUser(row) {
     avatar: asset('avatars', row.avatar) || `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(id) >> 22n) % 6n)}.png`,
     banner: asset('banners', row.banner), accountCreatedAt: row.account_created_at, createdAt: row.created_at,
     firstLoginAt: row.first_login_at, lastLoginAt: row.last_login_at, status: row.status, role: row.role,
-    preferences: JSON.parse(row.preferences), version: row.version };
+    preferences: require('./preferences.cjs').normalizePreferences(row.preferences), version: row.version };
 }
 function createAuth(db, config, fetcher = fetch) {
   const sessionName = config.secure ? '__Host-wn_session' : 'wn_session';

@@ -1,5 +1,5 @@
 const { isIP } = require('node:net');
-const ALLOWED = /^(?:auth\/discord\/(?:start|callback)|servers|profile(?:\/(?:settings|game))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?|api\/platform\/(?:public|session|servers|moderation\/\d{17,20}|logout|activity|me(?:\/game\/\d{17,20}|\/preferences|\/sessions\/revoke-others)?|admin\/(?:overview|bots|bot-config(?:\/(?:protect|game|support)\/(?:guilds|\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?))?|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
+const ALLOWED = /^(?:auth\/discord\/(?:start|callback)|servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?|api\/platform\/(?:public|session|servers|moderation\/\d{17,20}|logout|activity|me(?:\/(?:game|protect)\/\d{17,20}|\/preferences|\/sessions\/revoke-others)?|admin\/(?:overview|bots|bot-config(?:\/(?:protect|game|support)\/(?:guilds|\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?))?|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
