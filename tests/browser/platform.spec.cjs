@@ -260,7 +260,9 @@ test('compact role menus search, remove, save and persist without native multise
   await field.getByRole('searchbox').fill('introuvable'); await expect(field.locator('[data-picker-empty]')).toBeVisible();
   await field.getByRole('searchbox').fill('');
   expect(await picker.locator('.reference-popover').evaluate(node => { const b = node.getBoundingClientRect(); return b.left >= 0 && b.right <= innerWidth && b.top >= 64 && b.bottom <= innerHeight; })).toBe(true);
-  await page.screenshot({ path: info.outputPath('roles-search.png'), fullPage: true });
+  // Full-page capture resizes the mobile viewport and can dismiss a native popover.
+  await page.screenshot({ path: info.outputPath('roles-search.png') });
+  await expect(field.getByRole('searchbox')).toBeFocused();
   await page.keyboard.press('Escape'); await expect(picker).not.toHaveAttribute('open', '');
   await expect(field.locator('summary')).toBeFocused();
   await field.getByRole('button', { name: 'Retirer Administrateur', exact: true }).click();
