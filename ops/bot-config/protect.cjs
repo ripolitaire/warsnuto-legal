@@ -26,8 +26,17 @@ module.exports = root => {
   ], g => automod.getAutoModerationConfig(g.id), (g, values, actor, patch) => automod.updateAutoModerationConfig(g.id, patch)));
   const roleStore = load('roleService');
   sections.push(S.section('auto-roles', 'Attribution automatique des rôles', [S.boolean('joinRolesEnabled', 'Rôles à l’arrivée'), S.roles('joinRoles', 'Rôles attribués à l’arrivée', 25, true), S.boolean('nameRulesEnabled', 'Règles sur le pseudo'), S.boolean('statusRulesEnabled', 'Règles sur le statut'), S.boolean('removeNameRolesWhenMissing', 'Retirer le rôle si le pseudo ne correspond plus'), S.boolean('removeStatusRolesWhenMissing', 'Retirer le rôle si le statut ne correspond plus'), ...['nameRules', 'statusRules'].map(key => S.list(key, key === 'nameRules' ? 'Règles de pseudo' : 'Règles de statut', [S.text('id', 'Identifiant de la règle', 80), S.role('roleId', 'Rôle', true), S.text('keyword', 'Mot-clé', 64, { required: true }), S.boolean('caseSensitive', 'Respecter la casse')]))], g => roleStore.getGuildRoleConfig(g.id), (g, values, actor, patch) => roleStore.updateGuildRoleConfig(g.id, patch)));
-  const welcome = load('welcomeStore');
-  sections.push(S.section('welcome', 'Messages privés de bienvenue', [S.boolean('enabled', 'Activer les MP de bienvenue'), S.boolean('embedEnabled', 'Utiliser un message enrichi'), S.text('title', 'Titre', 256, { required: true }), S.text('message', 'Message', 2000, { required: true, multiline: true }), S.field('color', 'Couleur', 'color', { pattern: '^#[a-fA-F0-9]{6}$' }), S.boolean('footerEnabled', 'Afficher le pied de message')], g => welcome.ensureGuildWelcomeState(welcome.loadWelcomeData(), g.id).config, async (g, values) => { const data = welcome.loadWelcomeData(); welcome.ensureGuildWelcomeState(data, g.id).config = { ...welcome.ensureGuildWelcomeState(data, g.id).config, ...values }; await welcome.saveWelcomeData(data); }));
+  const welcome = load('welcomeService');
+  sections.push(S.section('welcome', 'Accueil des membres', [
+    S.boolean('enabled', 'Activer les MP de bienvenue'), S.boolean('publicEnabled', 'Activer l’accueil à chaque arrivée dans le salon'),
+    S.channel('publicChannelId', 'Salon d’accueil sur le serveur'),
+    S.channel('rulesChannelId', 'Règlement (facultatif)'), S.channel('announcementsChannelId', 'Annonces (facultatif)'), S.channel('discussionChannelId', 'Discussion (facultatif)'),
+    S.boolean('embedEnabled', 'Utiliser la carte Components V2'), S.text('title', 'Titre commun · variable {guild}', 256, { required: true }),
+    S.text('message', 'Message commun · variable {guild}', 2000, { required: true, multiline: true }), S.field('color', 'Couleur', 'color', { pattern: '^#[a-fA-F0-9]{6}$' }), S.boolean('footerEnabled', 'Afficher le pied de carte')
+  ], g => welcome.getGuildWelcomeConfig(g.id), async (g, values, actor, patch) => {
+    try { await welcome.validateWelcomeChannels(g, values); } catch (error) { S.fail(error.message); }
+    await welcome.updateGuildWelcomeConfig(g.id, patch);
+  }, { validate: values => { if (values.publicEnabled && !values.publicChannelId) S.fail('Choisis un salon d’accueil avant d’activer la bienvenue publique.'); } }));
   const authorization = load('authorization');
   return { sections, canConfigure: (guild, member) => authorization.getMemberAccessLevel(member) === 'admin',
     memberAccess: require('./webProtectAccess.cjs').createProtectAccess(authorization, settings),

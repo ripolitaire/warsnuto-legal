@@ -275,9 +275,9 @@ function renderYouTubeVideos(data) {
     target.innerHTML = `
       <article class="youtube-video-card is-empty">
         <span>YouTube</span>
-        <h3>Videos indisponibles pour le moment.</h3>
-        <p>Le lien officiel reste accessible si le flux YouTube ne repond pas.</p>
-        <a class="inline-link" href="https://www.youtube.com/@WarsNut0" target="_blank" rel="noopener noreferrer">Ouvrir la chaine</a>
+        <h3>Vidéos indisponibles pour le moment.</h3>
+        <p>Le lien officiel reste accessible si YouTube ne répond pas.</p>
+        <a class="inline-link" href="https://www.youtube.com/@WarsNut0" target="_blank" rel="noopener noreferrer">Ouvrir la chaîne</a>
       </article>
     `;
     return;
@@ -287,10 +287,10 @@ function renderYouTubeVideos(data) {
     .map(
       (video, index) => `
         <a class="youtube-video-card ${index === 0 ? "is-featured" : ""}" href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer">
-          <span>${escapeHtml(formatDateTime(video.publishedAt))}</span>
+          <span>${escapeHtml(video.publishedAt ? formatDateTime(video.publishedAt) : video.publishedLabel || "Vidéo YouTube")}</span>
           <img src="${escapeHtml(video.thumbnail)}" alt="" loading="lazy" />
           <h3>${escapeHtml(video.title)}</h3>
-          ${video.views ? `<p>${escapeHtml(formatNumberCompact(video.views))} vues</p>` : "<p>Nouvelle video YouTube</p>"}
+          ${video.views ? `<p>${escapeHtml(formatNumberCompact(video.views))} vues</p>` : `<p>${escapeHtml(video.viewsLabel || "Nouvelle vidéo YouTube")}</p>`}
         </a>
       `
     )

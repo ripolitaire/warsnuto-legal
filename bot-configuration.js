@@ -12,7 +12,7 @@
     const catalog = { bots: available };
     const model = { bot: catalog.bots.some(b => b.id === query.get('bot')) ? query.get('bot') : catalog.bots[0].id, guilds: [], guild: '', section: '', meta: null, values: {}, revision: '' };
     let inFlight = false, controlId = 0;
-    const sectionIcon = id => ({ access: 'users-round', validation: 'badge-check', logs: 'scroll-text', 'anti-alt': 'shield-alert', appearance: 'palette', rankings: 'chart-no-axes-combined', xp: 'sparkles', 'xp-messages': 'megaphone', 'xp-crates': 'package', 'xp-roles': 'award', 'xp-logs': 'scroll-text', automod: 'shield-check', 'auto-roles': 'user-plus', welcome: 'mail', availability: 'power', channels: 'hash', balance: 'sliders-horizontal', notes: 'notebook-pen', 'auto-boss': 'swords', events: 'calendar-days', halloween: 'moon', 'player-roles': 'award', team: 'users-round', options: 'sliders-horizontal', types: 'tags' }[id] || 'settings-2');
+    const sectionIcon = id => ({ access: 'users-round', validation: 'badge-check', logs: 'scroll-text', 'anti-alt': 'shield-alert', appearance: 'palette', rankings: 'chart-no-axes-combined', xp: 'sparkles', 'xp-messages': 'megaphone', 'xp-crates': 'package', 'xp-roles': 'award', 'xp-logs': 'scroll-text', automod: 'shield-check', 'auto-roles': 'user-plus', welcome: 'user-plus', availability: 'power', channels: 'hash', balance: 'sliders-horizontal', notes: 'notebook-pen', 'auto-boss': 'swords', events: 'calendar-days', halloween: 'moon', 'player-roles': 'award', team: 'users-round', options: 'sliders-horizontal', types: 'tags' }[id] || 'settings-2');
     const base = () => 'admin/bot-config/' + model.bot;
     const path = () => base() + '/' + model.guild + '/' + model.section;
     const selectedSection = () => model.meta.sections.find(s => s.id === model.section);
@@ -111,7 +111,10 @@
     }
     function patch() {
       const values = readFields(selectedSection().fields, content.querySelector('.config-fields'));
-      return Object.fromEntries(Object.entries(values).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(model.values[key])));
+      return Object.fromEntries(Object.entries(values).filter(([key, value]) => {
+        if (selectedSection().fields.find(f => f.key === key)?.type === 'color') return value.toLowerCase() !== String(model.values[key]).toLowerCase();
+        return JSON.stringify(value) !== JSON.stringify(model.values[key]);
+      }));
     }
     function updateDirty() {
       try { const count = Object.keys(patch()).length; dirty = count > 0; content.querySelector('[data-config-changes]').textContent = count ? count + (count === 1 ? ' réglage modifié, non enregistré' : ' réglages modifiés, non enregistrés') : 'Aucune modification'; content.querySelector('[data-save-config]').disabled = !dirty; } catch { dirty = true; }

@@ -18,6 +18,7 @@
     "backup:web": "node --env-file-if-exists=.env.web server/backup.cjs"
   },
   "dependencies": {
+    "cheerio": "1.2.0",
     "express": "5.3.0",
     "lucide": "1.67.0",
     "oauth4webapi": "3.8.8"

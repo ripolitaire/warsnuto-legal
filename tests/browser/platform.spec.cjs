@@ -302,6 +302,38 @@ test('module navigation protects pending edits and custom channel picker can cle
   await expect(page.getByLabel('Titre du module')).toHaveValue('game de test'); await context.close();
 });
 
+test('welcome configuration saves public delivery, optional channels and common V2 content', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'OWNER');
+  await page.goto('/admin/configuration?bot=protect&guild=661720242585600500&section=welcome');
+  await expect(page.getByRole('heading', { name: 'Accueil des membres', exact: true })).toBeVisible();
+  for (const key of ['publicChannelId', 'rulesChannelId', 'announcementsChannelId', 'discussionChannelId']) {
+    const field = page.locator('[data-config-field="' + key + '"]'); await field.locator('summary').click(); await field.getByRole('button', { name: 'journal-test', exact: true }).click();
+  }
+  await page.getByRole('switch', { name: 'Activer l’accueil à chaque arrivée dans le salon', exact: true }).check();
+  await expect(page.getByRole('switch', { name: 'Utiliser la carte Components V2', exact: true })).toBeChecked();
+  await page.locator('[data-config-field="message"] textarea').fill('Bienvenue dans la communauté de **{guild}** ! ' + info.project.name);
+  await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+  await page.locator('#confirm-dialog textarea[name="reason"]').fill('Configurer le message d’accueil commun');
+  await page.locator('#confirm-dialog input[name="confirmation"]').fill('ENREGISTRER');
+  await page.locator('#confirm-dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
+  await expect(page.locator('[data-notice]')).toContainText('Configuration enregistrée');
+  await page.reload(); await expect(page.getByRole('switch', { name: 'Activer l’accueil à chaque arrivée dans le salon', exact: true })).toBeChecked();
+  await expect(page.locator('[data-config-field="rulesChannelId"] [data-picker-caption]')).toHaveText('journal-test');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: info.outputPath('welcome-config.png'), fullPage: true }); await context.close();
+});
+
+test('YouTube fallback videos show real relative labels, working thumbnails and safe titles', async ({ browser }, info) => {
+  const { context, page } = await prepare(browser, 'USER');
+  await page.route('**/api/youtube', route => route.fulfill({ json: { ok: true, source: 'YouTube channel', videos: [{ id: 'j2tpYXhhuFM', title: 'Une vidéo de WarsNuto <script>', url: 'https://www.youtube.com/watch?v=j2tpYXhhuFM', thumbnail: 'https://i.ytimg.com/vi/j2tpYXhhuFM/hqdefault.jpg', publishedAt: null, publishedLabel: 'il y a 2 jours', viewsLabel: '14 mille vues' }] } }));
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ path: require('node:path').resolve(__dirname, '../../assets/warsnuto-icon.png'), contentType: 'image/png' }));
+  await page.goto('/youtube'); const cards = page.locator('[data-youtube-videos]');
+  await expect(cards).toContainText('il y a 2 jours'); await expect(cards).toContainText('14 mille vues');
+  await expect(cards.locator('script')).toHaveCount(0); await expect(cards).not.toContainText('1970');
+  await expect(cards.locator('img')).toBeVisible(); expect(await cards.locator('img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await page.screenshot({ path: info.outputPath('youtube-videos.png'), fullPage: true }); await context.close();
+});
+
 test('moderation workspace links to real Protect modules and handles an outage honestly', async ({ browser }) => {
   const { context, page } = await prepare(browser, 'OWNER'); await page.goto('/admin/moderation');
   await expect(page.locator('.moderation-module')).toHaveCount(3);
