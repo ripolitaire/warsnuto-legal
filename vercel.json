@@ -100,13 +100,22 @@
     }
   ],
   "rewrites": [
-    { "source": "/auth/discord/:action", "destination": "/api/platform?route=auth/discord/:action" },
+    { "source": "/auth/discord/start", "destination": "/api/platform?route=auth/discord/start" },
+    { "source": "/auth/discord/callback", "destination": "/api/platform?route=auth/discord/callback" },
     { "source": "/api/platform/:rest*", "destination": "/api/platform?route=api/platform/:rest*" },
     { "source": "/profile", "destination": "/api/platform?route=profile" },
     { "source": "/servers", "destination": "/api/platform?route=servers" },
-    { "source": "/profile/:section", "destination": "/api/platform?route=profile/:section" },
+    { "source": "/profile/settings", "destination": "/api/platform?route=profile/settings" },
+    { "source": "/profile/game", "destination": "/api/platform?route=profile/game" },
+    { "source": "/profile/protect", "destination": "/api/platform?route=profile/protect" },
     { "source": "/admin", "destination": "/api/platform?route=admin" },
-    { "source": "/admin/:section", "destination": "/api/platform?route=admin/:section" },
+    { "source": "/admin/bots", "destination": "/api/platform?route=admin/bots" },
+    { "source": "/admin/configuration", "destination": "/api/platform?route=admin/configuration" },
+    { "source": "/admin/users", "destination": "/api/platform?route=admin/users" },
+    { "source": "/admin/staff", "destination": "/api/platform?route=admin/staff" },
+    { "source": "/admin/logs", "destination": "/api/platform?route=admin/logs" },
+    { "source": "/admin/settings", "destination": "/api/platform?route=admin/settings" },
+    { "source": "/admin/moderation", "destination": "/api/platform?route=admin/moderation" },
     {
       "source": "/game",
       "destination": "/game.html"

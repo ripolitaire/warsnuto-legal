@@ -7,6 +7,7 @@
 - Les rubriques sont regroupées et recherchables ; le module choisi est conservé lors du retour sur un bot.
 - L’accueil est organisé en quatre groupes : diffusion, salons importants, message et apparence. Une activation publique sans salon est refusée avant l’envoi.
 - Après reconnexion, le serveur, le bot et la rubrique sont conservés dans un lien de retour strictement validé.
+- Les routes Vercel des pages privées sont explicites : une capture de route ne peut plus écraser le paramètre de la rubrique sélectionnée.
 - Une réponse privée arrivée après expiration ne peut plus remplacer l’écran de reconnexion. Le nom du compte et l’indicateur de session active sont retirés.
 - La limite de dix sessions conserve toujours la nouvelle connexion, y compris lorsque plusieurs connexions ont exactement le même horodatage.
 - Une erreur d’actualisation des serveurs ne laisse plus le bouton désactivé lorsqu’on clique sur son icône.

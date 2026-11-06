@@ -3,6 +3,18 @@ const { fixture, ids } = require('./helpers.cjs');
 const { nextPath } = require('../server/security.cjs');
 const { createBotConfigFixture, guildId } = require('./bot-config-fixture.cjs');
 
+test('Vercel page rewrites do not inject a section capture into the module query', () => {
+  const { rewrites } = require('../vercel.json');
+  for (const path of [...Object.keys(require('../server/views.cjs').pages), '/auth/discord/start', '/auth/discord/callback']) {
+    const rule = rewrites.find(rule => rule.source === path);
+    assert.ok(rule, 'Exact rewrite required: ' + path);
+    const destination = new URL(rule.destination, 'https://warsnuto.com');
+    assert.equal(destination.searchParams.get('route'), path.slice(1));
+    assert.deepEqual([...destination.searchParams.keys()], ['route']);
+  }
+  assert.ok(!rewrites.some(rule => /^\/(?:admin|profile|auth\/discord)\/:/.test(rule.source)));
+});
+
 test('safe return paths retain exact configuration context but refuse open redirects and unknown parameters', () => {
   const path = '/admin/configuration?bot=protect&guild=' + guildId + '&section=welcome';
   assert.equal(nextPath(path), path);
