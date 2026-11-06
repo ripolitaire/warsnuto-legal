@@ -107,7 +107,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.patch('/api/platform/admin/settings', permit('settings:write'), fresh, (req, res) => res.json(service.updateSettings(req.session, req.body)));
   const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
   for (const route of Object.keys(views.pages)) app.get(route, async (req, res) => {
-    if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(route)));
+    if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(req.originalUrl)));
     if (pagePermissions[route] && route !== '/admin/moderation') requirePermission(req.session, pagePermissions[route]);
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
     const scoped = { ...req.session, protectAccess: await memberSpace.protectSession(req.session, route === '/admin/moderation') };
@@ -115,7 +115,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     res.type('html').send(views.page(route, scoped, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'member-space.js'];
+  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'member-space.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {

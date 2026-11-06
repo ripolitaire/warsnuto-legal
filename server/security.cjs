@@ -41,7 +41,19 @@ function text(value, max, min = 0) {
   return value.trim();
 }
 function snowflake(value) { return typeof value === 'string' && /^\d{17,20}$/.test(value) && BigInt(value) > 0n && BigInt(value) < (1n << 64n); }
-function nextPath(value) { return typeof value === 'string' && /^\/(?:servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?)$/.test(value) ? value : '/profile'; }
+function nextPath(value) {
+  if (typeof value !== 'string' || value.length > 1024 || !value.startsWith('/') || /[\\\s]/.test(value)) return '/profile';
+  let url;
+  try { url = new URL(value, 'https://return.invalid'); } catch { return '/profile'; }
+  if (url.origin !== 'https://return.invalid' || url.hash || !/^\/(?:servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?)$/.test(url.pathname)) return '/profile';
+  const allowed = url.pathname === '/admin/configuration' ? ['bot', 'guild', 'section'] : url.pathname === '/profile/game' ? ['guild', 'mode'] : ['/profile/protect', '/admin/moderation'].includes(url.pathname) ? ['guild'] : [];
+  const clean = new URLSearchParams();
+  for (const [key, entry] of url.searchParams) {
+    if (!allowed.includes(key) || url.searchParams.getAll(key).length !== 1) return '/profile';
+    if (key === 'guild' ? snowflake(entry) : key === 'bot' ? ['protect', 'game', 'support'].includes(entry) : key === 'mode' ? ['normal', 'admin'].includes(entry) : /^[a-z][a-z0-9_-]{0,39}$/.test(entry)) clean.set(key, entry);
+  }
+  return url.pathname + (clean.size ? '?' + clean : '');
+}
 function headers(req, res, next) {
   res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',

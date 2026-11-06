@@ -105,10 +105,11 @@ function createAuth(db, config, fetcher = fetch) {
         const browserLabel = /Firefox/i.test(userAgent) ? 'Firefox' : /Edg\//i.test(userAgent) ? 'Edge' : /Chrome/i.test(userAgent) ? 'Chrome' : /Safari/i.test(userAgent) ? 'Safari' : 'Navigateur';
         db.prepare('INSERT INTO sessions(token_hash,user_id,created_at,authenticated_at,last_seen_at,expires_at,browser) VALUES(?,?,?,?,?,?,?)')
           .run(digest(tokenId), user.id, now, now, now, now + config.sessionMaxMs, browserLabel);
-        db.prepare(`UPDATE sessions SET revoked_at=? WHERE token_hash IN (SELECT token_hash FROM sessions WHERE user_id=? AND revoked_at IS NULL ORDER BY created_at DESC,token_hash DESC LIMIT -1 OFFSET 10)`)
-          .run(now, user.id);
+        db.prepare(`UPDATE sessions SET revoked_at=? WHERE token_hash IN (SELECT token_hash FROM sessions WHERE user_id=? AND revoked_at IS NULL AND token_hash<>? ORDER BY created_at DESC,token_hash DESC LIMIT -1 OFFSET 9)`)
+          .run(now, user.id, digest(tokenId));
         const role = db.prepare('SELECT role FROM user_roles WHERE user_id=?').get(user.id).role;
-        destination = flow.destination.startsWith('/admin') && !['/admin/configuration', '/admin/moderation'].includes(flow.destination) && !permissions(db, user.id, role).includes('admin:read') ? '/profile' : flow.destination;
+        const destinationPath = new URL(flow.destination, config.origin).pathname;
+        destination = destinationPath.startsWith('/admin') && !['/admin/configuration', '/admin/moderation'].includes(destinationPath) && !permissions(db, user.id, role).includes('admin:read') ? '/profile' : flow.destination;
         audit(db, now, identity.id, 'auth.login', identity.id);
       });
       return { location: destination, cookies: [cookie(sessionName, signed(tokenId, config.secret), config.secure, config.sessionMaxMs / 1000), cookie(stateName, '', config.secure, 0)] };

@@ -22,11 +22,14 @@
     'bot.config.requested': 'Configuration bot demandée', 'bot.config.saved': 'Configuration bot enregistrée', 'bot.config.refused': 'Configuration bot refusée ou à vérifier' };
   const grantLabels = { 'admin:read': 'Vue d’ensemble', 'moderation:read': 'Espace de modération', 'users:read': 'Consulter les comptes', 'users:moderate': 'Suspendre et réactiver les membres',
     'audit:read': 'Consulter le journal', 'settings:write': 'Modifier les paramètres publics', 'bots:configure': 'Configurer les bots sur les serveurs Discord autorisés' };
-  let session, serverOffset = 0, listPage = 1, currentUser, settings, grants, busy = false, preferenceDirty = false;
+  let session, serverOffset = 0, listPage = 1, currentUser, settings, grants, busy = false, preferenceDirty = false, authGeneration = 0, booting = false;
+  const returnPath = () => route ? location.pathname + location.search : '/profile';
   async function request(path, options = {}) {
+    const generation = authGeneration;
     const response = await fetch('/api/platform/' + path, { cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(15000), ...options,
       headers: { ...(options.body ? { 'Content-Type': 'application/json', 'X-CSRF-Token': session?.csrf || '' } : {}), ...options.headers } });
     const result = await response.json().catch(() => ({}));
+    if (generation !== authGeneration) { const error = new Error('Session expirée.'); error.status = 401; throw error; }
     if (!response.ok) {
       if (response.status === 401) expire();
       const error = new Error(result.error || 'Le service est temporairement indisponible.'); error.status = response.status; throw error;
@@ -38,9 +41,13 @@
     const target = document.querySelector('[data-notice]');
     if (!target) return;
     target.className = 'notice ' + kind;
-    target.innerHTML = `${icon(kind === 'success' ? 'circle-check' : 'info')}<span>${E(message)}${reauth ? ' <a href="/auth/discord/start?next=' + encodeURIComponent(route) + '">Confirmer avec Discord</a>' : ''}</span>`; icons();
+    target.innerHTML = `${icon(kind === 'success' ? 'circle-check' : 'info')}<span>${E(message)}${reauth ? ' <a href="/auth/discord/start?next=' + encodeURIComponent(returnPath()) + '">Confirmer avec Discord</a>' : ''}</span>`; icons();
   }
-  function fail(error) { notice(error.name === 'TimeoutError' ? 'La réponse prend trop de temps. Réessaie dans un instant.' : error.message, 'error', error.status === 428); }
+  function fail(error) {
+    if (error.status === 401 || session === null) return;
+    notice(error.name === 'TimeoutError' ? 'La réponse prend trop de temps. Réessaie dans un instant.' : error.message, 'error', error.status === 428);
+    document.querySelector('[data-notice]')?.scrollIntoView({ block: 'nearest' });
+  }
   function account() {
     if (!menu) return;
     const protectModerator = session?.user && (session.permissions.includes('moderation:read') || session.protectAccess?.canModerate);
@@ -50,13 +57,20 @@
       <div class="wn-account-dropdown"><strong>${E(session.user.displayName)}</strong><span>@${E(session.user.username || session.user.id)}</span><small>ID Discord : ${E(session.user.id)}</small>
       <a href="/profile">${icon('user-round')} Mon espace</a><a href="/profile/protect">${icon('sparkles')} Mon XP Protect</a><a href="/profile/game">${icon('gamepad-2')} Ma progression Game</a><a href="/servers">${icon('server')} Mes serveurs</a><a href="/profile/settings">${icon('settings-2')} Mon compte</a>
       ${session.permissions.includes('admin:read') ? `<a href="/admin">${icon('shield-check')} Administration</a>` : protectModerator ? `<a href="/admin/moderation">${icon('shield-check')} Modération</a>` : ''}<button type="button" data-logout>${icon('log-out')} Se déconnecter</button></div></details>`
-      : `<a class="wn-login" href="/auth/discord/start?next=${encodeURIComponent(route || '/profile')}">${icon('log-in')} Se connecter</a>`;
+      : `<a class="wn-login" href="/auth/discord/start?next=${encodeURIComponent(returnPath())}">${icon('log-in')} Se connecter</a>`;
     menu.querySelector('[data-logout]')?.addEventListener('click', async () => { try { await write('logout', {}); location.assign('/'); } catch (error) { fail(error); } });
     icons();
   }
   function expire() {
+    if (session === null) return;
+    authGeneration++;
     session = null; account();
-    if (content) { content.setAttribute('aria-busy', 'false'); content.innerHTML = '<section class="empty-state"><h2>Ta session a expiré</h2><p>Reconnecte-toi avec Discord pour retrouver ton espace.</p><a class="button primary" href="/auth/discord/start?next=' + encodeURIComponent(route) + '">Se reconnecter</a></section>'; }
+    document.querySelector('.sidebar-account')?.remove();
+    const state = document.querySelector('.connection-state');
+    if (state) state.textContent = 'Session expirée';
+    const message = document.querySelector('[data-notice]');
+    if (message) { message.replaceChildren(); message.className = ''; }
+    if (content) { content.setAttribute('aria-busy', 'false'); content.innerHTML = '<section class="empty-state"><h2>Ta session a expiré</h2><p>Reconnecte-toi avec Discord pour retrouver ton espace.</p><a class="button primary" href="/auth/discord/start?next=' + encodeURIComponent(returnPath()) + '">Se reconnecter</a></section>'; }
     document.querySelectorAll('.platform-sidebar nav a').forEach(node => { if (node.href.includes('/admin')) node.remove(); });
     document.getElementById('confirm-dialog')?.close();
   }
@@ -221,6 +235,7 @@
     try { await callback(); icons(); } catch (error) { fail(error); } finally { busy = false; buttons.filter(button => button.isConnected).forEach(button => { button.disabled = false; }); }
   }
   async function boot() {
+    if (booting) return; booting = true;
     try {
       session = await request('session'); serverOffset = session.serverNow - Date.now(); account();
       if (!session.user) { if (route) expire(); return; }
@@ -240,10 +255,11 @@
       else if (route === '/admin/moderation') await window.wnMemberSpace.moderation(memberUI());
       icons();
     } catch (error) {
+      if (error.status === 401 || session === null) return;
       if (content) content.innerHTML = '<section class="empty-state"><h2>Chargement indisponible</h2><button type="button" data-retry>Réessayer</button></section>';
       content?.querySelector('[data-retry]')?.addEventListener('click', boot); fail(error);
       if (menu && !route) menu.innerHTML = '<a class="wn-login" href="/profile">Mon espace</a>';
-    } finally { content?.setAttribute('aria-busy', 'false'); }
+    } finally { booting = false; content?.setAttribute('aria-busy', 'false'); }
   }
   let lastActivity = 0;
   for (const eventName of ['pointerdown', 'keydown']) document.addEventListener(eventName, () => {

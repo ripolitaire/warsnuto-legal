@@ -69,3 +69,13 @@ test('revoking other sessions preserves the current one', async t => {
   assert.ok((await (await f.request('/api/platform/session', a)).json()).user);
   assert.equal((await (await f.request('/api/platform/session', b)).json()).user, null);
 });
+
+test('the session limit always retains the new login even when timestamps are identical', async t => {
+  const f = fixture(); await f.listen(); t.after(() => f.close());
+  for (let n = 0; n < 15; n++) {
+    f.db.prepare('DELETE FROM rate_limits').run();
+    const login = await f.login('USER');
+    assert.equal(login.session.user?.id, f.ids.USER);
+    assert.equal(f.db.prepare('SELECT count(*) n FROM sessions WHERE revoked_at IS NULL').get().n, Math.min(n + 1, 10));
+  }
+});

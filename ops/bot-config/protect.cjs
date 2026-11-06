@@ -30,7 +30,7 @@ module.exports = root => {
   sections.push(S.section('welcome', 'Accueil des membres', [
     S.boolean('enabled', 'Activer les MP de bienvenue'), S.boolean('publicEnabled', 'Activer l’accueil à chaque arrivée dans le salon'),
     S.channel('publicChannelId', 'Salon d’accueil sur le serveur'),
-    S.channel('rulesChannelId', 'Règlement (facultatif)'), S.channel('announcementsChannelId', 'Annonces (facultatif)'), S.channel('discussionChannelId', 'Discussion (facultatif)'),
+    S.channel('verificationChannelId', 'Vérification (facultatif)'), S.channel('rulesChannelId', 'Règlement (facultatif)'), S.channel('announcementsChannelId', 'Annonces (facultatif)'), S.channel('discussionChannelId', 'Discussion (facultatif)'),
     S.boolean('embedEnabled', 'Utiliser la carte Components V2'), S.text('title', 'Titre commun · variable {guild}', 256, { required: true }),
     S.text('message', 'Message commun · variable {guild}', 2000, { required: true, multiline: true }), S.field('color', 'Couleur', 'color', { pattern: '^#[a-fA-F0-9]{6}$' }), S.boolean('footerEnabled', 'Afficher le pied de carte')
   ], g => welcome.getGuildWelcomeConfig(g.id), async (g, values, actor, patch) => {

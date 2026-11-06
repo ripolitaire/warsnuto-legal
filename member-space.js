@@ -15,8 +15,8 @@
       if (guilds.length) empty.textContent = 'Aucun serveur ne correspond à cette recherche.';
     };
     content.querySelector('[data-refresh-servers]').onclick = async event => {
-      event.currentTarget.disabled = true;
-      try { await servers(ui, null, configure); } catch (error) { ui.notice?.(error.message); } finally { if (event.target.isConnected) event.target.disabled = false; }
+      const button = event.currentTarget; button.disabled = true;
+      try { await servers(ui, null, configure); } catch (error) { ui.notice?.(error.message); } finally { if (button.isConnected) button.disabled = false; }
     };
     icons();
   }
