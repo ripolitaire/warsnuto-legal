@@ -302,8 +302,12 @@ test('module navigation protects pending edits and custom channel picker can cle
   await expect(page.getByLabel('Titre du module')).toHaveValue('game de test'); await context.close();
 });
 
-test('welcome configuration saves public delivery, optional channels and common V2 content', async ({ browser }, info) => {
+test('welcome configuration saves public delivery, optional channels and common V2 content', async ({ browser, baseURL }, info) => {
   const { context, page } = await prepare(browser, 'OWNER');
+  const endpoint = baseURL + '/api/platform/admin/bot-config/protect/661720242585600500/welcome';
+  const before = await (await context.request.get(endpoint)).json(), session = await (await context.request.get(baseURL + '/api/platform/session')).json();
+  const reset = await context.request.patch(endpoint, { headers: { origin: baseURL, 'x-csrf-token': session.csrf }, data: { values: { publicEnabled: false, publicChannelId: null, rulesChannelId: null, announcementsChannelId: null, discussionChannelId: null }, revision: before.revision, operationId: require('node:crypto').randomUUID(), reason: 'Isoler le scénario du formulaire d’accueil', confirmation: 'ENREGISTRER' } });
+  expect(reset.status()).toBe(200);
   await page.goto('/admin/configuration?bot=protect&guild=661720242585600500&section=welcome');
   await expect(page.getByRole('heading', { name: 'Accueil des membres', exact: true })).toBeVisible();
   for (const key of ['publicChannelId', 'rulesChannelId', 'announcementsChannelId', 'discussionChannelId']) {
