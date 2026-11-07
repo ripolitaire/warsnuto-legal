@@ -1,29 +1,31 @@
 (() => {
   'use strict';
   const states = { creating: 'Création en cours', open: 'Ouverte', closed: 'Fermée', review: 'À vérifier', placing: 'Placement en cours', active: 'En prison', releasing: 'Libération en cours', released: 'Libéré', banned: 'Banni', left: 'A quitté le serveur', pending: 'En attente', running: 'En cours', applied: 'Terminée', sent: 'Envoyée', sending: 'Envoi en cours', cancelled: 'Annulée', failed: 'Refusée' };
-  const actionLabels = { create: 'Créer une prison', add: 'Ajouter les membres', repair: 'Réparer le placement', release: 'Libérer ce membre', close: 'Libérer tous et fermer', derank: 'Dérank', exclude: 'Exclure les rôles', mute: 'Mute', ban: 'Bannir', test: 'Envoyer le test sans ping', 'reconcile-ban': 'Constater un bannissement', reconcile: 'Réconcilier la notification', preview: 'Prévisualiser' };
+  const actionLabels = { create: 'Créer une prison', add: 'Ajouter les membres', repair: 'Réparer le placement', release: 'Libérer ce membre', close: 'Libérer tous et fermer', derank: 'Dérank', exclude: 'Exclure les rôles', mute: 'Mute', ban: 'Bannir', test: 'Envoyer le test sans ping', 'reconcile-ban': 'Constater un bannissement', 'resolve-sanction': 'Classer la vérification sans sanction prouvée', reconcile: 'Réconcilier la notification', preview: 'Prévisualiser' };
   async function mount(ui, root, guild, module) {
     const { request, write, confirmAction, action, notice, E, icon, icons } = ui;
-    const path = 'admin/features/' + guild + '/' + module; let selected, selectedUser, poll, checking = false;
+    const path = 'admin/features/' + guild + '/' + module; let selected, selectedUser, poll, operation = 0, view = 0, detail = 0;
     const command = async (name, input) => {
       const confirmation = await confirmAction(actionLabels[name] + ' ?', 'CONFIRMER'); if (!confirmation) return;
+      const current = ++operation, selectedAtSubmit = selected?.id; clearInterval(poll);
       const result = await write(path, { action: name, input: { ...input, reason: confirmation.reason }, confirmation: confirmation.confirmation, operationId: crypto.randomUUID() });
-      if (!root.isConnected) return;
+      if (!root.isConnected || current !== operation) return;
       if (result.preview) { renderPreview(result.preview); return; }
       const target = root.querySelector('[data-feature-result]');
       target.innerHTML = `<p role="status"><strong>${E(states[result.job.status] || result.job.status)}</strong> · <span class="mono">${E(result.job.id)}</span></p>`;
-      clearInterval(poll); let attempts = 0;
+      let attempts = 0, checking = false, ownPoll;
       const check = async () => {
-        if (!root.isConnected || attempts >= 150) { clearInterval(poll); if (root.isConnected) target.textContent = 'Le traitement continue dans Protect. Consulte les opérations récentes pour son résultat.'; return; }
+        if (!root.isConnected || current !== operation) { clearInterval(ownPoll); return; }
+        if (attempts >= 150) { clearInterval(ownPoll); target.textContent = 'Le traitement continue dans Protect. Consulte les opérations récentes pour son résultat.'; return; }
         if (document.hidden || checking) return;
         checking = true; attempts++;
         try {
-          const data = await request(path + '/job/' + result.job.id); if (!root.isConnected) { clearInterval(poll); return; }
+          const data = await request(path + '/job/' + result.job.id); if (!root.isConnected || current !== operation) { clearInterval(ownPoll); return; }
           target.textContent = (states[data.job.status] || data.job.status) + (data.job.result?.error ? ' : ' + data.job.result.error : '');
-          if (!['pending', 'running'].includes(data.job.status)) { clearInterval(poll); if (data.job.status === 'applied') { if (data.job.result?.prisonId) selected = { id: data.job.result.prisonId }; notice(data.job.result?.warning || 'Opération terminée dans Protect.', 'success'); await load(); } }
-        } catch (error) { clearInterval(poll); if (root.isConnected && error.status !== 401) notice(error.message); } finally { checking = false; }
+          if (!['pending', 'running'].includes(data.job.status)) { clearInterval(ownPoll); if (data.job.status === 'applied') { if (data.job.result?.prisonId && selected?.id === selectedAtSubmit) selected = { id: data.job.result.prisonId }; notice(data.job.result?.warning || 'Opération terminée dans Protect.', 'success'); await load(current); } }
+        } catch (error) { clearInterval(ownPoll); if (root.isConnected && current === operation && error.status !== 401) notice(error.message); } finally { checking = false; }
       };
-      poll = setInterval(() => void check(), 2000); await check();
+      ownPoll = setInterval(() => void check(), 2000); poll = ownPoll; await check();
     };
     const ids = value => [...new Set(value.split(/[\s,]+/).filter(Boolean))];
     function renderPreview(payload) {
@@ -32,11 +34,12 @@
       target.innerHTML = `<article class="feature-preview"><h3>${E(titles[payload.kind] || 'Aperçu YouTube')}</h3><p><strong>${E(payload.title || '')}</strong></p><p>${E(payload.channel || 'WarsNuto')}${payload.date && Number.isFinite(Date.parse(payload.date)) ? ' · ' + E(new Date(payload.date).toLocaleString('fr-FR')) : ''}</p>${/^https:\/\/i\.ytimg\.com\//.test(payload.thumbnail || '') ? `<img src="${E(payload.thumbnail)}" alt="Miniature YouTube">` : ''}${url ? `<a href="${E(url)}" target="_blank" rel="noopener noreferrer">Ouvrir sur YouTube</a>` : ''}</article>`;
     }
     async function showPrison(id) {
-      const { prison } = await request(path + '/' + id); if (!root.isConnected) return;
+      const currentDetail = ++detail, currentView = view;
+      const { prison } = await request(path + '/' + id); if (!root.isConnected || currentDetail !== detail || currentView !== view) return;
       selected = prison;
       root.querySelector('[data-prison-detail]').innerHTML = `<div class="section-heading"><h3>Prison #${prison.id}</h3><span class="status">${E(states[prison.status] || prison.status)}</span></div><p>${E(prison.reason)}</p><dl class="profile-facts"><div><dt>Responsable</dt><dd>${E(prison.creator_id)}</dd></div><div><dt>Création</dt><dd>${E(new Date(prison.created_at).toLocaleString('fr-FR'))}</dd></div></dl>
         <label>Membre concerné<select data-feature-member><option value="">Choisir un membre</option>${prison.members.map(m => `<option value="${E(m.user_id)}">${E(m.snapshot.displayName || m.user_id)} · ${E(states[m.status] || m.status)}</option>`).join('')}</select></label><div data-feature-member-info></div>
-        <form data-prison-decision class="feature-decision"><label>Décision<select name="decision"><option value="release">Libérer</option><option value="derank">Dérank des rôles staff configurés</option><option value="mute">Mute</option><option value="ban">Bannir</option><option value="reconcile-ban">Constater un bannissement déjà appliqué</option><option value="exclude">Exclure des rôles de la restauration</option></select></label><label data-mute-duration hidden>Durée du mute<input name="duration" placeholder="30m, 1h, 1d" maxlength="12"></label><label data-mute-proof hidden>Preuve Discord (facultatif)<input name="proof" type="url" maxlength="140"></label><label data-exclude-roles hidden>IDs des rôles à ne pas restaurer<textarea name="roles" maxlength="600"></textarea></label><button type="submit">${icon('shield-check')} Confirmer la décision</button></form>
+        <form data-prison-decision class="feature-decision"><label>Décision<select name="decision"><option value="release">Libérer</option><option value="derank">Dérank des rôles staff configurés</option><option value="mute">Mute</option><option value="ban">Bannir</option><option value="reconcile-ban">Constater un bannissement déjà appliqué</option><option value="resolve-sanction">Classer la vérification sans sanction prouvée</option><option value="exclude">Exclure des rôles de la restauration</option></select></label><label data-mute-duration hidden>Durée du mute<input name="duration" placeholder="30m, 1h, 1d" maxlength="12"></label><label data-mute-proof hidden>Preuve Discord (facultatif)<input name="proof" type="url" maxlength="140"></label><label data-exclude-roles hidden>IDs des rôles à ne pas restaurer<textarea name="roles" maxlength="600"></textarea></label><button type="submit">${icon('shield-check')} Confirmer la décision</button></form>
         <form data-prison-add class="feature-inline"><label>Membres à ajouter · IDs Discord<textarea name="members" required maxlength="240" rows="2"></textarea></label><button type="submit">${icon('user-plus')} Ajouter</button></form><div class="form-actions"><button type="button" data-prison-repair>${icon('refresh-cw')} Réparer</button><button type="button" data-prison-close class="danger">${icon('lock-keyhole')} Libérer tous et fermer</button></div>
         <h3>Historique</h3><ol class="feature-history">${prison.history.map(h => `<li><strong>${E(actionLabels[h.action] || h.action)}</strong> · ${E(h.actor_id)}${h.user_id ? ' · ' + E(h.user_id) : ''}<p>${E(h.details.reason || '')}</p></li>`).join('') || '<li>Aucune action.</li>'}</ol>`;
       const memberSelect = root.querySelector('[data-feature-member]');
@@ -60,8 +63,9 @@
       memberSelect.onchange();
       icons();
     }
-    async function load() {
-      const data = await request(path); if (!root.isConnected) return;
+    async function load(expectedOperation = operation) {
+      const currentView = ++view; detail++;
+      const data = await request(path); if (!root.isConnected || currentView !== view || expectedOperation !== operation) return;
       if (module === 'prison') {
         root.innerHTML = `<section class="workspace-section feature-workspace"><div class="section-heading"><h2>Gestion des prisons</h2><button type="button" data-feature-refresh aria-label="Actualiser les prisons" title="Actualiser les prisons">${icon('refresh-cw')}</button></div>
           <form data-prison-create class="feature-inline"><label>Membres de la nouvelle prison · IDs Discord<textarea name="members" rows="2" required maxlength="240"></textarea></label><button type="submit" class="primary">${icon('lock-keyhole')} Créer une prison</button></form>

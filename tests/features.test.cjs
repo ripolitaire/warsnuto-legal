@@ -37,3 +37,10 @@ test('feature writes enforce CSRF, fresh authentication, confirmation, body boun
   f.advance(600001); assert.equal((await f.request(endpoint('youtube'), user, { ...body, operationId: crypto.randomUUID() })).status, 428);
   assert.equal((await f.request('/api/platform/admin/features/' + guildId + '/game', user)).status, 400);
 });
+
+test('an unavailable feature mutation is audited as uncertain, not as a proven failure', async t => {
+  const f = fixture({ botTransport: async () => { throw Object.assign(Error('offline'), { status: 503 }); } }); await f.listen(); t.after(() => f.close()); const user = await f.login('OWNER');
+  const body = { action: 'test', input: { kind: 'video', reason: 'Envoi dont la réponse est inconnue' }, operationId: crypto.randomUUID(), confirmation: 'CONFIRMER' };
+  assert.equal((await f.request(endpoint('youtube'), user, body)).status, 503);
+  assert.equal(f.db.prepare("SELECT result FROM audit_logs WHERE action='bot.feature.refused'").get().result, 'uncertain');
+});

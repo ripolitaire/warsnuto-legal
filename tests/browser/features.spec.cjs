@@ -50,3 +50,39 @@ test('an ordinary logged-in member never sees the prison navigation or private p
     await page.goto('/admin/prisons'); await expect(page.getByRole('heading', { name: 'Accès réservé', exact: true })).toBeVisible();
   } finally { await context.close(); }
 });
+
+test('a late previous operation cannot stop tracking or overwrite the next operation', async ({ browser, baseURL }) => {
+  const { context, page } = await loginPage(browser, baseURL), submissions = [], counts = new Map();
+  let oldRequested, releaseOld;
+  const oldInFlight = new Promise(resolve => { oldRequested = resolve; }), oldGate = new Promise(resolve => { releaseOld = resolve; });
+  const path = '/api/platform/admin/features/' + guild + '/prison';
+  try {
+    await page.route('**' + path, async route => {
+      const response = await route.fetch();
+      if (route.request().method() !== 'POST') return route.fulfill({ response });
+      const data = await response.json(); submissions.push({ id: data.job.id, prisonId: data.job.result.prisonId }); data.job.status = 'pending';
+      await route.fulfill({ response, json: data });
+    });
+    await page.route('**' + path + '/job/*', async route => {
+      const response = await route.fetch(), data = await response.json(), id = data.job.id, count = (counts.get(id) || 0) + 1; counts.set(id, count);
+      if (count === 1) data.job.status = 'pending';
+      else if (id === submissions[0]?.id) { oldRequested(); await oldGate; }
+      await route.fulfill({ response, json: data });
+    });
+    await page.goto('/admin/prisons?guild=' + guild);
+    for (let i = 0; i < 2; i++) {
+      const create = page.locator('[data-prison-create]'); await create.locator('textarea').fill(i ? '661720242585600002' : '661720242585600001');
+      await create.getByRole('button', { name: 'Créer une prison', exact: true }).click(); await confirmation(page);
+      await expect.poll(() => submissions.length).toBe(i + 1); await expect(page.locator('[data-feature-result]')).toContainText('En attente');
+      if (i === 0) await oldInFlight;
+    }
+    releaseOld();
+    await expect(page.locator('[data-prison-detail] h3').first()).toHaveText('Prison #' + submissions[1].prisonId, { timeout: 10000 });
+    expect(counts.get(submissions[1].id)).toBeGreaterThanOrEqual(2);
+  } finally {
+    releaseOld(); await page.unrouteAll({ behavior: 'wait' });
+    const session = await (await context.request.get(baseURL + '/api/platform/session')).json();
+    for (const submission of submissions) await context.request.post(baseURL + path, { headers: { origin: baseURL, 'x-csrf-token': session.csrf }, data: { action: 'close', input: { prisonId: submission.prisonId, reason: 'Nettoyage de la fixture navigateur' }, operationId: require('node:crypto').randomUUID(), confirmation: 'CONFIRMER' } });
+    await context.close();
+  }
+});

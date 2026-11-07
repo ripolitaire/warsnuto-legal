@@ -40,7 +40,7 @@ function createBotConfiguration(db, config, transport) {
       if (body) {
         object(body, ['action', 'input', 'operationId', 'confirmation']);
         if (body.confirmation !== 'CONFIRMER' || !/^[a-f\d-]{36}$/.test(body.operationId || '')) throw error(400, 'Confirmation et opération requises.');
-        const actions = module === 'prison' ? ['create', 'add', 'repair', 'release', 'close', 'derank', 'exclude', 'mute', 'ban', 'reconcile-ban'] : ['preview', 'test', 'reconcile'];
+        const actions = module === 'prison' ? ['create', 'add', 'repair', 'release', 'close', 'derank', 'exclude', 'mute', 'ban', 'reconcile-ban', 'resolve-sanction'] : ['preview', 'test', 'reconcile'];
         if (!actions.includes(body.action)) throw error(400, 'Action inconnue.');
         object(body.input, module === 'prison' ? ['prisonId', 'userId', 'userIds', 'roleIds', 'duration', 'proof', 'reason'] : ['kind', 'deliveryId', 'messageId', 'reason']);
         text(body.input.reason, 500, 3);
@@ -50,7 +50,7 @@ function createBotConfiguration(db, config, transport) {
         const result = await send('protect', '/features/' + guild + '/' + module + (suffix ? '/' + suffix : ''), session.user.id, body);
         if (body) audit(db, config.now(), session.user.id, 'bot.feature.queued', guild, { module, action: body.action, operationId: body.operationId });
         return result;
-      } catch (err) { if (body) audit(db, config.now(), session.user.id, 'bot.feature.refused', guild, { module, action: body.action, operationId: body.operationId }, 'failure'); throw err; }
+      } catch (err) { if (body) audit(db, config.now(), session.user.id, 'bot.feature.refused', guild, { module, action: body.action, operationId: body.operationId }, err.status === 503 ? 'uncertain' : 'failure'); throw err; }
     },
     catalog() { return { bots: Object.entries(BOTS).map(([id, name]) => ({ id, name })) }; },
     async guilds(bot, session) { return send(bot, '/guilds', session.user.id); },

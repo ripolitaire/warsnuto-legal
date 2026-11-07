@@ -11,6 +11,7 @@ Les administrateurs configurent les modules. Les Admins et R Modo autorisés par
 La page Prisons propose groupes de membres par IDs Discord, dossiers actifs, rôles sauvegardés, exclusions, historique et décisions individuelles. Chaque mutation exige motif, confirmation et connexion Discord récente. Le bot exécute l'opération après une nouvelle vérification du membre staff, sans se fier aux droits affichés dans le navigateur.
 
 L'identifiant d'opération permet de retrouver le résultat après rechargement. « À vérifier » n'est pas un échec garanti de Discord : consulter le dossier et utiliser Réparer ou Constater un bannissement, sans relancer une sanction à l'aveugle. Une libération ne restaure pas les rôles dérankés, supprimés ou devenus plus privilégiés.
+Le classement d'une vérification incertaine exige une décision explicite et n'est accepté que sans ban ou timeout actif. Il ne transforme jamais le résultat d'origine en sanction prouvée. Une ancienne réponse réseau ne peut plus remplacer le dossier ou le suivi de l'opération suivante ; les erreurs 503 conservent un résultat d'audit incertain.
 
 YouTube sépare vidéos, Shorts, lives et diffusions programmées. Les salons et mentions sont indépendants ; aperçus et tests n'envoient aucun ping. L'état présente chaîne résolue, clé présente/manquante, publications, envois, erreurs et opérations récentes. La réconciliation exige la référence d'une annonce incertaine et l'ID du message réellement envoyé par Protect.
 
