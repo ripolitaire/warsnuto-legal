@@ -34,7 +34,7 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
       const ids = Array.isArray(value) ? value : [value];
       for (const id of ids) {
         if (f.type.startsWith('role')) {
-          const role = guild.roles.cache.get(id); if (!role || id === guild.id || role.managed) S.fail('Rôle invalide : ' + f.label + '.');
+          const role = guild.roles.cache.get(id); if (!role || id === guild.id && !(f.allowEveryone === true && f.type === 'role' && !f.assignable) || role.managed) S.fail('Rôle invalide : ' + f.label + '.');
           if (f.assignable) {
             const me = guild.members.me || await guild.members.fetchMe();
             const dangerous = ['Administrator', 'ManageGuild', 'ManageRoles', 'ManageChannels', 'ManageWebhooks', 'BanMembers', 'KickMembers', 'ModerateMembers', 'ManageMessages', 'MentionEveryone'];

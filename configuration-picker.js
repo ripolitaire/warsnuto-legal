@@ -6,7 +6,7 @@
     function render(field, value, meta) {
       const multiple = ['roles', 'channels'].includes(field.type), roles = field.type.startsWith('role');
       const chosen = [...new Set((multiple ? Array.isArray(value) ? value : [] : value == null || value === '' ? [] : [value]).map(String).filter(Boolean))];
-      const source = roles ? meta.roles : meta.channels.filter(channel => field.channelTypes.includes(channel.type));
+      const source = roles ? [...meta.roles, ...(field.allowEveryone === true && !multiple && meta.guild?.id ? [{ id: meta.guild.id, name: 'Tout le serveur (@everyone)' }] : [])] : meta.channels.filter(channel => field.channelTypes.includes(channel.type));
       const options = [...new Map(source.map(item => [String(item.id), { value: String(item.id), label: item.name }])).values()]
         .sort((a, b) => a.label.localeCompare(b.label, 'fr', { numeric: true, sensitivity: 'base' }));
       for (const value of chosen) if (!options.some(option => option.value === value)) options.unshift({ value, label: 'Indisponible : ' + value, missing: true });

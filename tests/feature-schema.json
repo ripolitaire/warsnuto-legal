@@ -130,7 +130,8 @@
       {
         "key": "videoRoleId",
         "label": "Vidéos : rôle de notification",
-        "type": "role"
+        "type": "role",
+        "allowEveryone": true
       },
       {
         "key": "videoMentionEnabled",
@@ -154,7 +155,8 @@
       {
         "key": "shortRoleId",
         "label": "Shorts : rôle de notification",
-        "type": "role"
+        "type": "role",
+        "allowEveryone": true
       },
       {
         "key": "shortMentionEnabled",
@@ -178,7 +180,8 @@
       {
         "key": "liveRoleId",
         "label": "Lives : rôle de notification",
-        "type": "role"
+        "type": "role",
+        "allowEveryone": true
       },
       {
         "key": "liveMentionEnabled",

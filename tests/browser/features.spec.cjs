@@ -44,6 +44,33 @@ test('YouTube settings and real preview are reachable from the existing configur
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   } finally { await context.close(); }
 });
+
+test('everyone can be selected and saved only in YouTube notification fields', async ({ browser, baseURL }, info) => {
+  const { context, page } = await loginPage(browser, baseURL);
+  try {
+    await page.setViewportSize(info.project.use.viewport);
+    const endpoint = baseURL + '/api/platform/admin/bot-config/protect/' + guild + '/youtube';
+    const before = await (await context.request.get(endpoint)).json(), session = await (await context.request.get(baseURL + '/api/platform/session')).json();
+    const reset = await context.request.patch(endpoint, { headers: { origin: baseURL, 'x-csrf-token': session.csrf }, data: { values: { videoRoleId: null, videoMentionEnabled: false }, revision: before.revision, operationId: require('node:crypto').randomUUID(), reason: 'Isoler le choix du destinataire YouTube', confirmation: 'ENREGISTRER' } });
+    expect(reset.status()).toBe(200);
+    await page.goto('/admin/configuration?bot=protect&guild=' + guild + '&section=youtube');
+    const field = page.locator('[data-config-field="videoRoleId"]');
+    await field.locator('summary').click();
+    await field.getByRole('button', { name: 'Tout le serveur (@everyone)', exact: true }).click();
+    await expect(field.locator('[data-config-input]')).toHaveValue(guild);
+    await expect(page.locator('[data-config-field="videoMentionEnabled"] input')).not.toBeChecked();
+    await page.getByRole('button', { name: 'Enregistrer', exact: true }).click();
+    await page.locator('#confirm-dialog textarea[name="reason"]').fill('Choix explicite du destinataire des notifications YouTube');
+    await page.locator('#confirm-dialog input[name="confirmation"]').fill('ENREGISTRER');
+    await page.locator('#confirm-dialog').getByRole('button', { name: 'Confirmer', exact: true }).click();
+    await expect(page.locator('[data-notice]')).toContainText('enregistr');
+    await page.reload(); await expect(page.locator('[data-config-field="videoRoleId"] [data-picker-caption]')).toHaveText('Tout le serveur (@everyone)');
+    await page.screenshot({ path: info.outputPath('youtube-everyone.png'), fullPage: true });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.goto('/admin/configuration?bot=protect&guild=' + guild + '&section=prison');
+    await expect(page.locator('[data-config-field="quarantineRoleId"] [data-picker-value="' + guild + '"]')).toHaveCount(0);
+  } finally { await context.close(); }
+});
 test('an ordinary logged-in member never sees the prison navigation or private prison API', async ({ browser, baseURL }) => {
   const { context, page } = await loginPage(browser, baseURL, 'USER');
   try {

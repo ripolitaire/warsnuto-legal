@@ -51,6 +51,19 @@ test('roles from other guilds, @everyone, invalid channels, and values beyond bo
   }
   assert.equal(bots.writes.length, 0);
 });
+
+test('everyone is accepted only for explicitly permitted YouTube notification roles', async t => {
+  const bots = createBotConfigFixture(ids), f = fixture({ botTransport: bots.transport }); t.after(() => f.close()); await f.listen(); const owner = await f.login('OWNER');
+  const endpoint = '/api/platform/admin/bot-config/protect/' + guildId + '/youtube';
+  let current = await (await f.request(endpoint, owner)).json();
+  for (const field of ['videoRoleId', 'shortRoleId', 'liveRoleId']) {
+    const response = await f.request(endpoint, owner, { ...body(current.revision), values: { [field]: guildId } }, 'PATCH');
+    assert.equal(response.status, 200); current = await response.json(); assert.equal(current.values[field], guildId);
+  }
+  assert.equal(current.values.videoMentionEnabled, false);
+  const prison = '/api/platform/admin/bot-config/protect/' + guildId + '/prison', before = await (await f.request(prison, owner)).json();
+  assert.equal((await f.request(prison, owner, { ...body(before.revision), values: { quarantineRoleId: guildId } }, 'PATCH')).status, 400);
+});
 test('Discord changes invalidate the revision instead of being silently overwritten', async t => {
   const bots = createBotConfigFixture(ids), f = fixture({ botTransport: bots.transport }); t.after(() => f.close()); await f.listen(); const owner = await f.login('OWNER');
   const current = await (await f.request(route('support'), owner)).json(); bots.configs.get('support').title = 'Changement Discord';

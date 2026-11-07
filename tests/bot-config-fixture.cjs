@@ -10,7 +10,7 @@ function createBotConfigFixture(ids) {
   const extraRoles = roleNames.map((name, i) => ({ ...safeRole, id: String(661720242585600610n + BigInt(i)), name }));
   const guild = { id: guildId, name: 'Serveur de test', ownerId: ids.OWNER,
     members: { fetch: async ({ user }) => member(user), me: { permissions: { has: () => true }, roles: { highest: { position: 100 } } } },
-    roles: { cache: new Map([safeRole, ...extraRoles].map(role => [role.id, role])), fetch: async () => {} },
+    roles: { cache: new Map([{ ...safeRole, id: guildId, name: '@everyone' }, safeRole, ...extraRoles].map(role => [role.id, role])), fetch: async () => {} },
     channels: { cache: new Map([[channelId, { id: channelId, guildId, name: 'journal-test', type: 0, permissionsFor: () => ({ has: () => true }) }]]), fetch: async () => {} } };
   const client = { isReady: () => true, guilds: { cache: new Map([[guildId, guild]]) } };
   const adapters = {};
