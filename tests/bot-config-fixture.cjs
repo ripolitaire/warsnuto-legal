@@ -45,7 +45,7 @@ function createBotConfigFixture(ids) {
         if (level < (module === 'prison' ? 3 : 4)) S.fail('Accès au module refusé par Protect.', 403);
         if (method === 'GET' && path[1] === 'job') { const job = featureJobs.get(path[2]); if (!job || job.module !== module) S.fail('Opération inconnue.', 404); return { job }; }
         const jobs = [...featureJobs.values()].filter(job => job.module === module).map(job => ({ id: job.id, status: job.status, action: job.action, updated_at: job.updated_at }));
-        if (method === 'GET' && module === 'youtube') return { channelId: 'UCabcdefghijklmnopqrstuv', apiConfigured: true, lastSuccess: Date.now(), lastError: null, publications: [{ video_id: 'new00000000', kind: 'video' }], deliveries: [], jobs };
+        if (method === 'GET' && module === 'youtube') return { channelId: 'UCabcdefghijklmnopqrstuv', sourceMode: 'public', apiRequired: false, lastSuccess: Date.now(), lastError: null, publications: [{ video_id: 'new00000000', kind: 'video' }], deliveries: [], jobs };
         if (method === 'GET' && path[1]) { const prison = prisons.get(Number(path[1])); if (!prison) S.fail('Prison inconnue.', 404); return { prison }; }
         if (method === 'GET') return { prisons: [...prisons.values()].filter(p => p.status !== 'closed').map(p => ({ ...p, members: p.members.map(m => ({ userId: m.user_id, status: m.status })) })), jobs };
         S.object(body);

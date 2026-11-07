@@ -32,6 +32,8 @@ test('YouTube settings and real preview are reachable from the existing configur
   try {
     await page.goto('/admin/configuration?bot=protect&guild=' + guild + '&section=youtube');
     await expect(page.getByRole('heading', { name: 'Surveillance YouTube', exact: true })).toBeVisible();
+    await expect(page.locator('.profile-facts')).toContainText('sans clé API');
+    await expect(page.locator('.profile-facts')).not.toContainText('Manquante');
     await expect(page.locator('[data-config-field="videoMentionEnabled"]')).toBeVisible();
     await expect(page.locator('[data-config-field="shortChannelId"]')).toBeVisible();
     await page.getByRole('button', { name: 'Aperçu privé', exact: true }).click(); await confirmation(page);
