@@ -97,6 +97,8 @@ locale. Si le délai de réponse expire, aucune réussite n'est inventée et auc
 nouvelle tentative d'écriture n'est lancée automatiquement : actualiser pour
 vérifier les valeurs présentes.
 
-Cette livraison n'ajoute pas de bannissement, give, reset de comptes ou traitement
-de tickets depuis le site. Ce sont des actions distinctes des réglages ; elles
-restent dans Discord. Les commandes slash existantes sont conservées.
+Les actions de prison sont maintenant distinctes des réglages et accessibles via
+`/admin/prisons` et les outils sous la rubrique Prisons de Protect. Voir
+[Prisons et YouTube](PRISON-YOUTUBE.md) pour les droits, confirmations et résultats
+différés. Les autres sanctions, gives, resets et traitements de tickets ne sont
+pas ajoutés par cette extension. Les commandes slash existantes sont conservées.

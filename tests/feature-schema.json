@@ -1,0 +1,203 @@
+{
+  "prison": {
+    "label": "Prisons",
+    "defaults": {
+      "enabled": false,
+      "categoryId": null,
+      "accessRoleIds": [],
+      "staffRoleIds": [],
+      "quarantineRoleId": null,
+      "logsChannelId": null,
+      "closeMode": "archive",
+      "cleanupMinutes": 60,
+      "allowAttachments": false,
+      "allowReactions": false
+    },
+    "fields": [
+      {
+        "key": "enabled",
+        "label": "Activer les prisons",
+        "type": "boolean"
+      },
+      {
+        "key": "categoryId",
+        "label": "Catégorie des prisons",
+        "type": "channel",
+        "channelTypes": [
+          4
+        ]
+      },
+      {
+        "key": "accessRoleIds",
+        "label": "Restreindre aux rôles Admin / R Modo suivants",
+        "type": "roles",
+        "maxItems": 25
+      },
+      {
+        "key": "staffRoleIds",
+        "label": "Rôles retirés définitivement lors d’un dérank",
+        "type": "roles",
+        "maxItems": 25
+      },
+      {
+        "key": "quarantineRoleId",
+        "label": "Rôle de quarantaine facultatif",
+        "type": "role"
+      },
+      {
+        "key": "logsChannelId",
+        "label": "Journal des prisons",
+        "type": "channel",
+        "channelTypes": [
+          0,
+          5
+        ]
+      },
+      {
+        "key": "closeMode",
+        "label": "Fermeture du salon",
+        "type": "select",
+        "choices": [
+          {
+            "value": "archive",
+            "label": "Conserver en lecture seule"
+          },
+          {
+            "value": "delete",
+            "label": "Supprimer après fermeture vérifiée"
+          }
+        ]
+      },
+      {
+        "key": "cleanupMinutes",
+        "label": "Délai de nettoyage, en minutes",
+        "type": "number",
+        "min": 1,
+        "max": 10080,
+        "step": 1
+      },
+      {
+        "key": "allowAttachments",
+        "label": "Autoriser les pièces jointes des prisonniers",
+        "type": "boolean"
+      },
+      {
+        "key": "allowReactions",
+        "label": "Autoriser leurs réactions",
+        "type": "boolean"
+      }
+    ]
+  },
+  "youtube": {
+    "label": "YouTube",
+    "defaults": {
+      "enabled": false,
+      "videoEnabled": true,
+      "shortEnabled": true,
+      "liveEnabled": true,
+      "scheduledEnabled": false,
+      "videoChannelId": null,
+      "shortChannelId": null,
+      "liveChannelId": null,
+      "videoRoleId": null,
+      "shortRoleId": null,
+      "liveRoleId": null,
+      "videoMentionEnabled": false,
+      "shortMentionEnabled": false,
+      "liveMentionEnabled": false,
+      "titleMaxLength": 180
+    },
+    "fields": [
+      {
+        "key": "enabled",
+        "label": "Activer les notifications WarsNuto",
+        "type": "boolean"
+      },
+      {
+        "key": "videoEnabled",
+        "label": "Vidéos : notifications",
+        "type": "boolean"
+      },
+      {
+        "key": "videoChannelId",
+        "label": "Vidéos : salon",
+        "type": "channel",
+        "channelTypes": [
+          0,
+          5
+        ]
+      },
+      {
+        "key": "videoRoleId",
+        "label": "Vidéos : rôle de notification",
+        "type": "role"
+      },
+      {
+        "key": "videoMentionEnabled",
+        "label": "Vidéos : mentionner ce rôle",
+        "type": "boolean"
+      },
+      {
+        "key": "shortEnabled",
+        "label": "Shorts : notifications",
+        "type": "boolean"
+      },
+      {
+        "key": "shortChannelId",
+        "label": "Shorts : salon",
+        "type": "channel",
+        "channelTypes": [
+          0,
+          5
+        ]
+      },
+      {
+        "key": "shortRoleId",
+        "label": "Shorts : rôle de notification",
+        "type": "role"
+      },
+      {
+        "key": "shortMentionEnabled",
+        "label": "Shorts : mentionner ce rôle",
+        "type": "boolean"
+      },
+      {
+        "key": "liveEnabled",
+        "label": "Lives : notifications",
+        "type": "boolean"
+      },
+      {
+        "key": "liveChannelId",
+        "label": "Lives : salon",
+        "type": "channel",
+        "channelTypes": [
+          0,
+          5
+        ]
+      },
+      {
+        "key": "liveRoleId",
+        "label": "Lives : rôle de notification",
+        "type": "role"
+      },
+      {
+        "key": "liveMentionEnabled",
+        "label": "Lives : mentionner ce rôle",
+        "type": "boolean"
+      },
+      {
+        "key": "scheduledEnabled",
+        "label": "Annoncer les lives programmés",
+        "type": "boolean"
+      },
+      {
+        "key": "titleMaxLength",
+        "label": "Longueur maximale du titre",
+        "type": "number",
+        "min": 50,
+        "max": 250,
+        "step": 1
+      }
+    ]
+  }
+}

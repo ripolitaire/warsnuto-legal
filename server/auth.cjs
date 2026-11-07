@@ -109,7 +109,7 @@ function createAuth(db, config, fetcher = fetch) {
           .run(now, user.id, digest(tokenId));
         const role = db.prepare('SELECT role FROM user_roles WHERE user_id=?').get(user.id).role;
         const destinationPath = new URL(flow.destination, config.origin).pathname;
-        destination = destinationPath.startsWith('/admin') && !['/admin/configuration', '/admin/moderation'].includes(destinationPath) && !permissions(db, user.id, role).includes('admin:read') ? '/profile' : flow.destination;
+        destination = destinationPath.startsWith('/admin') && !['/admin/configuration', '/admin/moderation', '/admin/prisons'].includes(destinationPath) && !permissions(db, user.id, role).includes('admin:read') ? '/profile' : flow.destination;
         audit(db, now, identity.id, 'auth.login', identity.id);
       });
       return { location: destination, cookies: [cookie(sessionName, signed(tokenId, config.secret), config.secure, config.sessionMaxMs / 1000), cookie(stateName, '', config.secure, 0)] };

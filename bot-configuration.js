@@ -48,8 +48,8 @@
     }
     function mountPickers(root) { picker.mount(root); }
     function formFields(section) {
-      if (section.id !== 'welcome' || model.bot !== 'protect') return fieldsHTML(section.fields, model.values);
-      const groups = [['Diffusion', ['enabled', 'publicEnabled', 'publicChannelId']], ['Salons importants', ['verificationChannelId', 'rulesChannelId', 'announcementsChannelId', 'discussionChannelId']], ['Message de bienvenue', ['title', 'message']], ['Apparence', ['embedEnabled', 'color', 'footerEnabled']]];
+      if (!['welcome', 'prison', 'youtube'].includes(section.id) || model.bot !== 'protect') return fieldsHTML(section.fields, model.values);
+      const groups = section.id === 'prison' ? [['Activation et accès', ['enabled', 'accessRoleIds']], ['Salons et rôles', ['categoryId', 'staffRoleIds', 'quarantineRoleId', 'logsChannelId']], ['Fermeture', ['closeMode', 'cleanupMinutes']], ['Permissions des prisonniers', ['allowAttachments', 'allowReactions']]] : section.id === 'youtube' ? [['Surveillance WarsNuto', ['enabled', 'scheduledEnabled', 'titleMaxLength']], ...['video', 'short', 'live'].map((kind, i) => [['Vidéos', 'Shorts', 'Lives'][i], [kind + 'Enabled', kind + 'ChannelId', kind + 'RoleId', kind + 'MentionEnabled']])] : [['Diffusion', ['enabled', 'publicEnabled', 'publicChannelId']], ['Salons importants', ['verificationChannelId', 'rulesChannelId', 'announcementsChannelId', 'discussionChannelId']], ['Message de bienvenue', ['title', 'message']], ['Apparence', ['embedEnabled', 'color', 'footerEnabled']]];
       const known = new Set(groups.flatMap(([, keys]) => keys)), rest = section.fields.filter(f => !known.has(f.key));
       return groups.map(([name, keys]) => `<h3 class="config-group-heading">${E(name)}</h3>` + fieldsHTML(section.fields.filter(f => keys.includes(f.key)), model.values)).join('') + (rest.length ? '<h3 class="config-group-heading">Autres réglages</h3>' + fieldsHTML(rest, model.values) : '');
     }
@@ -126,6 +126,11 @@
       content.querySelector('[data-cancel-config]').onclick = () => { dirty = false; renderForm(); };
       content.querySelector('[data-refresh-config]').onclick = () => run(async () => { if (await discard()) { dirty = false; await loadSection(); } });
       mountPickers(form); icons();
+      if (model.bot === 'protect' && ['prison', 'youtube'].includes(section.id)) {
+        const tools = document.createElement('div'); tools.dataset.featureTools = '';
+        content.querySelector('[data-config-editor]').append(tools);
+        void window.wnFeatureDashboard?.mount({ request, write, confirmAction, action, notice, E, icon, icons }, tools, model.guild, section.id);
+      }
     }
     function loading() { const editor = content.querySelector('[data-config-editor]'); if (editor) editor.innerHTML = '<p class="loading-state">Chargement des réglages…</p>'; }
     function loadError(retry) {

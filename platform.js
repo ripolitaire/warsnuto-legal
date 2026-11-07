@@ -52,6 +52,7 @@
     if (!menu) return;
     const protectModerator = session?.user && (session.permissions.includes('moderation:read') || session.protectAccess?.canModerate);
     document.querySelectorAll('[data-protect-link]').forEach(node => { node.hidden = !protectModerator; });
+    document.querySelectorAll('[data-prison-link]').forEach(node => { node.hidden = !session?.protectAccess?.guilds?.some(g => g.canManagePrisons); });
     menu.className = 'wn-account';
     menu.innerHTML = session?.user ? `<details><summary aria-label="Compte de ${E(session.user.displayName)}"><img src="${E(session.user.avatar)}" alt=""><span>${E(session.user.displayName)}</span>${icon('chevron-down')}</summary>
       <div class="wn-account-dropdown"><strong>${E(session.user.displayName)}</strong><span>@${E(session.user.username || session.user.id)}</span><small>ID Discord : ${E(session.user.id)}</small>
@@ -253,6 +254,7 @@
       else if (route === '/admin/logs') await logs();
       else if (route === '/admin/settings') await siteSettings();
       else if (route === '/admin/moderation') await window.wnMemberSpace.moderation(memberUI());
+      else if (route === '/admin/prisons') await window.wnFeatureDashboard.page({ content, request, write, confirmAction, action, notice, E, icon, icons });
       icons();
     } catch (error) {
       if (error.status === 401 || session === null) return;

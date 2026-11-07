@@ -61,6 +61,12 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
       }
       return { guilds };
     }
+    const feature = /^\/features\/(\d{17,20})\/(prison|youtube)(?:\/(job)\/([a-f\d-]{36})|\/(\d{1,10}))?$/.exec(url.pathname);
+    if (feature) {
+      const { guild, member } = await membership(feature[1], actor, true);
+      if (!member || !adapter.feature) S.fail('Module indisponible ou accès refusé.', 403);
+      return adapter.feature(guild, actor, req.method, [feature[2], feature[3] || feature[5], feature[4]].filter(Boolean), body);
+    }
     const access = /^\/member\/(\d{17,20})\/access$/.exec(url.pathname);
     if (access && req.method === 'GET') {
       const { guild, member } = await membership(access[1], actor, true);

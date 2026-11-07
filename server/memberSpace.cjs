@@ -49,7 +49,7 @@ function createMemberSpace(db, config, broker) {
     const work = (async () => {
       try {
         const result = await broker.send('protect', '/member/servers', actor, undefined, 2000);
-        const guilds = result.guilds.filter(g => g.access?.canModerate === true).map(g => ({ id: g.id, name: g.name, tier: g.access.tier, level: g.access.level, label: g.access.label }));
+        const guilds = result.guilds.filter(g => g.access?.canModerate === true).map(g => ({ id: g.id, name: g.name, tier: g.access.tier, level: g.access.level, label: g.access.label, canManagePrisons: g.access.canManagePrisons === true }));
         return { available: true, canModerate: guilds.length > 0, guilds };
       } catch { return { available: false, canModerate: false, guilds: [] }; }
     })();

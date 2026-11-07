@@ -45,8 +45,8 @@ function nextPath(value) {
   if (typeof value !== 'string' || value.length > 1024 || !value.startsWith('/') || /[\\\s]/.test(value)) return '/profile';
   let url;
   try { url = new URL(value, 'https://return.invalid'); } catch { return '/profile'; }
-  if (url.origin !== 'https://return.invalid' || url.hash || !/^\/(?:servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation))?)$/.test(url.pathname)) return '/profile';
-  const allowed = url.pathname === '/admin/configuration' ? ['bot', 'guild', 'section'] : url.pathname === '/profile/game' ? ['guild', 'mode'] : ['/profile/protect', '/admin/moderation'].includes(url.pathname) ? ['guild'] : [];
+  if (url.origin !== 'https://return.invalid' || url.hash || !/^\/(?:servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation|prisons))?)$/.test(url.pathname)) return '/profile';
+  const allowed = url.pathname === '/admin/configuration' ? ['bot', 'guild', 'section'] : url.pathname === '/profile/game' ? ['guild', 'mode'] : ['/profile/protect', '/admin/moderation', '/admin/prisons'].includes(url.pathname) ? ['guild'] : [];
   const clean = new URLSearchParams();
   for (const [key, entry] of url.searchParams) {
     if (!allowed.includes(key) || url.searchParams.getAll(key).length !== 1) return '/profile';
@@ -57,6 +57,6 @@ function nextPath(value) {
 function headers(req, res, next) {
   res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff', 'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer', 'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" }); next();
+    'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https://cdn.discordapp.com https://media.discordapp.net https://i.ytimg.com; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'" }); next();
 }
 module.exports = { opaque, digest, hmac, equal, error, cookies, signed, verified, cookie, seal, unseal, object, text, snowflake, nextPath, headers };

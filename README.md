@@ -24,6 +24,7 @@ Les [grades Protect](RELEASE-PROTECT-ACCESS-2026-11-04.md) ouvrent aussi l'espac
 de modération du serveur correspondant, sans promotion du compte web. La charte
 du site public et du panel est centralisée dans `theme.css`.
 La rubrique `/profile/protect` affiche ton XP communautaire Protect. Le [journal des préférences](RELEASE-MEMBER-PREFERENCES-2026-11-04.md) décrit les thèmes, la densité et les réglages personnels accessibles depuis Mon compte.
+Les [modules Prisons et YouTube](docs/PRISON-YOUTUBE.md) ajoutent des réglages partagés avec Protect et une gestion privée des prisons pour les Admins et R Modo autorisés sur Discord. Ils restent désactivés par défaut dans le bot.
 
 Commandes locales : `npm ci`, `npm test`, `npm run build`, `npm run test:browser`.
 Le frontend reste HTML/CSS/JavaScript ; aucune migration vers un autre framework.

@@ -3,7 +3,7 @@ module.exports = root => {
   const load = name => require(path.join(root, 'utils', name));
   const settings = load('guildSettings'), level = load('levelService'), levelStore = load('levelStore');
   const sections = [], general = (id, label, fields, extra) => sections.push(S.section(id, label, fields, g => settings.getGuildSettings(g.id), (g, values, actor, patch) => settings.updateGuildSettings(g.id, patch), extra));
-  general('access', 'Équipes et accès', [S.roles('adminRoleIds', 'Administrateurs du bot'), S.roles('confirmedModRoleIds', 'Modérateurs confirmés'), S.roles('modRoleIds', 'Modérateurs'), S.roles('testModRoleIds', 'Modérateurs en test'), S.role('staffOfTheWeekRoleId', 'Staff de la semaine'), S.role('warnBanRoleId', 'Rôle WarnBan'), S.number('warnBanDurationDays', 'Durée WarnBan, en jours', 0, 3650)]);
+  general('access', 'Équipes et accès', [S.roles('adminRoleIds', 'Administrateurs du bot'), S.roles('responsibleModRoleIds', 'Responsables modération (IDs)'), S.roles('confirmedModRoleIds', 'Modérateurs confirmés'), S.roles('modRoleIds', 'Modérateurs'), S.roles('testModRoleIds', 'Modérateurs en test'), S.role('staffOfTheWeekRoleId', 'Staff de la semaine'), S.role('warnBanRoleId', 'Rôle WarnBan'), S.number('warnBanDurationDays', 'Durée WarnBan, en jours', 0, 3650)]);
   general('validation', 'Validation des sanctions', [S.channel('sanctionValidationChannelId', 'Salon de validation'), S.channel('sanctionValidationCategoryId', 'Catégorie de validation', [4]), S.channel('sanctionValidationLogChannelId', 'Journal des validations'), S.roles('sanctionValidationReviewerRoleIds', 'Rôles de validation'), S.select('sanctionValidationCloseSeconds', 'Fermeture, en secondes', [5, 8, 15, 30, 60].map(value => ({ value, label: value + ' s' }))), S.select('sanctionValidationArchiveMinutes', 'Archivage', [60, 1440, 4320, 10080].map(value => ({ value, label: value + ' min' }))), S.boolean('sanctionValidationNotifyDm', 'Notifier les membres par message privé')]);
   general('logs', 'Salons et journaux', [['moderationLogChannelId', 'Journal de modération'], ['logSanctionsChannelId', 'Sanctions'], ['logMessagesChannelId', 'Messages'], ['logMembersChannelId', 'Membres'], ['logRolesChannelId', 'Rôles'], ['logServerChannelId', 'Serveur'], ['logVoiceChannelId', 'Vocal'], ['logAutomodChannelId', 'Modération automatique'], ['botStatusChannelId', 'État du bot'], ['patchNoteChannelId', 'Annonces de mise à jour'], ['suggestionChannelId', 'Suggestions']].map(([key, label]) => S.channel(key, label)));
   general('anti-alt', 'Protection anti-double-compte', [S.boolean('antiAltEnabled', 'Activer la protection'), S.channel('antiAltLogChannelId', 'Journal de la protection'), S.role('antiAltQuarantineRoleId', 'Rôle de quarantaine'), S.number('antiAltAlertThreshold', 'Seuil d’alerte', 0, 100), S.number('antiAltQuarantineThreshold', 'Seuil de quarantaine', 0, 100)], { validate: values => { if (values.antiAltAlertThreshold > values.antiAltQuarantineThreshold) S.fail('Le seuil de quarantaine doit être supérieur ou égal au seuil d’alerte.'); } });
@@ -37,9 +37,15 @@ module.exports = root => {
     try { await welcome.validateWelcomeChannels(g, values); } catch (error) { S.fail(error.message); }
     await welcome.updateGuildWelcomeConfig(g.id, patch);
   }, { validate: values => { if (values.publicEnabled && !values.publicChannelId) S.fail('Choisis un salon d’accueil avant d’activer la bienvenue publique.'); } }));
+  const featureSettings = load('moduleSettings'), featureStore = load('featureStore');
+  for (const [id, module] of Object.entries(featureSettings.MODULES)) sections.push(S.section(id, module.label, module.fields,
+    g => featureStore.getFeatureStore().settings(g.id, id), async (g, values, actor, patch) => { const dashboard = load('featureDashboard'); await dashboard.requireFeatureAdmin({ guild: g, user: { id: actor } }); return dashboard.saveFeatureSettings(g, id, patch); }));
   const authorization = load('authorization');
+  const access = require('./webProtectAccess.cjs').createProtectAccess(authorization, settings);
   return { sections, canConfigure: (guild, member) => authorization.getMemberAccessLevel(member) === 'admin',
-    memberAccess: require('./webProtectAccess.cjs').createProtectAccess(authorization, settings),
+    memberAccess: (guild, member, actor) => ({ ...access(guild, member, actor), canManagePrisons: load('prisonPermissions').canManagePrisons(member, featureStore.getFeatureStore().settings(guild.id, 'prison')) }),
+    feature: (guild, actor, method, path, body) => load('featureBridge').handleFeatureRequest(guild, actor, method, path, body),
+    afterWrite: (guild, module) => load('featureDashboard').refreshFeatureSettings(guild, module),
     profile: require('./webProtectProfile.cjs').createProtectProfile(level, levelStore, load('database').getDatabase),
     audit: (guildId, actor, module, fields, operationId) => load('configAuditLog').recordConfigAudit({ guildId, actor: { id: actor }, module: 'web:' + module, action: 'Configuration depuis le site', details: { fields, operationId } }) };
 };

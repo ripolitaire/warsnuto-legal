@@ -116,6 +116,7 @@
     { "source": "/admin/logs", "destination": "/api/platform?route=admin/logs" },
     { "source": "/admin/settings", "destination": "/api/platform?route=admin/settings" },
     { "source": "/admin/moderation", "destination": "/api/platform?route=admin/moderation" },
+    { "source": "/admin/prisons", "destination": "/api/platform?route=admin/prisons" },
     {
       "source": "/game",
       "destination": "/game.html"

@@ -31,9 +31,42 @@ function createBotConfigFixture(ids) {
       };
       adapter.memberAccess = (g, member) => {
         const tier = member.protectTier || 'public', level = ['public', 'mod-test', 'mod', 'responsible-mod', 'admin'].indexOf(tier);
-        return { tier, level, label: ['Membre', 'Modérateur test', 'Modérateur', 'Responsable modération', 'Administrateur Protect'][level], canModerate: level > 0, canConfigure: level === 4, commands: level ? ['mute', 'kick', ...(level >= 2 ? ['give-role'] : []), ...(level >= 3 ? ['ban'] : []), ...(level === 4 ? ['dashboard'] : [])] : [] };
+        return { tier, level, label: ['Membre', 'Modérateur test', 'Modérateur', 'Responsable modération', 'Administrateur Protect'][level], canModerate: level > 0, canConfigure: level === 4, canManagePrisons: level >= 3, commands: level ? ['mute', 'kick', ...(level >= 2 ? ['give-role'] : []), ...(level >= 3 ? ['ban', 'prison'] : []), ...(level === 4 ? ['dashboard'] : [])] : [] };
       };
       adapter.canConfigure = (g, member) => member.protectTier === 'admin';
+      const featureSettings = {};
+      for (const [id, schema] of Object.entries(require('./feature-schema.json'))) {
+        featureSettings[id] = structuredClone(schema.defaults);
+        adapter.sections.push(S.section(id, schema.label, schema.fields, () => featureSettings[id], (g, values, actor, patch) => { Object.assign(featureSettings[id], patch); writes.push({ bot, actor, module: id, patch }); }));
+      }
+      const featureJobs = new Map(), prisons = new Map(); let nextPrison = 1;
+      adapter.feature = async (g, actor, method, path, body) => {
+        const level = ['public', 'mod-test', 'mod', 'responsible-mod', 'admin'].indexOf(tiers.get(actor) || 'public'), module = path[0];
+        if (level < (module === 'prison' ? 3 : 4)) S.fail('Accès au module refusé par Protect.', 403);
+        if (method === 'GET' && path[1] === 'job') { const job = featureJobs.get(path[2]); if (!job || job.module !== module) S.fail('Opération inconnue.', 404); return { job }; }
+        const jobs = [...featureJobs.values()].filter(job => job.module === module).map(job => ({ id: job.id, status: job.status, action: job.action, updated_at: job.updated_at }));
+        if (method === 'GET' && module === 'youtube') return { channelId: 'UCabcdefghijklmnopqrstuv', apiConfigured: true, lastSuccess: Date.now(), lastError: null, publications: [{ video_id: 'new00000000', kind: 'video' }], deliveries: [], jobs };
+        if (method === 'GET' && path[1]) { const prison = prisons.get(Number(path[1])); if (!prison) S.fail('Prison inconnue.', 404); return { prison }; }
+        if (method === 'GET') return { prisons: [...prisons.values()].filter(p => p.status !== 'closed').map(p => ({ ...p, members: p.members.map(m => ({ userId: m.user_id, status: m.status })) })), jobs };
+        S.object(body);
+        if (body.confirmation !== 'CONFIRMER' || !/^[a-f\d-]{36}$/.test(body.operationId || '') || typeof body.input?.reason !== 'string' || body.input.reason.trim().length < 3) S.fail('Confirmation et motif requis.');
+        if (module === 'youtube' && body.action === 'preview') return { preview: { kind: 'video', title: 'Publication de test', channel: 'WarsNuto', url: 'https://www.youtube.com/watch?v=fixture0000', thumbnail: null, date: '2026-11-07T10:00:00Z' } };
+        if (featureJobs.has(body.operationId)) return { job: featureJobs.get(body.operationId) };
+        const job = { id: body.operationId, guild_id: g.id, module, action: body.action, payload: body.input, status: 'applied', result: {}, updated_at: Date.now() };
+        if (module === 'prison') {
+          if (body.action === 'create') {
+            const id = nextPrison++;
+            prisons.set(id, { id, creator_id: actor, status: 'open', reason: body.input.reason, created_at: Date.now(), members: body.input.userIds.map(user_id => ({ user_id, status: 'active', snapshot: { displayName: 'Membre de test', roles: [{ id: roleId, name: safeRole.name }] }, excluded_roles: [] })), history: [] }); job.result.prisonId = id;
+          } else {
+            const p = prisons.get(body.input.prisonId); if (!p) S.fail('Prison inconnue.', 404);
+            if (body.action === 'close') { p.status = 'closed'; p.members.forEach(m => { m.status = 'released'; }); }
+            else if (body.action === 'add') p.members.push(...body.input.userIds.map(user_id => ({ user_id, status: 'active', snapshot: { roles: [] }, excluded_roles: [] })));
+            else { const m = p.members.find(m => m.user_id === body.input.userId); if (m && body.action === 'release') m.status = 'released'; if (m && body.action === 'derank') m.excluded_roles = [roleId]; if (m && body.action === 'ban') m.status = 'banned'; }
+            p.history.unshift({ action: body.action, actor_id: actor, user_id: body.input.userId, details: { reason: body.input.reason } }); job.result.prisonId = p.id;
+          }
+        }
+        featureJobs.set(job.id, job); writes.push({ bot, actor, module, action: body.action }); return { job };
+      };
       const access = { adminRoleIds: [extraRoles[0].id], confirmedModRoleIds: [extraRoles[1].id], modRoleIds: [extraRoles[2].id], testModRoleIds: [extraRoles[3].id], staffOfTheWeekRoleId: null, warnBanRoleId: null, warnBanDurationDays: 7 };
       adapter.sections.push(S.section('access', 'Équipes et accès', [S.roles('adminRoleIds', 'Administrateurs du bot'), S.roles('confirmedModRoleIds', 'Modérateurs confirmés'), S.roles('modRoleIds', 'Modérateurs'), S.roles('testModRoleIds', 'Modérateurs en test'), S.role('staffOfTheWeekRoleId', 'Staff de la semaine'), S.role('warnBanRoleId', 'Rôle WarnBan'), S.number('warnBanDurationDays', 'Durée WarnBan, en jours', 0, 3650)], () => access, (g, next, actor, patch) => { Object.assign(access, patch); writes.push({ bot, actor, patch }); }));
       const logs = { moderationLogChannelId: channelId, logSanctionsChannelId: channelId };

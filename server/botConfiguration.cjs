@@ -7,7 +7,7 @@ function createBotConfiguration(db, config, transport) {
     if (!Object.hasOwn(BOTS, bot)) throw error(404, 'Bot inconnu.');
     if (!snowflake(actor)) throw error(403, 'Identité Discord invalide.');
     if (!config.botSocketDirectory && !transport) throw error(503, 'La liaison de configuration des bots n’est pas activée.');
-    if (!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) throw error(404, 'Rubrique inconnue.');
+    if (!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) throw error(404, 'Rubrique inconnue.');
     const options = { socketPath: path.join(config.botSocketDirectory || '.', bot + '.sock'), path: route,
       method: body ? 'PATCH' : 'GET', headers: { 'x-wn-actor': actor, ...(body ? { 'content-type': 'application/json' } : {}) } };
     if (transport) return transport(options, body);
@@ -15,7 +15,8 @@ function createBotConfiguration(db, config, transport) {
       const unavailable = () => error(503, 'Le bot n’a pas répondu. Actualise les réglages avant de retenter une modification.');
       const request = http.request(options, response => {
         let size = 0; const chunks = [];
-        response.on('data', chunk => { size += chunk.length; if (size > 262144) { reject(unavailable()); response.destroy(); } else chunks.push(chunk); });
+        const maximum = route.startsWith('/features/') ? 2097152 : 262144;
+        response.on('data', chunk => { size += chunk.length; if (size > maximum) { reject(unavailable()); response.destroy(); } else chunks.push(chunk); });
         response.on('error', () => reject(unavailable()));
         response.on('end', () => {
           try {
@@ -34,6 +35,23 @@ function createBotConfiguration(db, config, transport) {
   }
   return {
     send,
+    async feature(guild, module, suffix, session, body) {
+      if (!snowflake(guild) || !['prison', 'youtube'].includes(module) || !/^(?:|\d{1,10}|job\/[a-f\d-]{36})$/.test(suffix || '')) throw error(400, 'Module ou référence invalide.');
+      if (body) {
+        object(body, ['action', 'input', 'operationId', 'confirmation']);
+        if (body.confirmation !== 'CONFIRMER' || !/^[a-f\d-]{36}$/.test(body.operationId || '')) throw error(400, 'Confirmation et opération requises.');
+        const actions = module === 'prison' ? ['create', 'add', 'repair', 'release', 'close', 'derank', 'exclude', 'mute', 'ban', 'reconcile-ban'] : ['preview', 'test', 'reconcile'];
+        if (!actions.includes(body.action)) throw error(400, 'Action inconnue.');
+        object(body.input, module === 'prison' ? ['prisonId', 'userId', 'userIds', 'roleIds', 'duration', 'proof', 'reason'] : ['kind', 'deliveryId', 'messageId', 'reason']);
+        text(body.input.reason, 500, 3);
+        audit(db, config.now(), session.user.id, 'bot.feature.requested', guild, { module, action: body.action, operationId: body.operationId }, 'pending');
+      }
+      try {
+        const result = await send('protect', '/features/' + guild + '/' + module + (suffix ? '/' + suffix : ''), session.user.id, body);
+        if (body) audit(db, config.now(), session.user.id, 'bot.feature.queued', guild, { module, action: body.action, operationId: body.operationId });
+        return result;
+      } catch (err) { if (body) audit(db, config.now(), session.user.id, 'bot.feature.refused', guild, { module, action: body.action, operationId: body.operationId }, 'failure'); throw err; }
+    },
     catalog() { return { bots: Object.entries(BOTS).map(([id, name]) => ({ id, name })) }; },
     async guilds(bot, session) { return send(bot, '/guilds', session.user.id); },
     async read(bot, guild, section, session) {

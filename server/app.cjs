@@ -90,6 +90,10 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.get('/api/platform/admin/overview', permit('admin:read'), async (req, res) => res.json(await service.overview()));
   app.get('/api/platform/admin/bots', permit('admin:read'), async (req, res) => res.json(await service.botMonitor()));
   // Bot permissions are checked live on Discord, independently of site staff roles.
+  app.get('/api/platform/admin/features/:guild/:module', async (req, res) => res.json(await botConfiguration.feature(req.params.guild, req.params.module, '', req.session)));
+  app.get('/api/platform/admin/features/:guild/:module/job/:id', async (req, res) => res.json(await botConfiguration.feature(req.params.guild, req.params.module, 'job/' + req.params.id, req.session)));
+  app.get('/api/platform/admin/features/:guild/:module/:id', async (req, res) => res.json(await botConfiguration.feature(req.params.guild, req.params.module, req.params.id, req.session)));
+  app.post('/api/platform/admin/features/:guild/:module', fresh, async (req, res) => res.json(await botConfiguration.feature(req.params.guild, req.params.module, '', req.session, req.body)));
   app.get('/api/platform/admin/bot-config', (req, res) => res.json(botConfiguration.catalog()));
   app.get('/api/platform/admin/bot-config/:bot/guilds', async (req, res) => res.json(await botConfiguration.guilds(req.params.bot, req.session)));
   app.get('/api/platform/admin/bot-config/:bot/:guild', async (req, res) => res.json(await botConfiguration.read(req.params.bot, req.params.guild, null, req.session)));
@@ -110,12 +114,13 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(req.originalUrl)));
     if (pagePermissions[route] && route !== '/admin/moderation') requirePermission(req.session, pagePermissions[route]);
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
-    const scoped = { ...req.session, protectAccess: await memberSpace.protectSession(req.session, route === '/admin/moderation') };
+    const scoped = { ...req.session, protectAccess: await memberSpace.protectSession(req.session, ['/admin/moderation', '/admin/prisons'].includes(route)) };
+    if (route === '/admin/prisons' && !scoped.protectAccess.guilds.some(g => g.canManagePrisons)) throw error(403, 'Accès prison réservé aux Admins et R Modo configurés dans Protect.');
     if (route === '/admin/moderation' && !scoped.protectAccess.canModerate) requirePermission(req.session, 'moderation:read');
     res.type('html').send(views.page(route, scoped, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'member-space.js'];
+  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {
