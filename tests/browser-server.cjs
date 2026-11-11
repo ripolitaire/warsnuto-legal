@@ -3,7 +3,8 @@ if (process.env.NODE_ENV === 'production') throw Error('Fixtures are forbidden i
 const { fixture } = require('./helpers.cjs');
 (async () => {
   const bots = require('./bot-config-fixture.cjs').createBotConfigFixture(require('./helpers.cjs').ids);
-  const f = fixture({ port: Number(process.env.PLAYWRIGHT_PORT || 4317), botTransport: bots.transport });
+  const recruitment=require('./recruitment-fixture.cjs').recruitmentFixture(bots.transport,require('./helpers.cjs').ids);
+  const f = fixture({ port: Number(process.env.PLAYWRIGHT_PORT || 4317), botTransport: recruitment.transport });
   // Browser scenarios exercise layout independently; real limiter behavior has its own API tests.
   f.beforeRequest = () => f.db.prepare('DELETE FROM rate_limits').run();
   const base = await f.listen();

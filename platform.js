@@ -244,6 +244,7 @@
       if (!route) return;
       if (matchMedia('(max-width: 780px)').matches) document.querySelector('.platform-sidebar nav [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
       if (route === '/profile/game') await window.wnMemberSpace.game(memberUI());
+      else if (route === '/candidature'||route==='/admin/candidatures')await window.wnRecruitment({content,request,write,confirmAction,notice,E,icon,icons});
       else if (route === '/profile/protect') await window.wnMemberSpace.protectProfile(memberUI());
       else if (route === '/servers') await window.wnMemberSpace.servers(memberUI());
       else if (route.startsWith('/profile')) await profile();

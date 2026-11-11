@@ -1,5 +1,7 @@
 const { isIP } = require('node:net');
-const ALLOWED = /^(?:auth\/discord\/(?:start|callback)|servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation|prisons))?|api\/platform\/(?:public|session|servers|moderation\/\d{17,20}|logout|activity|me(?:\/(?:game|protect)\/\d{17,20}|\/preferences|\/sessions\/revoke-others)?|admin\/(?:features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|overview|bots|bot-config(?:\/(?:protect|game|support)\/(?:guilds|\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?))?|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
+const LEGACY_ALLOWED = /^(?:auth\/discord\/(?:start|callback)|servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation|prisons))?|api\/platform\/(?:public|session|servers|moderation\/\d{17,20}|logout|activity|me(?:\/(?:game|protect)\/\d{17,20}|\/preferences|\/sessions\/revoke-others)?|admin\/(?:features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|overview|bots|bot-config(?:\/(?:protect|game|support)\/(?:guilds|\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?))?|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
+const RECRUITMENT = /^(?:candidature|admin\/candidatures|api\/platform\/recruitment\/\d{17,20}(?:\/(?:context|mine|reviews|settings|application\/[a-f\d-]{36}))?)$/;
+const ALLOWED = new RegExp('(?:' + LEGACY_ALLOWED.source + ')|(?:' + RECRUITMENT.source + ')');
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
@@ -23,7 +25,7 @@ module.exports = async function handler(req, res) {
     const ip = req.headers['x-vercel-forwarded-for'];
     if (process.env.VERCEL && typeof ip === 'string' && isIP(ip)) headers['x-wn-client-ip'] = ip;
     const body = ['POST', 'PATCH'].includes(req.method) ? (typeof req.body === 'string' ? req.body : JSON.stringify(req.body ?? {})) : undefined;
-    if (body && Buffer.byteLength(body) > 16384) return res.status(413).json({ error: 'Formulaire trop volumineux.' });
+    if (body && Buffer.byteLength(body) > (route.startsWith('api/platform/recruitment/') ? 65536 : 16384)) return res.status(413).json({ error: 'Formulaire trop volumineux.' });
     const response = await fetch(url, { method: req.method, headers, body, redirect: 'manual', signal: AbortSignal.timeout(30000) });
     for (const name of ['content-type', 'content-security-policy', 'x-frame-options', 'permissions-policy', 'retry-after']) {
       const value = response.headers.get(name); if (value) res.setHeader(name, value);

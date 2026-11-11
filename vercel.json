@@ -100,6 +100,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/candidature", "destination": "/api/platform?route=candidature" },
+    { "source": "/admin/candidatures", "destination": "/api/platform?route=admin/candidatures" },
     { "source": "/auth/discord/start", "destination": "/api/platform?route=auth/discord/start" },
     { "source": "/auth/discord/callback", "destination": "/api/platform?route=auth/discord/callback" },
     { "source": "/api/platform/:rest*", "destination": "/api/platform?route=api/platform/:rest*" },
