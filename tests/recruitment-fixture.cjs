@@ -33,7 +33,7 @@ function recruitmentFixture(base,ids){
      else if(body.action==='draft.submit'){if(body.confirmation!=='ENVOYER'||questions.some((q,i)=>!c.answers[i]?.value))deny('Réponses et confirmation requises.',400);c.status='PENDING';}
      else if(body.action==='review.claim'){c.status='UNDER_REVIEW';c.assignee=actor;}
      else if(body.action==='review.note'){c.events=[...(c.events||[]),{kind:'review.note',actor,created:Date.now(),data:{note:body.note}}];}
-     else if(body.action==='review.decide'){c.status=body.status;c.reason=body.reason;}
+     else if(body.action==='review.decide'){c.status=body.status==='ACCEPTED'?'INTERVIEW':body.status;c.reason=body.reason;if(c.status==='INTERVIEW'){c.interviewChannelId='1561826762747285690';c.interviewState='ready';c.notification='sent';}}
      else deny('Action inconnue.',400);
      c.version++;
    }
