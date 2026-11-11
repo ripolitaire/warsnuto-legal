@@ -52,7 +52,15 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
   async function dispatch(req, body = {}) {
     if (!client.isReady()) S.fail('Ce bot se reconnecte à Discord. Réessaie dans un instant.', 503);
     const url = new URL(req.url, 'http://localhost'), actor = req.headers['x-wn-actor'];
-    if (url.search || !['GET', 'PATCH'].includes(req.method)) S.fail('Route indisponible.', 404);
+    if ((url.search && !url.pathname.startsWith('/recruitment/')) || !['GET', 'PATCH'].includes(req.method)) S.fail('Route indisponible.', 404);
+    const recruitment=/^\/recruitment\/(\d{17,20})\/(context|mine|reviews|settings|actions|application\/([a-f\d-]{36}))$/.exec(url.pathname);
+    if(recruitment) {
+      const {guild,member}=await membership(recruitment[1],actor,true);
+      if(!member||!adapter.recruitment)S.fail('Candidatures indisponibles sur ce serveur.',403);
+      if([...url.searchParams.keys()].some(k=>!['page','status','search'].includes(k))||req.method==='PATCH'&&recruitment[2]!=='actions'||req.method==='GET'&&recruitment[2]==='actions')S.fail('Route de candidature invalide.',404);
+      if(recruitment[2]==='settings'){await guild.roles.fetch();await guild.channels.fetch();}
+      return adapter.recruitment(guild,member,req.method,recruitment[2].startsWith('application/')?'application':recruitment[2],recruitment[3],url.searchParams,body);
+    }
     if (url.pathname === '/member/servers' && req.method === 'GET') {
       const guilds = [];
       for (const entry of client.guilds.cache.values()) {
@@ -120,7 +128,7 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.setHeader('Cache-Control', 'no-store');
     try {
       let length = 0; const chunks = [];
-      for await (const chunk of req) { length += chunk.length; if (length > 16384) S.fail('Formulaire trop volumineux.', 413); chunks.push(chunk); }
+      for await (const chunk of req) { length += chunk.length; if (length > (req.url.startsWith('/recruitment/')?65536:16384)) S.fail('Formulaire trop volumineux.', 413); chunks.push(chunk); }
       let body = {}; if (length) { try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { S.fail('Formulaire JSON invalide.'); } }
       const data = await dispatch(req, body); res.end(JSON.stringify(data));
     } catch (error) { res.statusCode = error.status || 503; res.end(JSON.stringify({ error: error.publicMessage || 'Le bot n’a pas pu appliquer cette configuration.' })); }

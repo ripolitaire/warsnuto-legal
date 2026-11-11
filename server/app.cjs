@@ -40,6 +40,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     if (['POST', 'PATCH'].includes(req.method) && !req.is('application/json')) return next(error(415, 'Un formulaire JSON est requis.'));
     next();
   });
+  app.use('/api/platform/recruitment',express.json({limit:'64kb',strict:true,inflate:false}));
   app.use(express.json({ limit: '16kb', strict: true, inflate: false }));
   app.get('/auth/discord/start', async (req, res) => {
     limit('oauth:' + req.clientKey, 10);
@@ -63,12 +64,18 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
       if (!req.session) throw error(401, 'Connecte-toi avec Discord.');
       if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER' && req.path !== '/logout') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
       if (!['GET', 'HEAD', 'POST', 'PATCH'].includes(req.method)) throw error(405, 'Méthode non autorisée.');
-      if (['POST', 'PATCH'].includes(req.method)) { auth.csrf(req, req.session); limit('write:' + req.session.user.id, 20); auth.touch(req.session); }
+      if (['POST', 'PATCH'].includes(req.method)) { auth.csrf(req, req.session); limit('write:' + req.session.user.id, req.path.startsWith('/recruitment/')?60:20); auth.touch(req.session); }
       next();
     } catch (err) { next(err); }
   });
   const permit = permission => (req, res, next) => { try { requirePermission(req.session, permission); next(); } catch (err) { next(err); } };
   const fresh = (req, res, next) => { try { auth.fresh(req.session); next(); } catch (err) { next(err); } };
+  app.get('/api/platform/recruitment/:guild/:view',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,req.params.view,req.session,undefined,req.query)));
+  app.get('/api/platform/recruitment/:guild/application/:id',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,'application/'+req.params.id,req.session)));
+  app.post('/api/platform/recruitment/:guild',async(req,res)=>{
+    if(!['draft.create','draft.save','draft.submit','interview.redeem','withdraw'].includes(req.body?.action))auth.fresh(req.session);
+    res.json(await botConfiguration.recruitment(req.params.guild,'actions',req.session,req.body));
+  });
   app.post('/api/platform/logout', (req, res) => { object(req.body, []); auth.logout(req.session); res.set('Set-Cookie', auth.clearCookie()).json({ ok: true }); });
   app.post('/api/platform/activity', (req, res) => { object(req.body, []); res.json({ ok: true }); });
   app.get('/api/platform/me', (req, res) => res.json({ user: req.session.user, sessions: service.sessions(req.session) }));
@@ -115,12 +122,16 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     if (pagePermissions[route] && route !== '/admin/moderation') requirePermission(req.session, pagePermissions[route]);
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
     const scoped = { ...req.session, protectAccess: await memberSpace.protectSession(req.session, ['/admin/moderation', '/admin/prisons'].includes(route)) };
+    if(route==='/admin/candidatures') {
+      const guild=String(req.query.guild||'1052863089692905493'),context=await botConfiguration.recruitment(guild,'context',req.session);
+      if(!context.access.review)throw error(403,'Espace réservé aux recruteurs configurés dans Protect.');
+    }
     if (route === '/admin/prisons' && !scoped.protectAccess.guilds.some(g => g.canManagePrisons)) throw error(403, 'Accès prison réservé aux Admins et R Modo configurés dans Protect.');
     if (route === '/admin/moderation' && !scoped.protectAccess.canModerate) requirePermission(req.session, 'moderation:read');
     res.type('html').send(views.page(route, scoped, service.publicSettings()));
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
-  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js'];
+  const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js'];
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {

@@ -43,6 +43,10 @@ module.exports = root => {
   const authorization = load('authorization');
   const access = require('./webProtectAccess.cjs').createProtectAccess(authorization, settings);
   return { sections, canConfigure: (guild, member) => authorization.getMemberAccessLevel(member) === 'admin',
+    recruitment:(guild,member,method,view,id,query,body)=>{
+      const service=load('recruitmentService').getRecruitmentService(guild.client);
+      return method==='GET'?service.read(guild,member,view,id,query):service.mutate(guild,member,body);
+    },
     memberAccess: (guild, member, actor) => ({ ...access(guild, member, actor), canManagePrisons: load('prisonPermissions').canManagePrisons(member, featureStore.getFeatureStore().settings(guild.id, 'prison')) }),
     feature: (guild, actor, method, path, body) => load('featureBridge').handleFeatureRequest(guild, actor, method, path, body),
     afterWrite: (guild, module) => load('featureDashboard').refreshFeatureSettings(guild, module),
