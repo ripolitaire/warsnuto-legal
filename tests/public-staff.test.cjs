@@ -5,6 +5,18 @@ const fs=require('node:fs'),vm=require('node:vm');
 const snapshot=require('../api/bots-data.json');
 const source=fs.readFileSync(require.resolve('../api/bots'),'utf8');
 const MOD='1465459339241193524',TEST='1052991598096560179';
+
+test('staff palettes survive CSP using CSSOM and reject CSS injection', () => {
+ const script=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const fragment=script.slice(script.indexOf('function normalizeHexColor'),script.indexOf('function applyRoleColors'));
+ const context={};vm.runInNewContext(fragment,context);
+ const properties={};const card={dataset:{staffPrimary:'#123456',staffSecondary:'#000000',staffTertiary:'#abcdef'},style:{setProperty:(k,v)=>properties[k]=v}};
+ context.applyStaffColors({querySelectorAll:()=>[card]});assert.match(properties['background-image'],/#00000018/);assert.match(properties['background-image'],/#abcdef18/);assert.equal(properties['--staff-color'],'#123456');
+ delete properties['background-image'];card.dataset.staffSecondary='red; background:url(https://invalid.example)';
+ context.applyStaffColors({querySelectorAll:()=>[card]});assert.equal(properties['background-image'],undefined);
+ const renderer=script.slice(script.indexOf('function renderStaff'),script.indexOf('function renderRoleGuide'));
+ assert.match(renderer,/applyStaffColors\(target\)/);assert.doesNotMatch(renderer,/style=/);
+});
 function api(fetcher){let now=Date.now();class Clock extends Date{static now(){return now;}}
  const module={exports:{}};const env={DISCORD_BOT_TOKEN:'fixture-token',WARSNUTO_GUILD_ID:'fixture-guild'};
  const context={module,exports:module.exports,require:()=>snapshot,process:{env},Date:Clock,URL,AbortController,setTimeout,clearTimeout,fetch:fetcher,console};
