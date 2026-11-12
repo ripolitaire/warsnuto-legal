@@ -26,7 +26,7 @@ function api(fetcher){let now=Date.now();class Clock extends Date{static now(){r
 test('hierarchy waits for paginated members, refreshes changed roles and excludes absent pinned profiles',async()=>{
  let promoted=false;let memberCalls=0;const fetched=[];
  const app=api(async url=>{const u=new URL(url);fetched.push(u.pathname);let data;
- if(u.pathname.endsWith('/roles'))data=[{id:MOD,name:'MODO',color:0xffffff},{id:TEST,name:'Modo test',color:0xff7800}];
+ if(u.pathname.endsWith('/roles'))data=[{id:MOD,name:'MODO',color:0xffffff,colors:{primary_color:0xffffff,secondary_color:0,tertiary_color:0x123456}},{id:TEST,name:'Modo test',color:0xff7800}];
  else if(u.pathname.endsWith('/members')){memberCalls++;if(!promoted)await new Promise(r=>setTimeout(r,1100));
  data=BigInt(u.searchParams.get('after'))>2000n?[]:u.searchParams.get('after')==='0'?Array.from({length:1000},(_,n)=>({user:{id:String(n+1),username:'Member '+n},roles:[]})):[{user:{id:'2000',username:'New moderator'},roles:[promoted?MOD:TEST]}];}
  else data={approximate_member_count:1001,approximate_presence_count:10};
@@ -34,7 +34,7 @@ test('hierarchy waits for paginated members, refreshes changed roles and exclude
  let result=await app.call();assert.equal(result.body.live.staffSource,'Roles Discord lus automatiquement');assert.match(result.headers['Cache-Control'],/s-maxage=15, stale-while-revalidate=15/);assert.equal(memberCalls,5);
  const tier=label=>result.body.discord.staff.tiers.find(t=>t.label===label);
  assert.equal(tier('Modo test').nodes.length,1);assert.equal(tier('Moderation').nodes.length,0);assert.equal(tier('Administration').nodes.length,0);
- promoted=true;app.advance();result=await app.call();assert.equal(tier('Modo test').nodes.length,0);assert.equal(tier('Moderation').nodes.length,1);assert.equal(memberCalls,10);
+ promoted=true;app.advance();result=await app.call();assert.equal(tier('Modo test').nodes.length,0);assert.equal(tier('Moderation').nodes.length,1);assert.equal(memberCalls,10);assert.equal(tier('Moderation').nodes[0].colors.secondary,'#000000');assert.equal(tier('Moderation').nodes[0].colors.tertiary,'#123456');
  assert.doesNotMatch(JSON.stringify(result.body),/fixture-token|Authorization/);
 });
 test('hierarchy page renders the snapshot first and loads counts and staff separately',async()=>{
