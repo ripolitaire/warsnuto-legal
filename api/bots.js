@@ -486,6 +486,11 @@ function buildTierNodes(tier, roleMap, memberMap, shown) {
         id,
         role: ROLE_LABEL_OVERRIDES.get(roleId) || cleanRoleName(role.name),
         color: role.color ? intToHexColor(role.color) : tier.color,
+        colors: {
+          primary: intToHexColor(role.colors?.primary_color ?? role.color),
+          secondary: intToHexColor(role.colors?.secondary_color),
+          tertiary: intToHexColor(role.colors?.tertiary_color),
+        },
         iconType: tier.iconType,
         note: descriptions.get(id),
         member,
@@ -497,7 +502,7 @@ function buildTierNodes(tier, roleMap, memberMap, shown) {
   return nodes;
 }
 
-function normalizeStaffMember({ id, name, role, tag, note, color, iconType, member }) {
+function normalizeStaffMember({ id, name, role, tag, note, color, colors, iconType, member }) {
   return {
     id,
     name: NAME_OVERRIDES.get(id) || name || cleanDisplayName(displayName(member)),
@@ -505,6 +510,7 @@ function normalizeStaffMember({ id, name, role, tag, note, color, iconType, memb
     tag: tag || member?.user?.username || "",
     note,
     color: color || "#ffcc4d",
+    ...(colors ? { colors } : {}),
     iconType: iconType || "tools",
   };
 }

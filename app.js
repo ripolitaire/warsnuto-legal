@@ -135,7 +135,7 @@ function staffIconStyle(value) {
   ].join("; ");
 }
 
-function staffCardStyle(value) {
+function staffCardStyle(value, colors) {
   const color = normalizeHexColor(value);
   const { r, g, b } = hexToRgb(color);
   return [
@@ -143,6 +143,9 @@ function staffCardStyle(value) {
     `--staff-rgb: ${r}, ${g}, ${b}`,
     `border-color: rgba(${r}, ${g}, ${b}, 0.34)`,
     `box-shadow: 0 16px 38px rgba(0, 0, 0, 0.22), inset 3px 0 0 rgba(${r}, ${g}, ${b}, 0.5)`,
+    ...(colors?.secondary && /^#[0-9a-f]{6}$/i.test(colors.secondary) ? [
+      `background-image: linear-gradient(125deg, ${normalizeHexColor(colors.primary, color)}18, ${colors.secondary}18${colors.tertiary && /^#[0-9a-f]{6}$/i.test(colors.tertiary) ? `, ${colors.tertiary}18` : ""})`,
+    ] : []),
   ].join("; ");
 }
 
@@ -439,7 +442,7 @@ function renderStaffTree(data) {
                   ? tier.nodes
                       .map(
                         (member) => `
-                          <article class="staff-node" role="treeitem" style="${escapeHtml(staffCardStyle(member.color || tier.color))}">
+                          <article class="staff-node" role="treeitem" style="${escapeHtml(staffCardStyle(member.color || tier.color, member.colors))}">
                             <span class="staff-node-icon" style="${escapeHtml(staffIconStyle(member.color || tier.color))}">${staffIconSvg(member.iconType || tier.iconType, member.color || tier.color)}</span>
                             <p class="v2-kicker">${escapeHtml(member.role || tier.label)}</p>
                             <h4>${escapeHtml(member.name)}</h4>
