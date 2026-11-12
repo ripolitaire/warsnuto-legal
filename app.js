@@ -135,7 +135,7 @@ function staffIconStyle(value) {
   ].join("; ");
 }
 
-function staffCardStyle(value) {
+function staffCardStyle(value, colors) {
   const color = normalizeHexColor(value);
   const { r, g, b } = hexToRgb(color);
   return [
@@ -143,7 +143,26 @@ function staffCardStyle(value) {
     `--staff-rgb: ${r}, ${g}, ${b}`,
     `border-color: rgba(${r}, ${g}, ${b}, 0.34)`,
     `box-shadow: 0 16px 38px rgba(0, 0, 0, 0.22), inset 3px 0 0 rgba(${r}, ${g}, ${b}, 0.5)`,
+    ...(colors?.secondary && /^#[0-9a-f]{6}$/i.test(colors.secondary) ? [
+      `background-image: linear-gradient(125deg, ${normalizeHexColor(colors.primary, color)}18, ${colors.secondary}18${colors.tertiary && /^#[0-9a-f]{6}$/i.test(colors.tertiary) ? `, ${colors.tertiary}18` : ""})`,
+    ] : []),
   ].join("; ");
+}
+
+function applyStaffColors(target) {
+  target.querySelectorAll('[data-staff-primary]').forEach((element) => {
+    const color = normalizeHexColor(element.dataset.staffPrimary);
+    const colors = { primary: color, secondary: element.dataset.staffSecondary, tertiary: element.dataset.staffTertiary };
+    const declarations = element.dataset.staffIcon === 'true' ? staffIconStyle(color) : staffCardStyle(color, colors);
+    declarations.split(';').forEach((declaration) => {
+      const separator = declaration.indexOf(':');
+      if (separator < 0) return;
+      const name = declaration.slice(0, separator).trim();
+      const value = declaration.slice(separator + 1).trim();
+      const important = /\s*!important$/.test(value);
+      element.style.setProperty(name, value.replace(/\s*!important$/, ''), important ? 'important' : '');
+    });
+  });
 }
 
 function applyRoleColors(target) {
@@ -165,7 +184,7 @@ function staffIconSvg(type, value) {
   const shadowColor = "rgba(0, 0, 0, 0.24)";
   if (type === "crown") {
     return `
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="staff-crown-icon" style="color: ${color}; fill: ${color}; stroke: ${color};">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="staff-crown-icon">
         <path d="M3.5 8.2 8.3 12l3.7-6.2L15.7 12l4.8-3.8-1.8 10H5.3l-1.8-10Z" fill="${color}" />
         <path d="M6 20h12" fill="none" stroke="${color}" />
       </svg>
@@ -173,7 +192,7 @@ function staffIconSvg(type, value) {
   }
 
   return `
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="staff-shield-icon" style="color: ${color}; fill: ${color}; stroke: none;">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="staff-shield-icon">
       <path d="M12 2.4 20 5.2v6.1c0 5.1-3.25 8.95-8 10.3-4.75-1.35-8-5.2-8-10.3V5.2L12 2.4Z" fill="${color}" />
       <path d="M12 5.6v12.3c2.85-1.05 4.8-3.55 4.8-6.8V7.45L12 5.6Z" fill="${shadowColor}" />
     </svg>
@@ -429,7 +448,7 @@ function renderStaffTree(data) {
           (tier, index) => `
             <section class="staff-tier ${index === 0 ? "is-root" : ""}" role="group" aria-label="${escapeHtml(tier.label)}">
               <div class="staff-tier-label">
-                <span style="${escapeHtml(staffIconStyle(tier.color))}">${staffIconSvg(tier.iconType, tier.color)}</span>
+                <span data-staff-primary="${escapeHtml(normalizeHexColor(tier.color))}" data-staff-icon="true">${staffIconSvg(tier.iconType, tier.color)}</span>
                 <div>
                   <h3>${escapeHtml(tier.label)}</h3>
                 </div>
@@ -439,8 +458,8 @@ function renderStaffTree(data) {
                   ? tier.nodes
                       .map(
                         (member) => `
-                          <article class="staff-node" role="treeitem" style="${escapeHtml(staffCardStyle(member.color || tier.color))}">
-                            <span class="staff-node-icon" style="${escapeHtml(staffIconStyle(member.color || tier.color))}">${staffIconSvg(member.iconType || tier.iconType, member.color || tier.color)}</span>
+                          <article class="staff-node" role="treeitem" data-staff-primary="${escapeHtml(normalizeHexColor(member.color || tier.color))}" data-staff-secondary="${escapeHtml(member.colors?.secondary || '')}" data-staff-tertiary="${escapeHtml(member.colors?.tertiary || '')}">
+                            <span class="staff-node-icon" data-staff-primary="${escapeHtml(normalizeHexColor(member.color || tier.color))}" data-staff-icon="true">${staffIconSvg(member.iconType || tier.iconType, member.color || tier.color)}</span>
                             <p class="v2-kicker">${escapeHtml(member.role || tier.label)}</p>
                             <h4>${escapeHtml(member.name)}</h4>
                             ${member.tag ? `<span class="staff-tag">@${escapeHtml(member.tag)}</span>` : ""}
@@ -449,8 +468,8 @@ function renderStaffTree(data) {
                         `
                       )
                       .join("")
-                  : `<article class="staff-node is-empty" role="treeitem" style="${escapeHtml(staffCardStyle(tier.color))}">
-                      <span class="staff-node-icon" style="${escapeHtml(staffIconStyle(tier.color))}">${staffIconSvg(tier.iconType, tier.color)}</span>
+                  : `<article class="staff-node is-empty" role="treeitem" data-staff-primary="${escapeHtml(normalizeHexColor(tier.color))}">
+                      <span class="staff-node-icon" data-staff-primary="${escapeHtml(normalizeHexColor(tier.color))}" data-staff-icon="true">${staffIconSvg(tier.iconType, tier.color)}</span>
                       <p class="v2-kicker">${escapeHtml(tier.label)}</p>
                       <h4>Aucun membre public</h4>
                       <p>Le role existe, mais aucun membre public n'est liste actuellement.</p>
@@ -463,6 +482,7 @@ function renderStaffTree(data) {
       </div>
     </div>
   `;
+  applyStaffColors(target);
 }
 
 function renderRoleGuide(data) {

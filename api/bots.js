@@ -485,7 +485,12 @@ function buildTierNodes(tier, roleMap, memberMap, shown) {
       nodes.push(normalizeStaffMember({
         id,
         role: ROLE_LABEL_OVERRIDES.get(roleId) || cleanRoleName(role.name),
-        color: role.color ? intToHexColor(role.color) : tier.color,
+        color: intToHexColor(role.colors?.primary_color ?? role.color) || tier.color,
+        colors: {
+          primary: intToHexColor(role.colors?.primary_color ?? role.color),
+          secondary: intToHexColor(role.colors?.secondary_color, true),
+          tertiary: intToHexColor(role.colors?.tertiary_color, true),
+        },
         iconType: tier.iconType,
         note: descriptions.get(id),
         member,
@@ -497,7 +502,7 @@ function buildTierNodes(tier, roleMap, memberMap, shown) {
   return nodes;
 }
 
-function normalizeStaffMember({ id, name, role, tag, note, color, iconType, member }) {
+function normalizeStaffMember({ id, name, role, tag, note, color, colors, iconType, member }) {
   return {
     id,
     name: NAME_OVERRIDES.get(id) || name || cleanDisplayName(displayName(member)),
@@ -505,13 +510,14 @@ function normalizeStaffMember({ id, name, role, tag, note, color, iconType, memb
     tag: tag || member?.user?.username || "",
     note,
     color: color || "#ffcc4d",
+    ...(colors ? { colors } : {}),
     iconType: iconType || "tools",
   };
 }
 
-function intToHexColor(value) {
+function intToHexColor(value, allowZero = false) {
   const number = Number(value);
-  if (!Number.isFinite(number) || number <= 0) return null;
+  if (value === null || value === undefined || !Number.isInteger(number) || number < 0 || number > 0xffffff || (!allowZero && number === 0)) return null;
   return `#${number.toString(16).padStart(6, "0")}`;
 }
 

@@ -5,6 +5,18 @@ const fs=require('node:fs'),vm=require('node:vm');
 const snapshot=require('../api/bots-data.json');
 const source=fs.readFileSync(require.resolve('../api/bots'),'utf8');
 const MOD='1465459339241193524',TEST='1052991598096560179';
+
+test('staff palettes survive CSP using CSSOM and reject CSS injection', () => {
+ const script=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ const fragment=script.slice(script.indexOf('function normalizeHexColor'),script.indexOf('function applyRoleColors'));
+ const context={};vm.runInNewContext(fragment,context);
+ const properties={};const card={dataset:{staffPrimary:'#123456',staffSecondary:'#000000',staffTertiary:'#abcdef'},style:{setProperty:(k,v)=>properties[k]=v}};
+ context.applyStaffColors({querySelectorAll:()=>[card]});assert.match(properties['background-image'],/#00000018/);assert.match(properties['background-image'],/#abcdef18/);assert.equal(properties['--staff-color'],'#123456');
+ delete properties['background-image'];card.dataset.staffSecondary='red; background:url(https://invalid.example)';
+ context.applyStaffColors({querySelectorAll:()=>[card]});assert.equal(properties['background-image'],undefined);
+ const renderer=script.slice(script.indexOf('function renderStaff'),script.indexOf('function renderRoleGuide'));
+ assert.match(renderer,/applyStaffColors\(target\)/);assert.doesNotMatch(renderer,/style=/);
+});
 function api(fetcher){let now=Date.now();class Clock extends Date{static now(){return now;}}
  const module={exports:{}};const env={DISCORD_BOT_TOKEN:'fixture-token',WARSNUTO_GUILD_ID:'fixture-guild'};
  const context={module,exports:module.exports,require:()=>snapshot,process:{env},Date:Clock,URL,AbortController,setTimeout,clearTimeout,fetch:fetcher,console};
@@ -14,7 +26,7 @@ function api(fetcher){let now=Date.now();class Clock extends Date{static now(){r
 test('hierarchy waits for paginated members, refreshes changed roles and excludes absent pinned profiles',async()=>{
  let promoted=false;let memberCalls=0;const fetched=[];
  const app=api(async url=>{const u=new URL(url);fetched.push(u.pathname);let data;
- if(u.pathname.endsWith('/roles'))data=[{id:MOD,name:'MODO',color:0xffffff},{id:TEST,name:'Modo test',color:0xff7800}];
+ if(u.pathname.endsWith('/roles'))data=[{id:MOD,name:'MODO',color:0xffffff,colors:{primary_color:0xffffff,secondary_color:0,tertiary_color:0x123456}},{id:TEST,name:'Modo test',color:0xff7800}];
  else if(u.pathname.endsWith('/members')){memberCalls++;if(!promoted)await new Promise(r=>setTimeout(r,1100));
  data=BigInt(u.searchParams.get('after'))>2000n?[]:u.searchParams.get('after')==='0'?Array.from({length:1000},(_,n)=>({user:{id:String(n+1),username:'Member '+n},roles:[]})):[{user:{id:'2000',username:'New moderator'},roles:[promoted?MOD:TEST]}];}
  else data={approximate_member_count:1001,approximate_presence_count:10};
@@ -22,7 +34,7 @@ test('hierarchy waits for paginated members, refreshes changed roles and exclude
  let result=await app.call();assert.equal(result.body.live.staffSource,'Roles Discord lus automatiquement');assert.match(result.headers['Cache-Control'],/s-maxage=15, stale-while-revalidate=15/);assert.equal(memberCalls,5);
  const tier=label=>result.body.discord.staff.tiers.find(t=>t.label===label);
  assert.equal(tier('Modo test').nodes.length,1);assert.equal(tier('Moderation').nodes.length,0);assert.equal(tier('Administration').nodes.length,0);
- promoted=true;app.advance();result=await app.call();assert.equal(tier('Modo test').nodes.length,0);assert.equal(tier('Moderation').nodes.length,1);assert.equal(memberCalls,10);
+ promoted=true;app.advance();result=await app.call();assert.equal(tier('Modo test').nodes.length,0);assert.equal(tier('Moderation').nodes.length,1);assert.equal(memberCalls,10);assert.equal(tier('Moderation').nodes[0].colors.secondary,'#000000');assert.equal(tier('Moderation').nodes[0].colors.tertiary,'#123456');
  assert.doesNotMatch(JSON.stringify(result.body),/fixture-token|Authorization/);
 });
 test('hierarchy page renders the snapshot first and loads counts and staff separately',async()=>{
