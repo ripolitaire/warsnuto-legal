@@ -1149,6 +1149,26 @@ body[data-platform-page] input[type="checkbox"] {
 .table-scroll table {
   min-width: 720px;
 }
+.session-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.session-item {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 1.4fr 1.4fr auto;
+  gap: 18px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--line);
+}
+.session-item:last-child { border-bottom: 0; }
+.session-item > div { display: grid; min-width: 0; gap: 4px; }
+.session-item span:not(.status) { color: var(--faint); font-size: 11px; }
+.session-item strong { overflow-wrap: anywhere; font-size: 12px; font-weight: 600; }
+.session-item .status { justify-self: start; }
 .server-search { display: grid; gap: 8px; max-width: 420px; margin-bottom: 24px; }
 .server-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; }
 .server-item { min-width: 0; border: 1px solid #38383c; background: var(--surface); border-radius: 8px; padding: 22px; display: flex; flex-direction: column; gap: 18px; }
@@ -1213,6 +1233,16 @@ body[data-platform-page] .game-updated { margin: 24px 0 0; font-size: 12px; }
   .game-level { gap: 20px; }
   .game-level > div { width: 100%; }
   .server-item { padding: 18px; }
+  .platform-main,
+  .workspace-section,
+  #platform-content { min-width: 0; overflow-x: clip; }
+  .section-heading { align-items: flex-start; gap: 12px; }
+  .section-heading > :last-child:not(h2) { margin-left: 0; }
+  .table-scroll { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 640px; }
+  .session-list { border: 0; border-radius: 0; gap: 10px; overflow: visible; }
+  .session-item { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+  .session-item > div:last-child { grid-column: 1 / -1; }
 }
 .v2-header:has(> .wn-account),
 .site-header:has(> .wn-account) {

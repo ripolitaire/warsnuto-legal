@@ -3,7 +3,10 @@
 ## Etat
 
 La page privee est /play. Elle utilise la connexion Discord existante, puis
-interroge seulement le bot Game par la passerelle Unix deja en place.
+interroge seulement le bot Game par la passerelle Unix deja en place. Son
+ouverture est limitee aux comptes du site possedant la permission `admin:read`
+(roles ADMIN et OWNER) : le controle est applique a la page et aux deux routes
+API, pas seulement a l'interface.
 
 Le navigateur ne calcule ni les degats, ni les recompenses, ni les probabilites.
 Il envoie une action avec une revision et un identifiant UUID. Le moteur Game

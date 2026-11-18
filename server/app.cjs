@@ -81,21 +81,25 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   });
   const permit = permission => (req, res, next) => { try { requirePermission(req.session, permission); next(); } catch (err) { next(err); } };
   const fresh = (req, res, next) => { try { auth.fresh(req.session); next(); } catch (err) { next(err); } };
+  // The browser adventure is a controlled administrator preview. Both its
+  // document and API endpoints enforce the same site permission.
+  const adventureAdmin = permit('admin:read');
   const adventureRoute = req => {
     if (!require('./security.cjs').snowflake(req.params.guild) || !['normal','admin'].includes(req.params.mode) || Object.keys(req.query).length) throw error(400, 'Profil d’aventure invalide.');
     return '/adventure/' + req.params.guild + '/' + req.params.mode;
   };
-  app.get('/api/platform/adventure/:guild/:mode', async (req, res) => {
+  app.get('/api/platform/adventure/:guild/:mode', adventureAdmin, async (req, res) => {
     limit('adventure-read:' + req.session.user.id, 40);
     res.json(await botConfiguration.send('game', adventureRoute(req), req.session.user.id));
   });
-  app.post('/api/platform/adventure/:guild/:mode', async (req, res) => {
+  app.post('/api/platform/adventure/:guild/:mode', adventureAdmin, async (req, res) => {
     object(req.body, ['operationId','revision','action','input']);
     if (!/^[a-f\d-]{36}$/i.test(req.body.operationId || '') || !/^[a-f\d]{64}$/.test(req.body.revision || '') || typeof req.body.action !== 'string' || req.body.action.length > 40) throw error(400, 'Opération d’aventure invalide.');
     res.json(await botConfiguration.send('game', adventureRoute(req), req.session.user.id, req.body));
   });
   app.get('/play', (req, res) => {
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(req.originalUrl)));
+    requirePermission(req.session, 'admin:read');
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’aventure est en maintenance.');
     res.type('html').send(require('./adventure.cjs').page(req.session));
   });
