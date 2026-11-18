@@ -313,3 +313,6 @@ body .reveal.is-visible { animation: community-enter 300ms ease; }
   .community-stat strong { font-size: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.recruitment-tracks { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 16px; }
+.recruitment-tracks .button { border-radius: 6px; min-height: 44px; }
+.recruitment-tracks [aria-current="page"] { color: var(--gold); border-color: var(--gold); background: var(--nav-active-bg); }

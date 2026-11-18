@@ -82,10 +82,10 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   const permit = permission => (req, res, next) => { try { requirePermission(req.session, permission); next(); } catch (err) { next(err); } };
   const fresh = (req, res, next) => { try { auth.fresh(req.session); next(); } catch (err) { next(err); } };
   app.get('/api/platform/recruitment/:guild/:view',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,req.params.view,req.session,undefined,req.query)));
-  app.get('/api/platform/recruitment/:guild/application/:id',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,'application/'+req.params.id,req.session)));
+  app.get('/api/platform/recruitment/:guild/application/:id',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,'application/'+req.params.id,req.session,undefined,req.query)));
   app.post('/api/platform/recruitment/:guild',async(req,res)=>{
     if(!['draft.create','draft.save','draft.submit','interview.redeem','withdraw'].includes(req.body?.action))auth.fresh(req.session);
-    res.json(await botConfiguration.recruitment(req.params.guild,'actions',req.session,req.body));
+    res.json(await botConfiguration.recruitment(req.params.guild,'actions',req.session,req.body,req.query));
   });
   app.post('/api/platform/logout', (req, res) => { object(req.body, []); auth.logout(req.session); res.set('Set-Cookie', auth.clearCookie()).json({ ok: true }); });
   app.post('/api/platform/activity', (req, res) => { object(req.body, []); res.json({ ok: true }); });
@@ -135,7 +135,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
     const scoped = { ...req.session, protectAccess: await memberSpace.protectSession(req.session, ['/admin/moderation', '/admin/prisons'].includes(route)) };
     if(route==='/admin/candidatures') {
-      const guild=String(req.query.guild||'1052863089692905493'),context=await botConfiguration.recruitment(guild,'context',req.session);
+      const guild=String(req.query.guild||'1052863089692905493'),context=await botConfiguration.recruitment(guild,'context',req.session,undefined,{track:req.query.track||'staff'});
       if(!context.access.review)throw error(403,'Espace réservé aux recruteurs configurés dans Protect.');
     }
     if (route === '/admin/prisons' && !scoped.protectAccess.guilds.some(g => g.canManagePrisons)) throw error(403, 'Accès prison réservé aux Admins et R Modo configurés dans Protect.');

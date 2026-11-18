@@ -9,7 +9,7 @@ function createBotConfiguration(db, config, transport) {
     if (!config.botSocketDirectory && !transport) throw error(503, 'La liaison de configuration des bots n’est pas activée.');
     const target=new URL(route,'http://local.invalid');
     const recruitment=/^\/recruitment\/\d{17,20}\/(?:context|mine|reviews|settings|actions|application\/[a-f\d-]{36})$/.test(target.pathname);
-    if (target.origin!=='http://local.invalid'||target.hash||(!recruitment&&(!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)))||recruitment&&[...target.searchParams.keys()].some(k=>!['page','status','search'].includes(k))) throw error(404,'Rubrique inconnue.');
+    if (target.origin!=='http://local.invalid'||target.hash||(!recruitment&&(!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)))||recruitment&&[...target.searchParams.keys()].some(k=>!['page','status','search','track'].includes(k))) throw error(404,'Rubrique inconnue.');
     const options = { socketPath: path.join(config.botSocketDirectory || '.', bot + '.sock'), path: route,
       method: body ? 'PATCH' : 'GET', headers: { 'x-wn-actor': actor, ...(body ? { 'content-type': 'application/json' } : {}) } };
     if (transport) return transport(options, body);
@@ -40,7 +40,7 @@ function createBotConfiguration(db, config, transport) {
     async recruitment(guild,view,session,body,query={}) {
       if(!snowflake(guild)||!/^(?:context|mine|reviews|settings|actions|application\/[a-f\d-]{36})$/.test(view))throw error(400,'Route de candidature invalide.');
       const params=new URLSearchParams();
-      for(const [key,value] of Object.entries(query)){if(!['page','status','search'].includes(key)||typeof value!=='string'||value.length>80)throw error(400,'Filtre invalide.');params.set(key,value);}
+      for(const [key,value] of Object.entries(query)){if(!['page','status','search','track'].includes(key)||typeof value!=='string'||value.length>80||key==='track'&&!['staff','confirmed','responsible'].includes(value))throw error(400,'Filtre invalide.');params.set(key,value);}
       if(body&&(!body.operationId||!body.action))throw error(400,'Opération de candidature requise.');
       return send('protect',`/recruitment/${guild}/${view}${params.size?'?'+params:''}`,session.user.id,body);
     },

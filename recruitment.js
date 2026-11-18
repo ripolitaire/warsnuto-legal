@@ -1,12 +1,15 @@
 window.wnRecruitment = async function({content,request,write,confirmAction,notice,E,icon,icons}) {
   const staff=location.pathname==='/admin/candidatures';
   const params=new URLSearchParams(location.search);let guild=params.get('guild')||'1052863089692905493';
+  const track=params.get('track')||'staff';
+  if(!['staff','confirmed','responsible'].includes(track))throw Error('Parcours de candidature inconnu.');
+  const url=(admin=false)=>`${admin?'/admin/candidatures':'/candidature'}?${new URLSearchParams({guild,...(track!=='staff'?{track}:{})})}`;
   let context,current,index=0,dirty=false,saving=false,timer,chain=Promise.resolve(),page=1,status='ALL',search='',loading=false;
   const states={DRAFT:'Brouillon',PENDING:'À examiner',UNDER_REVIEW:'En analyse',ACCEPTED:'Préparation de l’entretien',INTERVIEW:'Validée pour entretien',REJECTED:'Non retenue',PRIORITY:'Prioritaire à la prochaine session',WITHDRAWN:'Retirée',HIRED:'Retenue après entretien'};
   const phase={OPEN:'Candidatures ouvertes',CLOSED:'Candidatures fermées',REVIEW:'Analyse des dossiers',INTERVIEWS:'Entretiens',FINISHED:'Session terminée'};
   const base=()=>`recruitment/${guild}`;
-  const read=(view,query='')=>request(`${base()}/${view}${query}`);
-  const mutate=(action,input={})=>write(base(),{action,operationId:crypto.randomUUID(),...input});
+  const read=(view,query='')=>{const q=new URLSearchParams(query);if(track!=='staff')q.set('track',track);return request(`${base()}/${view}${q.size?'?'+q:''}`);};
+  const mutate=(action,input={})=>write(base()+(track!=='staff'?'?'+new URLSearchParams({track}):''),{action,operationId:crypto.randomUUID(),...input});
   const report=error=>notice(error.message||'Opération indisponible.');
   const button=(label,fn,primary=false)=>{const b=document.createElement('button');b.type='button';b.className=primary?'primary':'';b.textContent=label;b.onclick=async()=>{if(b.disabled)return;b.disabled=true;try{await fn();icons();}catch(e){report(e);}finally{if(b.isConnected)b.disabled=false;}};return b;};
   const section=(html)=>{const node=document.createElement('section');node.className='workspace-section recruitment-card';node.innerHTML=html;return node;};
@@ -28,8 +31,13 @@ window.wnRecruitment = async function({content,request,write,confirmAction,notic
   window.addEventListener('beforeunload',event=>{if(dirty||saving){event.preventDefault();event.returnValue='';}});
   function header(){
     const node=section(`<div class="recruitment-brand"><img src="/assets/protect-logo.png" alt=""><div><span class="eyebrow">WARSNUTO UNIVERS · RECRUTEMENT</span><h2>${staff?'Les prochains membres du staff.':'Ta place dans l’équipe.'}</h2><p>${E(phase[context.phase]||context.phase)}</p></div></div><p>${E(context.instructions)}</p>`);
-    if(context.access.review&&!staff)node.append(link(`/admin/candidatures?guild=${guild}`,'Espace recruteurs'));
-    if(staff)node.append(link(`/candidature?guild=${guild}`,'Mon espace candidat'));
+    if(track!=='staff')node.querySelector('.recruitment-brand h2').textContent=context.title;
+    const navigation=document.createElement('nav');navigation.className='recruitment-tracks';navigation.setAttribute('aria-label','Parcours de candidature');
+    for(const item of context.tracks||[{id:'staff',label:'Rejoindre le staff'}]){const a=link(`${staff&&item.review!==false?'/admin/candidatures':'/candidature'}?${new URLSearchParams({guild,...(item.id!=='staff'?{track:item.id}:{})})}`,item.label);if(item.id===track)a.setAttribute('aria-current','page');navigation.append(a);}node.append(navigation);
+    if(context.closesAt){const deadline=document.createElement('p');deadline.className='muted';deadline.textContent='Clôture : '+new Date(context.closesAt).toLocaleString('fr-FR');node.append(deadline);}
+    if(context.eligible===false&&!staff){const eligibility=document.createElement('p');eligibility.className='notice';eligibility.textContent=track==='confirmed'?'Le grade Modérateur est requis pour déposer une candidature C-Modo.':'Le grade Modérateur Confirmé est requis pour déposer une candidature R-Modo.';node.append(eligibility);}
+    if(context.access.review&&!staff)node.append(link(url(true),'Espace recruteurs'));
+    if(staff)node.append(link(url(),'Mon espace candidat'));
     content.append(node);
   }
   function summary(c,full=false){
@@ -50,12 +58,12 @@ window.wnRecruitment = async function({content,request,write,confirmAction,notic
   function renderDraft(){
     content.replaceChildren();header();const q=current.questions[index];
     if(!q){const node=summary(current,true);appendAction(node,'Relire et modifier',()=>{index=0;renderDraft();});
-      if(context.phase==='OPEN')appendAction(node,'Envoyer ma candidature',async()=>{const ok=await confirmAction('Transmettre toutes tes réponses aux recruteurs WarsNuto ? Elles ne seront plus modifiables.','ENVOYER',false);if(!ok)return;current=await mutate('draft.submit',{id:current.id,version:current.version,confirmation:ok.confirmation});dirty=false;notice('Ta candidature a été transmise.','success');await member();},true);
+      if(context.phase==='OPEN'&&context.eligible!==false)appendAction(node,'Envoyer ma candidature',async()=>{const ok=await confirmAction('Transmettre toutes tes réponses aux recruteurs WarsNuto ? Elles ne seront plus modifiables.','ENVOYER',false);if(!ok)return;current=await mutate('draft.submit',{id:current.id,version:current.version,confirmation:ok.confirmation});dirty=false;notice('Ta candidature a été transmise.','success');await member();},true);
       content.append(node);return;}
     const saved=current.answers[index]?.value||'';
-    const node=section(`<div class="recruitment-progress"><span>Question ${index+1} sur ${current.questions.length}</span><progress value="${index}" max="${current.questions.length}" aria-label="Progression du questionnaire"></progress></div><span class="eyebrow">${E(q.section)}</span><h2>${E(q.label)}</h2><p class="preserve-lines">${E(q.description)}</p><label for="recruitment-answer">Ta réponse<textarea id="recruitment-answer" data-answer maxlength="${q.maxLength}" rows="7" ${context.phase==='OPEN'?'':'disabled'}>${E(saved)}</textarea></label><div class="recruitment-save"><span data-save-state>Enregistré dans ton brouillon</span><span data-count>${saved.length} / ${q.maxLength}</span></div>`);
+    const node=section(`<div class="recruitment-progress"><span>Question ${index+1} sur ${current.questions.length}</span><progress value="${index}" max="${current.questions.length}" aria-label="Progression du questionnaire"></progress></div><span class="eyebrow">${E(q.section)}</span><h2>${E(q.label)}</h2><p class="preserve-lines">${E(q.description)}</p><label for="recruitment-answer">Ta réponse<textarea id="recruitment-answer" data-answer maxlength="${q.maxLength}" rows="7" ${context.phase==='OPEN'&&context.eligible!==false?'':'disabled'}>${E(saved)}</textarea></label><div class="recruitment-save"><span data-save-state>Enregistré dans ton brouillon</span><span data-count>${saved.length} / ${q.maxLength}</span></div>`);
     const input=node.querySelector('[data-answer]');input.addEventListener('input',()=>{dirty=true;node.querySelector('[data-count]').textContent=`${input.value.length} / ${q.maxLength}`;setSaveLabel('Modifications en cours…');clearTimeout(timer);timer=setTimeout(()=>void save().catch(report),1200);});
-    if(context.phase==='OPEN'){
+    if(context.phase==='OPEN'&&context.eligible!==false){
       appendAction(node,'Enregistrer',save);
       appendAction(node,index===current.questions.length-1?'Relire ma candidature':'Continuer',async()=>{if(input.value.trim().length<q.minLength){notice(`Développe ta réponse : au moins ${q.minLength} caractères.`);return;}await save();index++;renderDraft();},true);
     }else node.append(section('<p>Les candidatures sont fermées. Ton brouillon est conservé.</p>'));
@@ -85,6 +93,7 @@ window.wnRecruitment = async function({content,request,write,confirmAction,notic
   }
   async function review(id){
     const c=await read('application/'+id);current=c;content.replaceChildren();header();const node=summary(c,true);content.append(node);
+    if(c.user===context.userId){await memberDetail(c);return;}
     node.append(section(`<p>Identifiant Discord : <strong>${E(c.user)}</strong>${c.assignee?` · Dossier pris par ${E(c.assignee)}`:''}</p>`));
     if(c.interviewChannelId)node.append(link(`https://discord.com/channels/${guild}/${c.interviewChannelId}`,'Ouvrir le salon d’entretien'));
     if(['PENDING','UNDER_REVIEW'].includes(c.status)&&(!c.assignee||c.assignee===context.userId))appendAction(node,'Prendre en charge',async()=>{await mutate('review.claim',{id:c.id,version:c.version});await review(c.id);});
@@ -107,11 +116,25 @@ window.wnRecruitment = async function({content,request,write,confirmAction,notic
     const data=await read('settings'),config=data.settings;content.replaceChildren();header();
     const node=section(`<h2>Session de recrutement</h2><p>L’ouverture d’une session fermée démarre une nouvelle session. Les brouillons et dossiers déjà actifs sont conservés.</p><label>Phase<select data-phase>${Object.entries(phase).map(([v,label])=>`<option value="${v}" ${config.phase===v?'selected':''}>${E(label)}</option>`).join('')}</select></label><label>Salon privé de suivi<select data-review-channel><option value="">Choisir un salon</option>${data.channels.filter(c=>c.type===0).map(c=>`<option value="${c.id}" ${config.reviewChannelId===c.id?'selected':''}>${E(c.name)}</option>`).join('')}</select></label><label>Catégorie des entretiens<select data-interview-category><option value="">Choisir une catégorie</option>${data.channels.filter(c=>c.type===4).map(c=>`<option value="${c.id}" ${config.interviewCategoryId===c.id?'selected':''}>${E(c.name)}</option>`).join('')}</select></label><label>Rôles de lecture des recruteurs<select data-review-roles multiple>${data.roles.map(r=>`<option value="${r.id}" ${config.reviewerRoleIds.includes(r.id)?'selected':''}>${E(r.name)}</option>`).join('')}</select></label><p class="muted">Sans sélection : Modérateurs Confirmés. Les Admins et Responsables modération conservent les décisions finales.</p>`);
     node.append(section('<p>À la validation, Protect crée automatiquement un salon privé dans la catégorie choisie, avec le dossier complet. Le candidat et les recruteurs y organisent la date, l’heure et le salon vocal de l’entretien.</p>'));
+    if(track!=='staff'){node.querySelector('[data-review-roles]').closest('label').hidden=true;node.querySelector('p.muted').textContent=track==='confirmed'?'Lecture et décisions : Responsables Modération et administration.':'Lecture et décisions : administration uniquement.';}
+    const fields=document.createElement('div');fields.className='recruitment-filters';
+    const dateValue=config.closesAt?new Date(config.closesAt-new Date(config.closesAt).getTimezoneOffset()*60000).toISOString().slice(0,16):'';
+    fields.innerHTML=`<label>Clôture programmée (heure locale)<input data-closes-at type="datetime-local" value="${E(dateValue)}"></label><label>Salon du panneau Discord<select data-public-channel><option value="">Choisir un salon</option>${data.channels.filter(c=>c.type===0).map(c=>`<option value="${E(c.id)}" ${config.publicChannelId===c.id?'selected':''}>${E(c.name)}</option>`).join('')}</select></label>`;node.append(fields);
+    if(data.panel)node.append(link(`https://discord.com/channels/${guild}/${data.panel.channel}/${data.panel.message}`,'Voir le panneau Discord'));
+    const publication=button(data.publicationPending?'Publication à vérifier ou en cours':'Publier ou actualiser le panneau',async()=>{const ok=await confirmAction('Publier le statut et le lien du formulaire dans le salon enregistré. Aucun dossier ni réponse ne sera affiché.','PUBLIER',false);if(ok){await mutate('panel.publish',{confirmation:ok.confirmation});notice('Publication mise en file. Le panneau sera actualisé sans ping.','success');await configure();}});
+    publication.disabled=!config.publicChannelId||Boolean(data.publicationPending);node.append(publication);
+    for(const job of data.panelJobs||[]){
+      const box=section('<h3>Vérifier la publication Discord</h3><p>Un envoi a échoué ou sa réception est incertaine. Vérifie le salon avant de poursuivre.</p><label>Identifiant du panneau déjà publié (facultatif)<input data-panel-message inputmode="numeric" maxlength="20"></label>');
+      appendAction(box,'Réconcilier le panneau',async()=>{const messageId=box.querySelector('[data-panel-message]').value.trim();const ok=await confirmAction(messageId?'Associer ce panneau existant, sans nouvel envoi.':'Je confirme avoir vérifié Discord : aucun panneau n’a été publié lors de cette tentative.',messageId?'CONFIRMER':'ABSENT');if(ok){await mutate('panel.reconcile',{jobId:job.id,messageId:messageId||undefined,reason:ok.reason,confirmation:ok.confirmation});notice('Publication vérifiée. Aucun nouveau message envoyé.','success');await configure();}});node.append(box);
+    }
     const questions=section('<h3>Questionnaire</h3><p>Chaque candidat conserve la version des questions avec laquelle il a commencé. Les modifications concernent les nouveaux brouillons.</p>');
-    for(const q of config.questions){const row=section(`<label>Question<input data-question-label maxlength="200" value="${E(q.label)}"></label><label>Consigne<textarea data-question-description maxlength="1500" rows="3">${E(q.description)}</textarea></label><div class="recruitment-filters"><label>Minimum<input data-question-min type="number" min="1" max="1500" value="${q.minLength}"></label><label>Maximum<input data-question-max type="number" min="1" max="1500" value="${q.maxLength}"></label></div>`);row.dataset.question=q.id;questions.append(row);}node.append(questions);
+    const rows=document.createElement('div');questions.append(rows);
+    const renderQuestions=()=>{rows.replaceChildren();for(const q of config.questions){const row=section(`<label>Question<input data-question-label maxlength="200" value="${E(q.label)}"></label><label>Consigne<textarea data-question-description maxlength="1500" rows="3">${E(q.description)}</textarea></label><div class="recruitment-filters"><label>Minimum<input data-question-min type="number" min="1" max="1500" value="${q.minLength}"></label><label>Maximum<input data-question-max type="number" min="1" max="1500" value="${q.maxLength}"></label></div>`);row.dataset.question=q.id;rows.append(row);}};renderQuestions();
+    if(data.recommendedQuestions)appendAction(questions,'Charger le questionnaire proposé',async()=>{const ok=await confirmAction('Remplacer le questionnaire affiché par la proposition de ce parcours ? Les brouillons déjà commencés ne changent pas.','CHARGER',false);if(ok){config.questions=structuredClone(data.recommendedQuestions);renderQuestions();notice('Questionnaire proposé chargé, non enregistré.');}});node.append(questions);
     appendAction(node,'Enregistrer la configuration',async()=>{const ok=await confirmAction('Appliquer la phase et les réglages de recrutement.','CONFIRMER',false);if(!ok)return;
       const updated=config.questions.map(q=>{const row=questions.querySelector(`[data-question="${q.id}"]`);return {...q,label:row.querySelector('[data-question-label]').value,description:row.querySelector('[data-question-description]').value,minLength:Number(row.querySelector('[data-question-min]').value),maxLength:Number(row.querySelector('[data-question-max]').value)};});
-      await mutate('settings.save',{version:config.version,settings:{phase:node.querySelector('[data-phase]').value,reviewChannelId:node.querySelector('[data-review-channel]').value||null,interviewCategoryId:node.querySelector('[data-interview-category]').value||null,reviewerRoleIds:[...node.querySelector('[data-review-roles]').selectedOptions].map(o=>o.value),questions:updated}});context=await read('context');notice('Configuration enregistrée.','success');await reviews();},true);appendAction(node,'Retour aux dossiers',reviews);content.append(node);
+      const date=node.querySelector('[data-closes-at]').value,closesAt=date?new Date(date).getTime():null;if(date&&!Number.isSafeInteger(closesAt))throw Error('Date de clôture invalide.');
+      await mutate('settings.save',{version:config.version,settings:{phase:node.querySelector('[data-phase]').value,reviewChannelId:node.querySelector('[data-review-channel]').value||null,interviewCategoryId:node.querySelector('[data-interview-category]').value||null,publicChannelId:node.querySelector('[data-public-channel]').value||null,closesAt,reviewerRoleIds:track==='staff'?[...node.querySelector('[data-review-roles]').selectedOptions].map(o=>o.value):[],questions:updated}});context=await read('context');notice('Configuration enregistrée.','success');await reviews();},true);appendAction(node,'Retour aux dossiers',reviews);content.append(node);
   }
   context=await read('context');
   if(staff){if(params.get('application'))await review(params.get('application'));else await reviews();}else await member();

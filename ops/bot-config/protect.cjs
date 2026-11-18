@@ -44,7 +44,7 @@ module.exports = root => {
   const access = require('./webProtectAccess.cjs').createProtectAccess(authorization, settings);
   return { sections, canConfigure: (guild, member) => authorization.getMemberAccessLevel(member) === 'admin',
     recruitment:(guild,member,method,view,id,query,body)=>{
-      const service=load('recruitmentService').getRecruitmentService(guild.client);
+      const service=load('recruitmentService').getRecruitmentService(guild.client,query.get('track')||'staff');
       return method==='GET'?service.read(guild,member,view,id,query):service.mutate(guild,member,body);
     },
     memberAccess: (guild, member, actor) => ({ ...access(guild, member, actor), canManagePrisons: load('prisonPermissions').canManagePrisons(member, featureStore.getFeatureStore().settings(guild.id, 'prison')) }),

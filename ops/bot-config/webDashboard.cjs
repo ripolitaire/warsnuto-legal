@@ -57,7 +57,7 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
     if(recruitment) {
       const {guild,member}=await membership(recruitment[1],actor,true);
       if(!member||!adapter.recruitment)S.fail('Candidatures indisponibles sur ce serveur.',403);
-      if([...url.searchParams.keys()].some(k=>!['page','status','search'].includes(k))||req.method==='PATCH'&&recruitment[2]!=='actions'||req.method==='GET'&&recruitment[2]==='actions')S.fail('Route de candidature invalide.',404);
+      if([...url.searchParams.keys()].some(k=>!['page','status','search','track'].includes(k))||req.method==='PATCH'&&recruitment[2]!=='actions'||req.method==='GET'&&recruitment[2]==='actions')S.fail('Route de candidature invalide.',404);
       if(recruitment[2]==='settings'){await guild.roles.fetch();await guild.channels.fetch();}
       return adapter.recruitment(guild,member,req.method,recruitment[2].startsWith('application/')?'application':recruitment[2],recruitment[3],url.searchParams,body);
     }

@@ -1,25 +1,30 @@
 const {randomUUID}=require('node:crypto');
-function recruitmentFixture(base,ids){
+function recruitmentFixture(base,ids,track='staff'){
+ const scopes=new Map(),labels={staff:'Rejoindre le staff',confirmed:'Passer C-Modo',responsible:'Passer R-Modo'};
  const applications=new Map(),operations=new Map();const guild='1561826762747285654';
  const questions=[{id:'motivation',section:'Motivation',label:'Pourquoi rejoindre le staff WarsNuto ?',description:'Explique ton envie d’aider la communauté.',minLength:5,maxLength:1500},{id:'availability',section:'Disponibilités',label:'Quand peux-tu être disponible ?',description:'Précise les jours et les horaires.',minLength:5,maxLength:1500}];
- const config={phase:'OPEN',version:1,session:1,questions,reviewChannelId:null,interviewCategoryId:null,reviewerRoleIds:[]};
+ const config={phase:track==='staff'?'OPEN':'CLOSED',version:1,session:1,questions,track,publicChannelId:null,closesAt:null,reviewChannelId:null,interviewCategoryId:null,reviewerRoleIds:[]};
  const deny=(message,status=403)=>{throw Object.assign(Error(message),{status,publicMessage:message});};
  let enabled=true;
  return {applications,config,setEnabled:value=>{enabled=value;},async transport(options,body){
    if(!options.path.startsWith('/recruitment/'))return base(options,body);
    const url=new URL(options.path,'http://fixture'),parts=url.pathname.split('/'),actor=options.headers['x-wn-actor'],view=parts[3];
-   const admin=enabled&&[ids.ADMIN,ids.OWNER].includes(actor),review=enabled&&(admin||actor===ids.MODERATOR);
+   const selected=url.searchParams.get('track')||'staff';if(!Object.hasOwn(labels,selected))deny('Parcours inconnu.',400);
+   if(selected!==track){if(!scopes.has(selected))scopes.set(selected,recruitmentFixture(base,ids,selected));return scopes.get(selected).transport(options,body);}
+   const admin=enabled&&[ids.ADMIN,ids.OWNER].includes(actor),review=enabled&&(admin||track==='staff'&&actor===ids.MODERATOR);
+   const eligible=track==='staff'||track==='confirmed'&&actor===ids.USER||track==='responsible'&&actor===ids.MODERATOR;
    if(parts[2]!==guild)deny('Serveur inconnu.',404);
    const owns=c=>c&&c.user===actor;
    const visible=c=>structuredClone(c);
    if(options.method==='GET'){
-     if(view==='context')return{guild:{id:guild,name:'WarsNuto · test'},userId:actor,phase:config.phase,session:1,access:{admin,decide:admin,review},canApply:config.phase==='OPEN'&&![...applications.values()].some(c=>c.user===actor),instructions:'Présente-toi avec tes propres mots. Tes réponses sont enregistrées progressivement.'};
-     if(view==='settings'){if(!admin)deny('Administration Protect requise.');return{settings:config,roles:[],channels:[]};}
+     if(view==='context')return{guild:{id:guild,name:'WarsNuto · test'},track,title:track==='confirmed'?'Candidature Modérateur Confirmé':'Candidature Responsable Modération',eligible,tracks:Object.entries(labels).filter(([id])=>admin||id==='staff'||id===track).map(([id,label])=>({id,label,review:admin||id==='staff'&&review})),userId:actor,phase:config.phase,session:1,access:{admin,decide:admin,review},canApply:eligible&&config.phase==='OPEN'&&![...applications.values()].some(c=>c.user===actor),instructions:'Présente-toi avec tes propres mots. Tes réponses sont enregistrées progressivement.'};
+     if(view==='settings'){if(!admin)deny('Administration Protect requise.');return{settings:config,recommendedQuestions:questions,roles:[],channels:[]};}
      if(view==='application'){const c=applications.get(parts[4]);if(!owns(c)&&!review)deny('Dossier inaccessible.');const out=visible(c);if(!review)delete out.events;return out;}
      if(view==='reviews'&&!review)deny('Recrutement réservé au staff.');
      const items=[...applications.values()].filter(c=>view==='mine'?owns(c):c.status!=='DRAFT').map(visible);return{items,total:items.length,pages:1,page:1,active:view==='mine'?items.find(c=>['DRAFT','PENDING','UNDER_REVIEW','ACCEPTED','INTERVIEW'].includes(c.status)):null};
    }
    if(body.action.startsWith('review.')&&!review)deny('Accès staff refusé.');
+   if(body.action.startsWith('draft.')&&!eligible)deny('Grade Discord requis.');
    if(['review.decide','review.hire','settings.save'].includes(body.action)&&!admin)deny('Décision réservée aux responsables.');
    const key=actor+body.operationId;if(operations.has(key))return operations.get(key);
    let c=applications.get(body.id);
