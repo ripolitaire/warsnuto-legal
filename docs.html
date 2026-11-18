@@ -7,13 +7,13 @@
     <title>Documentation Protect, Support et Game - WarsNuto</title>
     <meta
       name="description"
-      content="Documentation Protect, Support et Game: moderation, tickets, aventure One Piece, commandes et donnees utilisees."
+      content="Documentation Protect, Support et Game: modération, tickets, aventure One Piece, commandes et données utilisees."
     />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="WarsNuto" />
     <meta property="og:title" content="Documentation Protect, Support et Game - WarsNuto" />
-    <meta property="og:description" content="Protect, Support et Game: modules, commandes cles et donnees utilisees." />
+    <meta property="og:description" content="Protect, Support et Game: modules, commandes cles et données utilisees." />
     <meta property="og:url" content="https://warsnuto.com/docs" />
     <meta property="og:image" content="https://warsnuto.com/assets/og-warsnuto.png?v=12" />
     <meta property="og:image:width" content="1200" />
@@ -50,11 +50,13 @@
         "inLanguage": "fr-FR"
       }
     </script>
+    <link rel="stylesheet" href="/community.css">
+    <script src="/community.js" defer></script>
   </head>
-  <body class="docs-page">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Accueil WarsNuto">
-        <span class="brand-mark">
+  <body class="site-v2 docs-page">
+    <header class="site-header v2-header">
+      <a class="brand v2-brand" href="./" aria-label="Accueil WarsNuto">
+        <span class="brand-mark v2-brand-mark">
           <img src="./assets/warsnuto-icon.png" alt="" />
           <span>WN</span>
         </span>
@@ -63,25 +65,19 @@
           <small>Protect / Support / Game</small>
         </span>
       </a>
-      <nav class="nav">
-        <a href="./discord">Discord</a>
-        <a href="./youtube">YouTube</a>
-        <a href="./bots">Bots</a>
-        <a aria-current="page" href="./docs">Documentation</a>
-        <a href="./privacy">Confidentialit&eacute;</a>
-        <a href="./terms">Conditions</a>
-        <a href="mailto:solitaire.blox@gmail.com">Contact</a>
+      <nav class="v2-nav" aria-label="Navigation principale">
+        <a href="/">Accueil</a><a href="/game">Game</a><a href="/cards">Collection</a><a href="/discord">Communauté</a><a href="/bots">Bots</a><a href="/docs">Documentation</a>
       </nav>
     </header>
 
-    <main>
+    <main class="v2-main">
       <section class="docs-hero">
         <div>
           <p class="eyebrow">Documentation officielle</p>
           <h1>Protect, Support et Game.</h1>
           <p>
-            Protect gere la moderation, l'XP et les outils serveur. Support gere les tickets,
-            les equipes et le suivi des demandes. Game propose une aventure One Piece avec sa propre progression.
+            Protect gère la modération, l'XP et les outils serveur. Support gère les tickets,
+            les équipes et le suivi des demandes. Game propose les cartes et l’Arcade ; l’aventure One Piece est en maintenance.
           </p>
           <div class="doc-actions">
             <a class="button primary yellow" href="#protect-doc">Documentation Protect</a>
@@ -89,7 +85,7 @@
             <a class="button" href="#game-doc">Documentation Game</a>
           </div>
         </div>
-        <div class="api-pill">
+        <div class="api-pill" hidden>
           <span>Source dynamique</span>
           <code>GET /api/bots</code>
         </div>
@@ -119,11 +115,11 @@
       </section>
 
       <section class="notice-panel">
-        <p class="eyebrow">Acces public</p>
-        <h2>Les bots sont disponibles pour votre serveur.</h2>
+        <p class="eyebrow">Accès public</p>
+        <h2>Les outils de la communauté WarsNuto.</h2>
         <p>
-          Protect, Support et Game peuvent etre ajoutes a plusieurs serveurs Discord. Chaque installation
-          dispose de sa propre configuration et de ses propres donnees.
+          Protect, Support et Game sont conçus pour l’écosystème WarsNuto. Chaque serveur
+          dispose de sa propre configuration et de ses propres données.
         </p>
       </section>
     </main>

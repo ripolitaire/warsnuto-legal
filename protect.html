@@ -4,16 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="/appearance.js"></script>
-    <title>WarsNut0 Protect - Bot moderation, XP et configuration</title>
+    <title>WarsNut0 Protect - Bot modération, XP et configuration</title>
     <meta
       name="description"
-      content="Page dediee a WarsNut0 Protect: moderation, logs, XP, suggestions, dashboard et protections du serveur WarsNuto."
+      content="Page dédiée a WarsNut0 Protect: modération, logs, XP, suggestions, dashboard et protections du serveur WarsNuto."
     />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="WarsNuto" />
     <meta property="og:title" content="WarsNut0 Protect - Bot officiel WarsNuto" />
-    <meta property="og:description" content="Moderation, logs, XP et configuration serveur pour WarsNuto." />
+    <meta property="og:description" content="Modération, logs, XP et configuration serveur pour WarsNuto." />
     <meta property="og:url" content="https://warsnuto.com/protect" />
     <meta property="og:image" content="https://warsnuto.com/assets/og-warsnuto.png?v=12" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -45,6 +45,8 @@
         }
       }
     </script>
+    <link rel="stylesheet" href="/community.css">
+    <script src="/community.js" defer></script>
   </head>
   <body class="site-v2 bot-detail-v2" data-bot-page="protect">
     <header class="v2-header">
@@ -53,11 +55,7 @@
         <span><strong>WarsNuto</strong><small>Protect</small></span>
       </a>
       <nav class="v2-nav" aria-label="Navigation principale">
-        <a href="./">Accueil</a>
-        <a href="./discord">Discord</a>
-        <a href="./youtube">YouTube</a>
-        <a aria-current="page" href="./bots">Bots</a>
-        <a href="./docs">Docs</a>
+        <a href="/">Accueil</a><a href="/game">Game</a><a href="/cards">Collection</a><a href="/discord">Communauté</a><a href="/bots">Bots</a><a href="/docs">Documentation</a>
       </nav>
     </header>
 
@@ -65,7 +63,7 @@
       <section class="bot-hero">
         <div>
           <p class="v2-kicker">WarsNut0 Protect</p>
-          <h1>Moderation, XP et configuration serveur.</h1>
+          <h1>Modération, XP et configuration serveur.</h1>
           <p>
             Protect est le bot principal de gestion WarsNuto: sanctions, logs, classement XP,
             suggestions, AutoMod et panneaux de configuration.
@@ -81,7 +79,7 @@
       <section class="bot-dashboard" data-bot-detail>
         <article class="metric-card protect">
           <p class="v2-kicker">Protect</p>
-          <h2>Chargement des donnees publiques...</h2>
+          <h2>Chargement des données publiques...</h2>
         </article>
       </section>
     </main>
@@ -93,7 +91,7 @@
     <footer class="v2-footer">
       <span>WarsNut0 Protect</span>
       <a href="./bots">Bots</a>
-      <a href="./privacy">Confidentialite</a>
+      <a href="./privacy">Confidentialité</a>
       <a href="./terms">Conditions</a>
     </footer>
     <script src="/_vercel/insights/script.js" defer></script>

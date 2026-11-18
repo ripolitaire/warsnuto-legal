@@ -74,7 +74,7 @@
           const options = [...picker.querySelectorAll('[data-picker-value]:not([hidden]):not(:disabled)')];
           const index = options.indexOf(document.activeElement);
           if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(picker, true); }
-          else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+          else if (['ArrowDown', 'ArrowUp'].includes(event.key) || document.activeElement !== search && ['Home', 'End'].includes(event.key)) {
             event.preventDefault(); const at = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : event.key === 'ArrowDown' ? (index + 1) % options.length : index <= 0 ? options.length - 1 : index - 1;
             options[at]?.focus();
           } else if (event.key === 'Enter' && document.activeElement === search) event.preventDefault();

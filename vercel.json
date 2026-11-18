@@ -109,6 +109,7 @@
     { "source": "/servers", "destination": "/api/platform?route=servers" },
     { "source": "/profile/settings", "destination": "/api/platform?route=profile/settings" },
     { "source": "/profile/game", "destination": "/api/platform?route=profile/game" },
+    { "source": "/profile/cards", "destination": "/api/platform?route=profile/cards" },
     { "source": "/profile/protect", "destination": "/api/platform?route=profile/protect" },
     { "source": "/admin", "destination": "/api/platform?route=admin" },
     { "source": "/admin/bots", "destination": "/api/platform?route=admin/bots" },

@@ -10,6 +10,8 @@ function fixture({ database = ':memory:', port = 0, telemetryDirectory = '', bot
     DISCORD_OAUTH_CLIENT_SECRET: randomBytes(32).toString('base64url') });
   let time = Date.now(); config.now = () => time;
   config.telemetryDirectory = telemetryDirectory;
+  // Most suites exercise local site-role management without a Discord connector.
+  config.discordRoleSyncGuildId = '';
   const used = new Set(), calls = [];
   function seed(id, role, name = 'Compte de test') {
     const now = config.now();

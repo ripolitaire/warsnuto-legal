@@ -133,16 +133,17 @@ test('appearance previews, cancels, saves, follows system and carries to public 
     await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 248, 250)');
     const local = await page.evaluate(() => JSON.parse(localStorage.getItem('wn-appearance-v1')));
     expect(Object.keys(local).sort()).toEqual(['density', 'reducedMotion', 'theme']);
-    await expect(page.locator('.site-intro')).toHaveCSS('opacity', '0');
-    await expect(page.locator('.v2-hero-copy')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.site-intro')).toHaveCount(0);
+    await expect(page.locator('.community-hero-copy')).toHaveCSS('opacity', '1');
     await page.screenshot({ path: info.outputPath('public-light.png') });
     await preferences(context, { theme: 'system' }); await page.goto('/profile/settings');
     await page.emulateMedia({ colorScheme: 'light' }); await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(248, 248, 250)');
-    await page.emulateMedia({ colorScheme: 'dark' }); await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(5, 5, 6)');
+    await page.emulateMedia({ colorScheme: 'dark' }); await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(12, 13, 16)');
     await preferences(context, { reducedMotion: true }); await page.goto('/profile/settings');
     await expect(page.getByLabel('Réduire les animations de mon espace')).toBeChecked();
     await page.goto('/'); await expect(page.locator('.site-intro')).not.toBeVisible();
-    await expect(page.locator('.v2-hero-copy')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.community-hero-copy')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.community-hero-copy')).toHaveCSS('animation-name', 'none');
   } finally { await preferences(context, defaults); await context.close(); }
 });
 
@@ -232,12 +233,13 @@ test('unavailable bot clears the previous editor and supports retry without savi
   await page.getByRole('button', { name: 'Réessayer', exact: true }).click();
   await expect(page.getByLabel('Titre du module')).toHaveValue('game de test'); await context.close();
 });
-test('public home keeps existing navigation and animations with the account menu', async ({ browser }, info) => {
+test('public home shares six community destinations and the account menu without a blocking intro', async ({ browser }, info) => {
   const { context, page } = await prepare(browser, 'OWNER');
   await page.route('**/api/bots**', route => route.fulfill({ json: require('../../api/bots-data.json') }));
   await page.route('**/api/youtube', route => route.fulfill({ json: { videos: [], channel: {} } }));
   await page.goto('/'); await expect(page.locator('.wn-account summary')).toBeVisible();
-  await expect(page.locator('.v2-nav a')).toHaveCount(5); await expect(page.locator('.site-intro')).toHaveCount(1);
+  await expect(page.locator('.v2-nav a')).toHaveCount(6); await expect(page.locator('.site-intro')).toHaveCount(0);
+  await expect(page.locator('.community-hero')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: info.outputPath('public-home.png'), fullPage: true }); await context.close();
 });

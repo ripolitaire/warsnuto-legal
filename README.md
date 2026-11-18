@@ -1,6 +1,17 @@
 ﻿# WarsNuto public site
 
-Site public des bots Discord WarsNuto. Il présente Protect et Support, héberge les pages légales, et expose seulement des données publiques.
+Plateforme communautaire WarsNuto Univers : Discord, vidéos, Game, catalogue de
+205 cartes, collection personnelle, profils et configuration des trois bots.
+Les espaces privés restent protégés par Discord OAuth et les autorisations serveur.
+
+## Refonte locale
+
+La refonte du 16 novembre est préparée sur `rework/community-platform-20261116`,
+sans publication automatique. Voir [l’audit et le rapport](docs/REWORK-2026-11-16.md).
+`npm run preview` lance l’aperçu public sur `http://127.0.0.1:4318` avec une base
+en mémoire : aucun `.env` n’est chargé, aucune donnée de production n’est ouverte,
+et la connexion Discord reste désactivée. Les parcours connectés sont couverts
+par `npm run test:browser`, dans un environnement de test séparé.
 
 ## Plateforme membre et administration
 
@@ -9,8 +20,8 @@ administratif sécurisé sont publiés dans ce même dépôt, avec un backend
 indépendant des bots. Voir [la documentation complète](docs/PLATFORM.md) pour
 les variables à ajouter, la création du premier OWNER, les tests et le déploiement.
 La production est accessible sur `https://warsnuto.com/profile` depuis le
-3 novembre 2026. Soli est le premier OWNER provisionné ; sa première connexion
-Discord reste à réaliser. Voir le [journal de livraison](docs/RELEASE-2026-11-03.md).
+3 novembre 2026. Soli est le premier OWNER provisionné.
+Voir le [journal de livraison historique](docs/RELEASE-2026-11-03.md).
 Sans configuration de liaison valide, les espaces privés restent fermés.
 Le [suivi des trois bots](docs/BOT-MONITORING-2026-11-03.md) est accessible aux
 administrateurs sur `/admin/bots`, sans accès direct à leurs bases ni à leurs secrets.

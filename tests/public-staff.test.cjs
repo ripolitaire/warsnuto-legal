@@ -17,10 +17,10 @@ test('staff palettes survive CSP using CSSOM and reject CSS injection', () => {
  const renderer=script.slice(script.indexOf('function renderStaff'),script.indexOf('function renderRoleGuide'));
  assert.match(renderer,/applyStaffColors\(target\)/);assert.doesNotMatch(renderer,/style=/);
 });
-function api(fetcher){let now=Date.now();class Clock extends Date{static now(){return now;}}
+function api(fetcher, timeoutMs){let now=Date.now();class Clock extends Date{static now(){return now;}}
  const module={exports:{}};const env={DISCORD_BOT_TOKEN:'fixture-token',WARSNUTO_GUILD_ID:'fixture-guild'};
  const context={module,exports:module.exports,require:()=>snapshot,process:{env},Date:Clock,URL,AbortController,setTimeout,clearTimeout,fetch:fetcher,console};
- vm.runInNewContext(source,context);
+ vm.runInNewContext(timeoutMs ? source.replace('const DISCORD_TIMEOUT_MS = 5000;', `const DISCORD_TIMEOUT_MS = ${timeoutMs};`) : source,context);
  return {members:()=>context.fetchGuildMembers('fixture-guild','fixture-token'),advance:()=>now+=61000,call:async(url='/?live=1')=>{let body;const headers={};await module.exports({method:'GET',url},{setHeader:(k,v)=>headers[k]=v,status(){return this;},json(d){body=d;}});return {body,headers};}};
 }
 test('hierarchy waits for paginated members, refreshes changed roles and excludes absent pinned profiles',async()=>{
@@ -36,6 +36,34 @@ test('hierarchy waits for paginated members, refreshes changed roles and exclude
  assert.equal(tier('Modo test').nodes.length,1);assert.equal(tier('Moderation').nodes.length,0);assert.equal(tier('Administration').nodes.length,0);
  promoted=true;app.advance();result=await app.call();assert.equal(tier('Modo test').nodes.length,0);assert.equal(tier('Moderation').nodes.length,1);assert.equal(memberCalls,10);assert.equal(tier('Moderation').nodes[0].colors.secondary,'#000000');assert.equal(tier('Moderation').nodes[0].colors.tertiary,'#123456');
  assert.doesNotMatch(JSON.stringify(result.body),/fixture-token|Authorization/);
+});
+
+test('incomplete staff responses are not retained in the warm cache',async()=>{
+ let unavailable=true;
+ const app=api(async url=>{const u=new URL(url);
+  if(u.pathname.endsWith('/roles')&&unavailable)throw Error('Discord unavailable');
+  return {ok:true,json:async()=>u.pathname.endsWith('/roles')?[]:u.pathname.endsWith('/members')?[]:{approximate_member_count:2}};
+ });
+ const failed=await app.call();assert.equal(failed.headers['Cache-Control'],'no-store');
+ assert.notEqual(failed.body.live.staffSource,'Roles Discord lus automatiquement');
+ unavailable=false;
+ const recovered=await app.call();assert.equal(recovered.body.live.staffSource,'Roles Discord lus automatiquement');
+});
+
+test('a stalled JSON body times out and does not poison later staff refreshes',async()=>{
+ let stalled=true;
+ const app=api(async url=>{const u=new URL(url);
+  return {ok:true,json:async()=>{
+   if(u.pathname.endsWith('/members')&&stalled)return new Promise(()=>{});
+   return u.pathname.endsWith('/roles')||u.pathname.endsWith('/members')?[]:{approximate_member_count:2};
+  }};
+ },25);
+ const keepAlive=setTimeout(()=>{},1000);
+ try{
+  const failed=await app.call();assert.notEqual(failed.body.live.staffSource,'Roles Discord lus automatiquement');
+  stalled=false;
+  assert.equal((await app.call()).body.live.staffSource,'Roles Discord lus automatiquement');
+ }finally{clearTimeout(keepAlive);}
 });
 test('hierarchy page renders the snapshot first and loads counts and staff separately',async()=>{
  const source=fs.readFileSync(require.resolve('../app.js'),'utf8').split('function escapeHtml')[0];let rendered=0;const calls=[];

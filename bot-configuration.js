@@ -19,14 +19,18 @@
     const path = () => base() + '/' + model.guild + '/' + model.section;
     const selectedSection = () => model.meta.sections.find(s => s.id === model.section);
     const run = callback => action(null, async () => {
-      if (inFlight) return; inFlight = true;
+      if (inFlight) return; inFlight = true; syncState();
       picker.closeAll();
       const states = [...content.querySelectorAll('input,select,textarea')].map(node => [node, node.disabled]);
       states.forEach(([node]) => { node.disabled = true; });
       content.querySelectorAll('[data-reference-picker]').forEach(node => { node.inert = true; node.open = false; });
       try { await callback(); } finally { inFlight = false; states.forEach(([node, disabled]) => { if (node.isConnected) node.disabled = disabled; }); content.querySelectorAll('[data-reference-picker]').forEach(node => { node.inert = false; }); syncState(); }
     });
-    function syncState() { const select = content.querySelector('[data-config-section]'); if (select) select.disabled = inFlight || !model.meta || !model.guild; }
+    function syncState() {
+      const select = content.querySelector('[data-config-section]'); if (select) select.disabled = inFlight || !model.meta || !model.guild;
+      content.querySelectorAll('[data-bot-tab], [data-section-link]').forEach(button => { button.disabled = inFlight; });
+      content.querySelector('#config-workspace')?.setAttribute('aria-busy', String(inFlight));
+    }
     const discard = async () => !dirty || Boolean(await confirmAction('Abandonner les modifications non enregistrées ?', 'ABANDONNER', false));
     function input(f, value) {
       const required = f.required ? ' required' : '';
@@ -125,6 +129,7 @@
       };
       content.querySelector('[data-cancel-config]').onclick = () => { dirty = false; renderForm(); };
       content.querySelector('[data-refresh-config]').onclick = () => run(async () => { if (await discard()) { dirty = false; await loadSection(); } });
+      content.querySelector('[data-config-editor]').setAttribute('aria-busy', 'false');
       mountPickers(form); icons();
       if (model.bot === 'protect' && ['prison', 'youtube'].includes(section.id)) {
         const tools = document.createElement('div'); tools.dataset.featureTools = '';
@@ -132,9 +137,10 @@
         void window.wnFeatureDashboard?.mount({ request, write, confirmAction, action, notice, E, icon, icons }, tools, model.guild, section.id);
       }
     }
-    function loading() { const editor = content.querySelector('[data-config-editor]'); if (editor) editor.innerHTML = '<p class="loading-state">Chargement des réglages…</p>'; }
+    function loading() { const editor = content.querySelector('[data-config-editor]'); if (editor) { editor.setAttribute('aria-busy', 'true'); editor.innerHTML = '<p class="loading-state" role="status">Chargement des réglages…</p>'; } }
     function loadError(retry) {
       const editor = content.querySelector('[data-config-editor]'); if (!editor) return;
+      editor.setAttribute('aria-busy', 'false');
       editor.innerHTML = '<h2>Configuration indisponible</h2><button type="button" data-config-retry>Réessayer</button>';
       content.querySelector('[data-config-retry]').onclick = () => run(retry);
     }
@@ -160,7 +166,7 @@
           if (!groups.has(group)) groups.set(group, []); groups.get(group).push(section);
         }
         const select = content.querySelector('[data-config-section]'); select.innerHTML = [...groups].map(([name, sections]) => `<optgroup label="${E(name)}">${sections.map(s => `<option value="${E(s.id)}">${E(s.label)}</option>`).join('')}</optgroup>`).join(''); select.value = model.section;
-        content.querySelector('[data-config-nav]').innerHTML = [...groups].map(([name, sections]) => `<div class="config-nav-group"><h3>${E(name)}</h3>${sections.map(s => `<button type="button" data-section-link="${E(s.id)}">${icon(sectionIcon(s.id))}<span>${E(s.label)}</span></button>`).join('')}</div>`).join('') + '<p class="config-nav-empty" data-config-nav-empty hidden>Aucune rubrique correspondante.</p>';
+        content.querySelector('[data-config-nav]').innerHTML = [...groups].map(([name, sections]) => `<div class="config-nav-group"><h3>${E(name)}</h3>${sections.map(s => `<button type="button" data-section-link="${E(s.id)}">${icon(sectionIcon(s.id))}<span>${E(s.label)}</span><small aria-label="${s.fields.length} paramètres">${s.fields.length}</small></button>`).join('')}</div>`).join('') + '<p class="config-nav-empty" data-config-nav-empty hidden>Aucune rubrique correspondante.</p>';
         filterNavigation();
         content.querySelectorAll('[data-section-link]').forEach(button => button.onclick = () => run(async () => { if (!await discard()) return; dirty = false; model.section = button.dataset.sectionLink; await loadSection(); }));
         icons();
@@ -176,7 +182,7 @@
       data.guilds = data.guilds.filter(g => g.id === selectedGuild.id);
       model.guilds = data.guilds;
       const select = content.querySelector('[data-config-guild]'); select.innerHTML = data.guilds.map(g => `<option value="${E(g.id)}">${E(g.name)}</option>`).join('');
-      if (!data.guilds.length) { content.querySelector('[data-config-editor]').innerHTML = '<p class="notice">Aucun serveur accessible : la permission Administrateur Discord est requise sur un serveur où ce bot est présent.</p>'; content.querySelector('[data-config-section]').innerHTML = ''; model.guild = ''; return; }
+      if (!data.guilds.length) { content.querySelector('[data-config-editor]').setAttribute('aria-busy', 'false'); content.querySelector('[data-config-editor]').innerHTML = '<p class="notice">Aucun serveur accessible avec tes autorisations actuelles pour ce bot.</p>'; content.querySelector('[data-config-section]').innerHTML = ''; model.guild = ''; return; }
       model.guild = data.guilds.some(g => g.id === query.get('guild')) ? query.get('guild') : data.guilds[0].id; select.value = model.guild;
       await loadGuild();
     }
@@ -205,7 +211,7 @@
     });
     guildSelect.onchange = () => { const value = guildSelect.value; void run(async () => { if (!await discard()) { guildSelect.value = model.guild; return; } dirty = false; model.guild = value; await loadGuild(); }); };
     sectionSelect.onchange = () => { const value = sectionSelect.value; void run(async () => { if (!await discard()) { sectionSelect.value = model.section; return; } dirty = false; model.section = value; await loadSection(); }); };
-    inFlight = true; content.querySelectorAll('select').forEach(node => { node.disabled = true; });
+    inFlight = true; syncState(); content.querySelectorAll('select').forEach(node => { node.disabled = true; });
     try { await loadGuilds(); } finally { inFlight = false; content.querySelectorAll('select').forEach(node => { node.disabled = false; }); syncState(); }
   };
 })();

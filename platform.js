@@ -24,7 +24,15 @@
     'audit:read': 'Consulter le journal', 'settings:write': 'Modifier les paramètres publics', 'bots:configure': 'Configurer les bots sur les serveurs Discord autorisés' };
   let session, serverOffset = 0, listPage = 1, currentUser, settings, grants, busy = false, preferenceDirty = false, authGeneration = 0, booting = false;
   const returnPath = () => route ? location.pathname + location.search : '/profile';
-  async function request(path, options = {}) {
+  const pendingReads = new Map();
+  function request(path, options = {}) {
+    if (Object.keys(options).length) return requestOne(path, options);
+    const key = authGeneration + ':' + path;
+    if (pendingReads.has(key)) return pendingReads.get(key);
+    const pending = requestOne(path, options).finally(() => pendingReads.delete(key));
+    pendingReads.set(key, pending); return pending;
+  }
+  async function requestOne(path, options = {}) {
     const generation = authGeneration;
     const response = await fetch('/api/platform/' + path, { cache: 'no-store', credentials: 'same-origin', signal: AbortSignal.timeout(15000), ...options,
       headers: { ...(options.body ? { 'Content-Type': 'application/json', 'X-CSRF-Token': session?.csrf || '' } : {}), ...options.headers } });
@@ -166,10 +174,15 @@
     content.innerHTML = `<section class="profile-identity">${user.banner && user.preferences.showProfileBanner ? `<img class="profile-banner" src="${E(user.banner)}" alt="Bannière Discord">` : ''}<div class="profile-person"><img class="profile-avatar" src="${E(user.avatar)}" alt="Avatar Discord"><div><h2>${E(user.displayName)}</h2><p>@${E(user.username || user.id)}</p><span class="status positive">Compte actif</span></div><a class="button" href="/profile/settings">${icon('settings-2')} Mon compte</a></div></section>
       <section class="workspace-section"><h2>Ton compte</h2><dl class="profile-facts">${[['Identifiant Discord', user.id], ['Rôle sur le site', roles[user.role]], ['Compte Discord créé le', date(user.accountCreatedAt)], ['Première connexion au site', date(user.firstLoginAt)], ['Dernière connexion', date(user.lastLoginAt)]].map(([label, value]) => `<div><dt>${E(label)}</dt><dd>${E(value)}</dd></div>`).join('')}</dl></section>
       ${session.protectAccess?.guilds.length ? `<section class="workspace-section"><h2>Tes accès Protect par serveur</h2><div class="service-list">${session.protectAccess.guilds.map(guild => `<div><span>${E(guild.name)}</span><a href="/admin/moderation?guild=${E(guild.id)}">${E(guild.label)} · Niveau ${guild.level} ${icon('arrow-up-right')}</a></div>`).join('')}</div></section>` : ''}<div data-profile-protect></div><div data-profile-game></div>`;
-    try { await window.wnMemberSpace.protectProfile(memberUI(content.querySelector('[data-profile-protect]')), true); }
-    catch { content.querySelector('[data-profile-protect]').innerHTML = '<p class="notice">XP Protect indisponible. <a href="/profile/protect">Réessayer</a></p>'; }
-    try { await window.wnMemberSpace.game(memberUI(content.querySelector('[data-profile-game]')), true); }
-    catch { content.querySelector('[data-profile-game]').innerHTML = '<p class="notice">Progression Game indisponible. <a href="/profile/game">Réessayer</a></p>'; }
+    const destinations = document.createElement('section'); destinations.className = 'profile-destinations';
+    destinations.innerHTML = `<a href="/profile/cards">${icon('layers')}<strong>Ma collection</strong><span>Cartes obtenues et doublons</span></a><a href="/profile/protect">${icon('sparkles')}<strong>Mon XP Protect</strong><span>Ma progression sur le serveur</span></a><a href="/servers">${icon('server')}<strong>Mes serveurs</strong><span>Mon écosystème WarsNuto</span></a>`;
+    content.querySelector('.profile-identity').after(destinations);
+    await Promise.allSettled([
+      (async () => { try { await window.wnMemberSpace.protectProfile(memberUI(content.querySelector('[data-profile-protect]')), true); }
+    catch { content.querySelector('[data-profile-protect]').innerHTML = '<p class="notice">XP Protect indisponible. <a href="/profile/protect">Réessayer</a></p>'; } })(),
+      (async () => { try { await window.wnMemberSpace.game(memberUI(content.querySelector('[data-profile-game]')), true); }
+    catch { content.querySelector('[data-profile-game]').innerHTML = '<p class="notice">Progression Game indisponible. <a href="/profile/game">Réessayer</a></p>'; } })()
+    ]);
   }
   const memberUI = (target = content) => ({ content: target, request, E, icon, icons, notice, get preferences() { return session?.user?.preferences || {}; } });
   async function users(staff = false) {
@@ -243,7 +256,8 @@
       window.wnAppearance?.apply(session.user.preferences);
       if (!route) return;
       if (matchMedia('(max-width: 780px)').matches) document.querySelector('.platform-sidebar nav [aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
-      if (route === '/profile/game') await window.wnMemberSpace.game(memberUI());
+      if (route === '/profile/cards') await window.wnPersonalCards(memberUI());
+      else if (route === '/profile/game') await window.wnMemberSpace.game(memberUI());
       else if (route === '/candidature'||route==='/admin/candidatures')await window.wnRecruitment({content,request,write,confirmAction,notice,E,icon,icons});
       else if (route === '/profile/protect') await window.wnMemberSpace.protectProfile(memberUI());
       else if (route === '/servers') await window.wnMemberSpace.servers(memberUI());

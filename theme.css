@@ -1,7 +1,7 @@
 :root {
   color-scheme: dark;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --bg: #050506;
+  --bg: #0c0d10;
   --panel: rgba(255, 255, 255, 0.045);
   --panel-strong: rgba(255, 255, 255, 0.072);
   --line: rgba(255, 255, 255, 0.105);
@@ -9,27 +9,28 @@
   --text: #f5f5f4;
   --muted: #b8bbc4;
   --faint: #7e8491;
-  --red: #e11919;
-  --gold: #ffcc4d;
+  --red: #e43d45;
+  --gold: #efc66b;
   --blue: #5865f2;
   --support: #57b8ff;
+  --protect: #fee75c;
   --game: #f37e7e;
   --green: #42d994;
   --shadow: 0 20px 58px rgba(0, 0, 0, 0.24);
-  --radius: 24px;
-  --chrome: #09090a;
-  --surface: #111112;
+  --radius: 8px;
+  --chrome: #101115;
+  --surface: #17191f;
   --control-bg: rgba(255, 255, 255, 0.045);
-  --button-radius: 999px;
-  --input-radius: 12px;
+  --button-radius: 6px;
+  --input-radius: 6px;
   --nav-active-bg: rgba(255, 204, 77, 0.08);
   --nav-active-line: rgba(255, 204, 77, 0.22);
-  --gold-action: linear-gradient(135deg, var(--gold), #eeb044);
-  --site-background: radial-gradient(circle at 18% -8%, rgba(225, 25, 25, 0.32), transparent 27rem), radial-gradient(circle at 78% 10%, rgba(255, 204, 77, 0.11), transparent 24rem), radial-gradient(circle at 50% 115%, rgba(88, 101, 242, 0.12), transparent 34rem), linear-gradient(180deg, #080808 0%, #050506 52%, #07080b 100%);
-  --gold-button: #ffcc4d;
-  --public-header: rgba(5, 5, 6, 0.88);
-  --public-card: rgba(8, 8, 9, 0.84);
-  --public-card-hover: rgba(10, 10, 11, 0.92);
+  --gold-action: var(--gold-button);
+  --site-background: var(--bg);
+  --gold-button: #efc66b;
+  --public-header: #101115;
+  --public-card: var(--surface);
+  --public-card-hover: var(--panel-strong);
 }
 :root[data-theme="light"] {
   color-scheme: light;
@@ -37,9 +38,10 @@
   --panel: rgba(0, 0, 0, 0.025); --panel-strong: rgba(0, 0, 0, 0.055);
   --line: rgba(0, 0, 0, 0.12); --line-strong: rgba(0, 0, 0, 0.23);
   --text: #191919; --muted: #555b66; --faint: #68707d; --gold: #805600;
+  --green: #187043; --red: #b42630; --game: #9e2939;
   --control-bg: #ffffff; --shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
   --nav-active-bg: rgba(227, 166, 28, 0.12); --nav-active-line: rgba(156, 104, 0, 0.32);
-  --gold-action: linear-gradient(135deg, var(--gold-button), #eeb044);
+  --gold-action: var(--gold-button);
   --site-background: var(--bg);
   --public-header: rgba(255, 255, 255, 0.94);
   --public-card: #ffffff; --public-card-hover: #f1f1f4;
@@ -51,9 +53,10 @@
     --panel: rgba(0, 0, 0, 0.025); --panel-strong: rgba(0, 0, 0, 0.055);
     --line: rgba(0, 0, 0, 0.12); --line-strong: rgba(0, 0, 0, 0.23);
     --text: #191919; --muted: #555b66; --faint: #68707d; --gold: #805600;
+    --green: #187043; --red: #b42630; --game: #9e2939;
     --control-bg: #ffffff; --shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
     --nav-active-bg: rgba(227, 166, 28, 0.12); --nav-active-line: rgba(156, 104, 0, 0.32);
-    --gold-action: linear-gradient(135deg, var(--gold-button), #eeb044);
+    --gold-action: var(--gold-button);
     --site-background: var(--bg);
     --public-header: rgba(255, 255, 255, 0.94);
     --public-card: #ffffff; --public-card-hover: #f1f1f4;

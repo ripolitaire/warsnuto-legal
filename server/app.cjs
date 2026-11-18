@@ -53,7 +53,18 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
     res.set('Set-Cookie', result.cookies).redirect(303, result.location);
   });
   app.get('/api/platform/public', (req, res) => res.json(service.publicSettings()));
-  app.use((req, res, next) => { req.session = auth.read(req.headers.cookie); next(); });
+  app.get('/profile/cards', (req, res, next) => {
+    if (req.query.preview !== 'share') return next();
+    res.sendFile(path.join(__dirname, '..', 'assets', 'cards-share.png'));
+  });
+  app.use(async (req, res, next) => {
+    try {
+      req.session = await require('./discordSiteRole.cjs').discordSiteRole(auth.read(req.headers.cookie), {
+        db, config, memberSpace, fresh: !['GET', 'HEAD'].includes(req.method)
+      });
+      next();
+    } catch (err) { next(err); }
+  });
   app.get('/api/platform/session', async (req, res) => {
     const session = req.session;
     if (!session) { res.set('Set-Cookie', auth.clearCookie()); return res.json({ user: null, configured: Boolean(config.clientId && config.clientSecret), serverNow: config.now() }); }
@@ -118,6 +129,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   app.patch('/api/platform/admin/settings', permit('settings:write'), fresh, (req, res) => res.json(service.updateSettings(req.session, req.body)));
   const pagePermissions = { '/admin': 'admin:read', '/admin/bots': 'admin:read', '/admin/users': 'users:read', '/admin/staff': 'staff:manage', '/admin/logs': 'audit:read', '/admin/settings': 'settings:write', '/admin/moderation': 'moderation:read' };
   for (const route of Object.keys(views.pages)) app.get(route, async (req, res) => {
+    if (!req.session && route === '/profile/cards') return res.type('html').send(require('./cardPreview.cjs').collection(nextPath(req.originalUrl)));
     if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(req.originalUrl)));
     if (pagePermissions[route] && route !== '/admin/moderation') requirePermission(req.session, pagePermissions[route]);
     if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
@@ -132,12 +144,13 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   });
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
   const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js'];
+  publicFiles.push('personal-cards.js', 'cards.css', 'cards.js', 'community.js', 'community.css');
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {
     const apiFiles = { '/api/bots': 'bots', '/api/youtube': 'youtube', '/api/visits': 'visits' };
     for (const [route, file] of Object.entries(apiFiles)) app.get(route, require(path.join(config.root, 'api', file + '.js')));
-    const pages = ['index', 'bots', 'discord', 'youtube', 'docs', 'protect', 'support', 'game', 'privacy', 'terms'];
+    const pages = ['index', 'bots', 'discord', 'youtube', 'docs', 'protect', 'support', 'game', 'cards', 'privacy', 'terms'];
     for (const name of pages) app.get(name === 'index' ? '/' : '/' + name, (req, res) => {
       res.set('Content-Security-Policy', "default-src 'self'; script-src 'self' https://va.vercel-scripts.com; style-src 'self'; img-src 'self' data: https://*.ytimg.com https://yt3.googleusercontent.com https://cdn.discordapp.com; connect-src 'self' https://discord.com https://discordapp.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
       res.sendFile(path.join(config.root, name + '.html'));

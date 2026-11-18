@@ -267,10 +267,10 @@ async function buildResponse(includeLive, includeRoles, includeStaff, cacheKey) 
     mode: includeLive ? "live" : includeRoles ? "roles" : "snapshot",
   };
 
-  responseCache.set(cacheKey, {
-    expiresAt: Date.now() + RESPONSE_CACHE_MS,
-    value: data,
-  });
+  // Do not keep incomplete refreshes in the warm function cache either.
+  if ((!includeStaff || liveStaff) && (!includeRoles || liveRoleGuide)) {
+    responseCache.set(cacheKey, { expiresAt: Date.now() + RESPONSE_CACHE_MS, value: data });
+  }
 
   return data;
 }
@@ -580,11 +580,19 @@ async function discordFetch(path, token) {
 
 async function fetchWithTimeout(url, options, timeoutMs) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let timeout;
+  const deadline = new Promise((resolve, reject) => {
+    timeout = setTimeout(() => { controller.abort(); reject(new Error('Discord response timed out')); }, timeoutMs);
+  });
   timeout.unref?.();
 
   try {
-    return await fetch(url, { ...options, signal: controller.signal });
+    return await Promise.race([(async () => {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      // Include body decoding in the deadline, not just receipt of HTTP headers.
+      const body = await response.json();
+      return { ok: response.ok, status: response.status, headers: response.headers, json: async () => body };
+    })(), deadline]);
   } finally {
     clearTimeout(timeout);
   }

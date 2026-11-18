@@ -104,7 +104,7 @@ body::before {
   color: #f5f5f4;
   font-size: 0.82rem;
   font-weight: 950;
-  letter-spacing: 0.22em;
+  letter-spacing: 0;
   text-transform: uppercase;
   animation: introText 1300ms ease both;
 }
@@ -412,7 +412,7 @@ main {
   color: var(--gold);
   font-size: 0.7rem;
   font-weight: 950;
-  letter-spacing: 0.16em;
+  letter-spacing: 0;
   text-transform: uppercase;
   overflow-wrap: normal;
   word-break: normal;
@@ -425,9 +425,9 @@ main {
 .legal-side h1 {
   max-width: 680px;
   margin: 0;
-  font-size: clamp(2.25rem, 3.75vw, 3.7rem);
+  font-size: 3.7rem;
   line-height: 1.05;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 .v2-hero-copy > p:not(.v2-kicker),
@@ -438,7 +438,7 @@ main {
   max-width: 650px;
   margin-top: 18px;
   color: var(--muted);
-  font-size: clamp(0.98rem, 1.2vw, 1.08rem);
+  font-size: 1.08rem;
   line-height: 1.7;
 }
 
@@ -563,9 +563,9 @@ main {
 .metric-card h2,
 .notice-panel h2 {
   margin: 0;
-  font-size: clamp(1.35rem, 2.1vw, 2rem);
+  font-size: 2rem;
   line-height: 1.08;
-  letter-spacing: -0.018em;
+  letter-spacing: 0;
   overflow-wrap: anywhere;
 }
 
@@ -618,9 +618,9 @@ main {
 
 .v2-community-strip h2 {
   margin: 0;
-  font-size: clamp(1.55rem, 2.4vw, 2.35rem);
+  font-size: 2.35rem;
   line-height: 1.08;
-  letter-spacing: -0.018em;
+  letter-spacing: 0;
 }
 
 .v2-card p,
@@ -752,7 +752,7 @@ main {
 .release-item h3 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.02rem, 1.5vw, 1.24rem);
+  font-size: 1.24rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -795,9 +795,9 @@ main {
 
 .server-snapshot-head h2 {
   margin: 0;
-  font-size: clamp(1.75rem, 2.8vw, 2.65rem);
+  font-size: 2.65rem;
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .server-snapshot-head p {
@@ -1009,7 +1009,7 @@ main {
 .staff-tier-label h3 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(0.92rem, 1.08vw, 1.02rem);
+  font-size: 1.02rem;
   line-height: 1.12;
   overflow-wrap: normal;
   white-space: nowrap;
@@ -1068,7 +1068,7 @@ main {
 .staff-node h4 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.16rem, 1.8vw, 1.42rem);
+  font-size: 1.42rem;
   line-height: 1.08;
   overflow-wrap: anywhere;
 }
@@ -1142,9 +1142,9 @@ main {
 .server-showcase h2 {
   max-width: 470px;
   margin: 0;
-  font-size: clamp(1.7rem, 2.8vw, 2.65rem);
+  font-size: 2.65rem;
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .server-showcase p {
@@ -1242,7 +1242,7 @@ main {
   color: var(--gold);
   font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0.12em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -1302,7 +1302,7 @@ main {
   min-width: 0;
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.08rem, 1.6vw, 1.34rem);
+  font-size: 1.34rem;
   line-height: 1.12;
   overflow-wrap: anywhere;
 }
@@ -1477,7 +1477,7 @@ main {
   color: var(--gold);
   font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   text-transform: uppercase;
   overflow-wrap: normal;
   white-space: nowrap;
@@ -1489,7 +1489,7 @@ main {
   order: 3;
   min-width: 0;
   margin: 8px 0 0;
-  font-size: clamp(1rem, 1.5vw, 1.18rem);
+  font-size: 1.18rem;
   line-height: 1.16;
   overflow-wrap: anywhere;
   word-break: normal;
@@ -1863,7 +1863,7 @@ dd {
 
 .legal-card h2 {
   margin: 30px 0 10px;
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-size: 1.55rem;
 }
 
 .legal-card ul,
@@ -2084,7 +2084,7 @@ dd {
   .bot-hero h1,
   .docs-hero h1,
   .legal-side h1 {
-    font-size: clamp(2rem, 9vw, 2.65rem);
+    font-size: 2.65rem;
   }
 
   .v2-hero-copy,

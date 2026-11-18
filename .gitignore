@@ -19,3 +19,4 @@ playwright-report/
 dist/
 assets/platform-icons.js
 artifacts/
+*.log

@@ -78,7 +78,20 @@ function refreshBotDataInBackground(onUpdate) {
 
 function refreshStaffInBackground() {
   if (!document.querySelector("[data-staff-tree]")) return Promise.resolve();
-  return fetchBotPayload("/api/bots?live=1", 50000).then(applyBotData).catch(() => {});
+  return fetchBotPayload("/api/bots?live=1", 50000).then(data => {
+    applyBotData(data);
+    if (data.live?.staffSource !== 'Roles Discord lus automatiquement') showStaffRefreshFailure();
+  }).catch(showStaffRefreshFailure);
+}
+
+function showStaffRefreshFailure() {
+  const target = document.querySelector('[data-staff-tree]');
+  if (!target || target.dataset.hasLiveStaff) return;
+  target.innerHTML = `<div class="v2-section-head"><p class="v2-kicker">Staff</p><h2>Équipe temporairement indisponible</h2><p>Discord n’a pas terminé la vérification. Réessaie dans un instant.</p><button type="button" data-retry-staff>Réessayer</button></div>`;
+  target.querySelector('[data-retry-staff]').addEventListener('click', async event => {
+    event.currentTarget.disabled = true;
+    await refreshStaffInBackground();
+  });
 }
 
 function escapeHtml(value) {
@@ -204,6 +217,13 @@ function getBot(data, slug) {
 }
 
 function renderHomeStats(data) {
+  const community = data.bots?.find(bot => bot.slug === 'protect')?.community;
+  const sampled = Date.parse(data.live?.countsFetchedAt || data.live?.fetchedAt || '');
+  const freshCounts = data.live?.source === 'Discord Invite' && sampled <= Date.now() + 60000 && Date.now() - sampled < 300000;
+  const members = document.querySelector('[data-community-members]');
+  const online = document.querySelector('[data-community-online]');
+  if (members) members.textContent = freshCounts && community?.membersLabel || 'Indisponible';
+  if (online) online.textContent = freshCounts && community?.onlineLabel || 'Indisponible';
   const target = document.querySelector("[data-bot-stats]");
   if (!target) return;
   const isV2 = document.body.classList.contains("site-v2");
@@ -251,7 +271,7 @@ function renderLatestAdditions(data, slug) {
   const additions = (data.latestAdditions || [])
     .filter((item) => item.public !== false && (slug === "all" || !item.bot || item.bot === slug || item.bot === "all"))
     .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))
-    .slice(0, 5);
+    .slice(0, document.body.classList.contains('home-v2') ? 3 : 5);
 
   if (!additions.length) {
     target.innerHTML = "<p>Aucune nouveaute publique a afficher pour le moment.</p>";
@@ -273,14 +293,17 @@ function renderLatestAdditions(data, slug) {
 
 async function loadYouTubeVideos() {
   const target = document.querySelector("[data-youtube-videos]");
-  if (!target) return;
+  if (!target || target.getAttribute('aria-busy') === 'true') return;
 
   try {
-    const response = await fetch("/api/youtube", { cache: "default" });
+    target.setAttribute('aria-busy', 'true');
+    const response = await fetch("/api/youtube", { cache: "default", signal: AbortSignal.timeout(8000) });
     const data = response.ok ? await response.json() : null;
     renderYouTubeVideos(data);
   } catch {
     renderYouTubeVideos(null);
+  } finally {
+    target.setAttribute('aria-busy', 'false');
   }
 }
 
@@ -297,6 +320,7 @@ function renderYouTubeVideos(data) {
         <h3>Vidéos indisponibles pour le moment.</h3>
         <p>Le lien officiel reste accessible si YouTube ne répond pas.</p>
         <a class="inline-link" href="https://www.youtube.com/@WarsNut0" target="_blank" rel="noopener noreferrer">Ouvrir la chaîne</a>
+        <button type="button" data-youtube-retry>Réessayer</button>
       </article>
     `;
     return;
@@ -582,7 +606,7 @@ function bindScrollReveal() {
         observer.unobserve(entry.target);
       });
     },
-    { threshold: 0.14 }
+    { threshold: 0 }
   );
 
   nodes.forEach((node) => {
@@ -634,16 +658,17 @@ function renderDocs(data) {
           <h2>${escapeHtml(bot.name)}</h2>
           <p>${escapeHtml(bot.description)}</p>
           <div class="docs-bot-layout">
-            <div>
-              <h3>Modules</h3>
+            <details>
+              <summary>Modules et fonctionnalités · ${(bot.modules || []).length}</summary>
               <ul>${(bot.modules || []).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
-            </div>
-            <div>
+            </details>
+            <details>
+              <summary>Commandes et données utilisées</summary>
               ${(bot.commands || []).length ? `<h3>Commandes membres</h3><p class="command-list">${bot.commands.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</p>` : "<h3>Tickets</h3><p>Demandes accessibles depuis le panel de tickets du serveur.</p>"}
               <h3>Donnees utilisees</h3>
               <p>${escapeHtml(bot.dataUse)}</p>
               <a class="inline-link" href="${escapeHtml(bot.page)}">Voir la fiche ${escapeHtml(bot.badge)}</a>
-            </div>
+            </details>
           </div>
         </article>
       `
@@ -654,7 +679,7 @@ function renderDocs(data) {
 function renderUpdatedDate(data) {
   const target = document.querySelector("[data-site-updated]");
   if (!target || !data.updatedAt) return;
-  target.textContent = `Derniere mise a jour : ${formatDate(data.updatedAt)}`;
+  target.textContent = `Dernière mise à jour : ${formatDate(data.updatedAt)}`;
 }
 
 function renderBotDetail(data) {
@@ -663,6 +688,10 @@ function renderBotDetail(data) {
   if (!slug || !target) return;
 
   const bot = getBot(data, slug);
+  if (slug === 'game') {
+    target.innerHTML = `<div class="game-information"><section><p class="v2-kicker">Sur Discord</p><h2>Retrouver le jeu</h2><p class="command-list">${(bot.commands || []).map(command => `<code>${escapeHtml(command)}</code>`).join('')}</p><a class="v2-inline" href="/docs#game-doc">Documentation Game →</a></section><section><p class="v2-kicker">Ton compte</p><h2>Une collection, par serveur.</h2><p>Les cartes et les progressions sont attachées à ton compte Discord sur chaque serveur. Les échanges demandent une double validation.</p><a class="v2-inline" href="/privacy">Données utilisées et confidentialité →</a></section></div>`;
+    return;
+  }
   const onlineCount = bot.community?.onlineLabel ?? "Non public";
   const serverName = bot.community?.name || "WarsNuto UNIVERS";
   const memberLabel = bot.community?.membersLabel || "Non public";
@@ -713,7 +742,7 @@ function renderBotDetail(data) {
     <article class="docs-card ${escapeHtml(bot.theme)}">
       <span class="section-number">${(bot.commands || []).length ? "Commandes" : "Tickets"}</span>
       ${(bot.commands || []).length ? `<h2>Commandes membres</h2><p class="command-list">${bot.commands.map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</p>` : "<h2>Demandes de support</h2><p>Demandes accessibles depuis le panel de tickets du serveur.</p>"}
-      <h3>Donnees utilisees</h3>
+      <h3>Données utilisées</h3>
       <p>${escapeHtml(bot.dataUse)}</p>
       <h3>Usage WarsNuto</h3>
       <p>${escapeHtml(data.officialUse)}</p>
@@ -722,6 +751,7 @@ function renderBotDetail(data) {
 }
 
 function renderApiError() {
+  for (const node of document.querySelectorAll('[data-community-members], [data-community-online]')) node.textContent = 'Indisponible';
   document.querySelectorAll("[data-bot-stats], [data-docs-grid], [data-bot-detail]").forEach((node) => {
     node.innerHTML = `
       <article class="live-card api-state-card">

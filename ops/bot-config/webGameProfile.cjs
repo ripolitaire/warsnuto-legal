@@ -8,7 +8,12 @@ function createGameProfile(database, catalog) {
     // Read raw rows: getPlayer/getInventory also create or update game accounts.
     const partition = mode === 'admin' ? `adminmod|${guild}|${actor}` : guild;
     const player = db.prepare('SELECT * FROM players WHERE guild_id=? AND user_id=?').get(partition, actor);
-    const base = { mode, adminAvailable, sampledAt: now, player: null };
+    const hasCards = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='arcade_cards'").get());
+    const collection = { available: hasCards, cards: hasCards
+      ? db.prepare('SELECT card_id AS id,quantity FROM arcade_cards WHERE guild_id=? AND user_id=? AND quantity>0 ORDER BY card_id LIMIT 1000').all(guild, actor)
+        .filter(card => Number.isSafeInteger(card.quantity) && card.quantity > 0)
+        .map(card => ({ id: card.id, quantity: card.quantity })) : [] };
+    const base = { mode, adminAvailable, sampledAt: now, player: null, collection };
     if (!player) return base;
     const level = Math.max(1, player.level), nextXp = 100 + (level - 1) * 55;
     const crew = database.getCrewByUser(partition, actor);

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalogue des cartes · WarsNuto Game</title>
+  <meta name="description" content="Le catalogue des cartes WarsNuto Game : personnages, raretés et illustrations.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WarsNuto Game">
+  <meta property="og:title" content="Catalogue des cartes · WarsNuto Game">
+  <meta property="og:description" content="205 cartes à collectionner, de Common à Royale. Explore les personnages et leurs probabilités.">
+  <meta property="og:url" content="https://warsnuto.com/cards">
+  <meta property="og:image" content="https://warsnuto.com/profile/cards?preview=share">
+  <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Cartes à collectionner WarsNuto Game">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://warsnuto.com/profile/cards?preview=share">
+  <meta name="theme-color" content="#f37e7e">
+  <link rel="canonical" href="https://warsnuto.com/cards">
+  <link rel="icon" href="/assets/warsnuto-favicon-round.png">
+  <script src="/appearance.js"></script>
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/platform.css"><link rel="stylesheet" href="/cards.css">
+  <script defer src="/assets/cards/catalogue.js"></script><script defer src="/cards.js"></script>
+  <script defer src="/assets/platform-icons.js"></script><script defer src="/platform.js"></script>
+    <link rel="stylesheet" href="/community.css">
+    <script src="/community.js" defer></script>
+</head>
+<body class="site-v2">
+  <header class="v2-header"><a class="v2-brand" href="/" aria-label="Accueil WarsNuto"><span class="v2-brand-mark"><img src="/assets/warsnuto-icon.png" alt=""></span><span><strong>WarsNuto</strong><small>Discord officiel</small></span></a><nav class="v2-nav" aria-label="Navigation principale">
+        <a href="/">Accueil</a><a href="/game">Game</a><a href="/cards">Collection</a><a href="/discord">Communauté</a><a href="/bots">Bots</a><a href="/docs">Documentation</a>
+      </nav></header>
+  <main class="v2-main card-catalogue">
+    <header><p class="v2-kicker">WarsNuto Game</p><h1>Catalogue des cartes</h1><p>Des personnages à collectionner et à échanger sur Discord.</p><p><a href="/profile/cards" class="inline-link">Ma collection personnelle</a> · <a href="https://discord.gg/warsnuto" class="inline-link">Rejoindre le serveur</a></p></header>
+    <form id="card-filters" class="card-filters" role="search">
+      <label>Personnage ou identifiant<input id="card-search" type="search" placeholder="Rechercher une carte" maxlength="100"></label>
+      <label>Rareté<select id="card-rarity"><option value="all">Toutes les raretés</option></select></label>
+      <label>Univers<select id="card-universe"><option value="all">Tous les univers</option></select></label>
+    </form>
+    <p id="card-count" role="status" aria-live="polite">Chargement du catalogue…</p>
+    <p id="card-odds"></p>
+    <div id="card-grid" class="card-grid"></div>
+    <nav class="card-pagination" aria-label="Pages du catalogue"><button id="card-prev" type="button" aria-label="Page précédente">&larr;</button><span id="card-page"></span><button id="card-next" type="button" aria-label="Page suivante">&rarr;</button></nav>
+    <noscript>Active JavaScript pour consulter les illustrations du catalogue.</noscript>
+  </main>
+  <dialog id="card-detail" aria-labelledby="card-title" aria-describedby="card-meta"><form method="dialog"><button aria-label="Fermer" title="Fermer">&times;</button></form><h2 id="card-title"></h2><p id="card-meta"></p><img id="card-art" alt="" width="2560" height="3840"><a id="card-original" target="_blank" rel="noopener noreferrer">Ouvrir l’illustration 4K</a></dialog>
+  <footer class="v2-footer"><span>WarsNuto Game</span><a href="/game">Game</a><a href="/privacy">Confidentialité</a></footer>
+</body></html>
