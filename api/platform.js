@@ -1,7 +1,7 @@
 const { isIP } = require('node:net');
 const LEGACY_ALLOWED = /^(?:auth\/discord\/(?:start|callback)|servers|profile(?:\/(?:settings|game|protect))?|admin(?:\/(?:bots|configuration|users|staff|logs|settings|moderation|prisons))?|api\/platform\/(?:public|session|servers|moderation\/\d{17,20}|logout|activity|me(?:\/(?:game|protect)\/\d{17,20}|\/preferences|\/sessions\/revoke-others)?|admin\/(?:features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|overview|bots|bot-config(?:\/(?:protect|game|support)\/(?:guilds|\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?))?|users(?:\/\d{17,20}(?:\/(?:role|status|revoke))?)?|staff|permissions|logs|settings)))$/;
 const RECRUITMENT = /^(?:candidature|admin\/candidatures|api\/platform\/recruitment\/\d{17,20}(?:\/(?:context|mine|reviews|settings|application\/[a-f\d-]{36}))?)$/;
-const ALLOWED = new RegExp('(?:' + LEGACY_ALLOWED.source + ')|(?:' + RECRUITMENT.source + ')|^profile/cards$');
+const ALLOWED = new RegExp('(?:' + LEGACY_ALLOWED.source + ')|(?:' + RECRUITMENT.source + ')|^profile/cards$|^play$|^api/platform/adventure/\\d{17,20}/(?:normal|admin)$');
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'private, no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');

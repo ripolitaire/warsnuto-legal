@@ -1,7 +1,7 @@
 const path = require('node:path'), S = require('./webDashboardSchema.cjs');
 module.exports = root => {
   const load = name => require(path.join(root, 'src', name));
-  const database = load('database'), service = load('gameService'), catalog = load('gameData'), state = load('serverState'), auto = load('autoBoss');
+  const database = load('database'), service = load('gameService'), catalog = load('gameData'), state = load('serverState'), auto = load('autoBoss'), antiCheat = load('antiCheat');
   const check = result => { if (result?.ok === false) S.fail(result.message); return result; };
   const general = (id, label, fields) => S.section(id, label, fields, g => Object.fromEntries(fields.map(f => [f.key, ['role', 'channel'].includes(f.type) ? database.getSetting(g.id, f.key, '') || null : f.type === 'number' ? Number(database.getSetting(g.id, f.key, '1')) : database.getSetting(g.id, f.key, '')])), (g, values, actor, patch) => database.db.transaction(() => {
     for (const [key, value] of Object.entries(patch)) { if (value === null) { database.setSetting(g.id, key, ''); database.logAdminAction(g.id, actor, null, 'config:set', key + ' désactivé depuis le site.'); } else check(service.setAdminConfig(g.id, key, value, actor)); }
@@ -27,7 +27,11 @@ module.exports = root => {
     database.db.transaction(() => { for (const [key, value] of Object.entries(patch)) { database.setSetting(g.id, 'game_role_' + key, value || ''); database.logAdminAction(g.id, actor, null, 'game_role_config', key + ' modifié depuis le site.'); } })();
     if (patch.notifications) load('gameNotifications').scheduleNotifications(g.id, actor);
   }));
-  return { sections, canConfigure: (guild, member, actor) => database.isGameAdminMember(guild.id, actor),
+  const adventure = require(path.join(root, 'src', 'webAdventure')).createWebAdventure({ store: database, game: service, catalog,
+    voyage: load('infiniteVoyage'), halloween, enabled: process.env.WARSNUTO_ADVENTURE_WEB_ENABLED === '1',
+    testers: String(process.env.WARSNUTO_ADVENTURE_WEB_TESTERS || '').split(',').map(id => id.trim()).filter(Boolean) });
+  adventure.rateLimit = (guildId, actor) => antiCheat.checkInteractionRate(guildId, actor, { isMessageComponent: () => true });
+  return { sections, adventure, canConfigure: (guild, member, actor) => database.isGameAdminMember(guild.id, actor),
     profile: require('./webGameProfile.cjs').createGameProfile(database, catalog),
     audit: (guildId, actor, section, fields, operationId) => database.logAdminAction(guildId, actor, null, 'web:config', JSON.stringify({ section, fields, operationId })) };
 };

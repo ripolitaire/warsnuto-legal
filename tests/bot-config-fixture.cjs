@@ -24,6 +24,36 @@ function createBotConfigFixture(ids) {
         return { mode, adminAvailable, sampledAt: now, player: { level: mode === 'admin' ? 10000 : 42, xp: 85, nextXp: 2355, totalXp: mode === 'admin' ? 9999999 : 49285, className: 'Épéiste', classXp: 1500, berries: 125000, bounty: 4500000, energy: 85, maxEnergy: 120,
           fruit: { name: 'Fruit Nika', mastery: 340, awakened: 1 }, crew: { name: 'Les aventuriers', level: 12 }, weapon: 'Katana', accessory: null, inventory: [{ name: 'Clé de raid', quantity: 3 }], activity: [], seasonPoints: 25 } };
       } : undefined };
+    if (bot === 'game') {
+      const adventureState = {
+        version: 1,
+        revision: 'a'.repeat(64),
+        player: { class_id: 'pirate', level: 42, berries: 125000, prime: 4500000, energy: 85, max_energy: 120, xp: 85, nextXp: 2355, season_points: 25, maxHp: 280 },
+        cooldowns: [], combats: [], crew: null, crewMembers: [], crewInvite: null, raids: [], trades: [], voyage: null,
+        voyageStats: { navigation_marks: 12, best_stage: 4 }, inventory: [], history: [],
+        halloween: { config: { enabled: false }, run: null, raid: null }, event: null,
+        catalog: {
+          classes: { pirate: { id: 'pirate', name: 'Pirate', passive: 'Un capitaine equilibre.', description: 'Commence l aventure.' } },
+          zones: { east_blue: { id: 'east_blue', name: 'Shells Town', saga: 'East Blue', minLevel: 1, energyCost: 8, berry: [55, 110], xp: [14, 28] } },
+          missions: { livraison: { id: 'livraison', name: 'Livraison', energyCost: 8, berry: [45, 105], xp: [12, 22], risk: .04 } },
+          bosses: { bandit_port: { id: 'bandit_port', name: 'Buggy le Clown', minLevel: 2, energyCost: 18 } },
+          crewBosses: {}, serverBosses: {}, fruits: {}, items: {}, shop: [], exchanges: [],
+          bossImages: { bandit_port: '/assets/adventure/bosses/boss-buggy.png' }
+        },
+        limits: { webRaidCreation: false, discordGameplayStillEnabled: true }
+      };
+      adapter.adventure = {
+        snapshot(guildId, actor, mode) {
+          if (mode === 'admin' && actor !== ids.OWNER) S.fail('Profil Admin Mod inaccessible.', 403);
+          return { ...structuredClone(adventureState), guild: guildId, actor, mode, adminAvailable: actor === ids.OWNER, serverNow: Date.now() };
+        },
+        execute(guildId, actor, mode, body) {
+          if (mode === 'admin' && actor !== ids.OWNER) S.fail('Profil Admin Mod inaccessible.', 403);
+          if (!/^[a-f\d-]{36}$/.test(body.operationId || '') || body.revision !== 'a'.repeat(64)) S.fail('Operation invalide.', 409);
+          return { ...this.snapshot(guildId, actor, mode), result: { action: body.action, message: 'Action de test enregistrée.' } };
+        }
+      };
+    }
     if (bot === 'protect') {
       adapter.profile = (guild, actor, mode, now) => {
         if (mode !== 'normal') S.fail('Protect ne possède pas de profil Admin Mod.', 403);

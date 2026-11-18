@@ -5,7 +5,7 @@ const { createBotConfigFixture, guildId } = require('./bot-config-fixture.cjs');
 
 test('Vercel page rewrites do not inject a section capture into the module query', () => {
   const { rewrites } = require('../vercel.json');
-  for (const path of [...Object.keys(require('../server/views.cjs').pages), '/auth/discord/start', '/auth/discord/callback']) {
+  for (const path of [...Object.keys(require('../server/views.cjs').pages), '/play', '/auth/discord/start', '/auth/discord/callback']) {
     const rule = rewrites.find(rule => rule.source === path);
     assert.ok(rule, 'Exact rewrite required: ' + path);
     const destination = new URL(rule.destination, 'https://warsnuto.com');
@@ -19,6 +19,7 @@ test('safe return paths retain exact configuration context but refuse open redir
   const path = '/admin/configuration?bot=protect&guild=' + guildId + '&section=welcome';
   assert.equal(nextPath(path), path);
   assert.equal(nextPath('/profile/game?guild=' + guildId + '&mode=admin'), '/profile/game?guild=' + guildId + '&mode=admin');
+  assert.equal(nextPath('/play?guild=' + guildId + '&mode=normal'), '/play?guild=' + guildId + '&mode=normal');
   for (const value of ['//evil.example', '/\\evil.example', '/admin?next=evil', '/admin/configuration?bot=protect&bot=game', '/admin/configuration?section=welcome&redirect=https://evil.example', '/profile/game#https://evil.example', '/profile\n']) assert.equal(nextPath(value), '/profile');
   assert.equal(nextPath('/admin/configuration?guild=invalid&section=welcome'), '/admin/configuration?section=welcome');
 });

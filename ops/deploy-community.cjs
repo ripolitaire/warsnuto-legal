@@ -2,28 +2,28 @@
 const fs = require('node:fs'), path = require('node:path'), cp = require('node:child_process'), crypto = require('node:crypto');
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const run = (bin, args, options = {}) => cp.execFileSync(bin, args, { encoding: 'utf8', timeout: 180000, stdio: ['ignore', 'pipe', 'pipe'], ...options });
-const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js', 'personal-cards.js', 'cards.js', 'cards.css', 'community.js', 'community.css', 'robots.txt', 'sitemap.xml'];
+const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js', 'personal-cards.js', 'cards.js', 'cards.css', 'community.js', 'community.css', 'adventure.css', 'adventure.js', 'adventure-audio.js', 'robots.txt', 'sitemap.xml'];
 function walk(directory, relative, list) {
   for (const entry of fs.readdirSync(path.join(directory, relative), { withFileTypes: true })) {
     const file = path.posix.join(relative, entry.name);
     if (entry.name === '.gitkeep') continue;
     if (entry.name.startsWith('.') || entry.isSymbolicLink()) throw Error('Unexpected hidden file or symlink: ' + file);
     if (entry.isDirectory()) walk(directory, file, list);
-    else if (entry.isFile() && /\.(?:cjs|js|json|html|css|png|webp|jpg|jpeg|gif|svg|ico|txt|xml|sql)$/.test(entry.name)) list.push(file);
+    else if (entry.isFile() && /\.(?:cjs|js|json|html|css|png|webp|jpg|jpeg|gif|svg|ico|txt|xml|sql|wav|md)$/.test(entry.name)) list.push(file);
     else throw Error('Unexpected release file: ' + file);
   }
 }
 function pack(root) {
   const name = 'community-' + new Date().toISOString().replace(/[-:.TZ]/g, '');
   const directory = path.join(root, 'artifacts', name); fs.mkdirSync(directory, { recursive: true });
-  const files = [...publicFiles, ...fs.readdirSync(root).filter(file => file.endsWith('.html')), 'package.json', 'package-lock.json', 'scripts/build.cjs', 'scripts/check.cjs', 'ui/icons.js', 'ops/deploy-community.cjs'];
+  const files = [...publicFiles, ...fs.readdirSync(root).filter(file => file.endsWith('.html')), 'package.json', 'package-lock.json', 'scripts/build.cjs', 'scripts/check.cjs', 'ui/icons.js', 'ops/deploy-community.cjs', 'ops/deploy-game-adventure.cjs'];
   for (const relative of ['server', 'api', 'assets', 'tests', 'ops/bot-config']) walk(root, relative, files);
   const manifest = { name, createdAt: new Date().toISOString(), files: Object.fromEntries([...new Set(files)].sort().map(file => [file, hash(path.join(root, file))])) };
   fs.writeFileSync(path.join(directory, 'manifest.json'), JSON.stringify(manifest, null, 2));
   fs.writeFileSync(path.join(directory, 'files.txt'), Object.keys(manifest.files).join('\n') + '\n');
   run('tar', ['-czf', path.join(directory, 'source.tgz'), '-C', root, '-T', path.join(directory, 'files.txt')]);
   const frontend = path.join(directory, 'frontend'); fs.mkdirSync(frontend);
-  const selected = Object.keys(manifest.files).filter(file => publicFiles.includes(file) || file.endsWith('.html') || file.startsWith('api/') || file.startsWith('assets/') || ['package.json', 'package-lock.json', 'scripts/build.cjs', 'ui/icons.js'].includes(file));
+  const selected = Object.keys(manifest.files).filter(file => (publicFiles.includes(file) || file.endsWith('.html') || file.startsWith('api/') || file.startsWith('assets/') || ['package.json', 'package-lock.json', 'scripts/build.cjs', 'ui/icons.js'].includes(file)) && !file.endsWith('.md'));
   for (const file of [...selected, 'vercel.json', '.vercelignore', '.vercel/project.json']) {
     const target = path.join(frontend, file); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.copyFileSync(path.join(root, file), target);
   }
@@ -64,7 +64,7 @@ async function remote(mode, name) {
         const response = await fetch('http://127.0.0.1:3100/api/platform/session', { headers, signal: AbortSignal.timeout(2500) });
         const data = await response.json();
         if (response.ok && data.user === null && data.configured === true) {
-          for (const file of ['community.css', 'community.js', 'cards.js']) {
+          for (const file of ['community.css', 'community.js', 'cards.js', 'adventure.js', 'adventure-audio.js']) {
             const asset = await fetch('http://127.0.0.1:3100/' + file, { headers, signal: AbortSignal.timeout(2500) });
             if (!asset.ok || crypto.createHash('sha256').update(Buffer.from(await asset.arrayBuffer())).digest('hex') !== manifest.files[file]) throw Error('Asset readiness failed');
           }

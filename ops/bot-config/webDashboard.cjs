@@ -53,6 +53,19 @@ function createDashboardHandler(client, adapter, { now = Date.now } = {}) {
     if (!client.isReady()) S.fail('Ce bot se reconnecte à Discord. Réessaie dans un instant.', 503);
     const url = new URL(req.url, 'http://localhost'), actor = req.headers['x-wn-actor'];
     if ((url.search && !url.pathname.startsWith('/recruitment/')) || !['GET', 'PATCH'].includes(req.method)) S.fail('Route indisponible.', 404);
+    const adventure = /^\/adventure\/(\d{17,20})\/(normal|admin)$/.exec(url.pathname);
+    if (adventure) {
+      const { guild, member } = await membership(adventure[1], actor, req.method === 'PATCH');
+      if (!member) S.fail('Tu ne fais pas partie de ce serveur.', 403);
+      if (!adapter.adventure) S.fail("L'aventure navigateur n'est pas encore disponible.", 404);
+      if (req.method === 'PATCH') {
+        const rate = adapter.adventure.rateLimit?.(guild.id, actor);
+        if (rate && !rate.ok) S.fail(rate.message, 429);
+      }
+      return req.method === 'GET'
+        ? adapter.adventure.snapshot(guild.id, actor, adventure[2])
+        : adapter.adventure.execute(guild.id, actor, adventure[2], body);
+    }
     const recruitment=/^\/recruitment\/(\d{17,20})\/(context|mine|reviews|settings|actions|application\/([a-f\d-]{36}))$/.exec(url.pathname);
     if(recruitment) {
       const {guild,member}=await membership(recruitment[1],actor,true);

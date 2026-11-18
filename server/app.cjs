@@ -75,12 +75,30 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
       if (!req.session) throw error(401, 'Connecte-toi avec Discord.');
       if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER' && req.path !== '/logout') throw error(503, 'L’espace membre est en maintenance. Réessaie plus tard.');
       if (!['GET', 'HEAD', 'POST', 'PATCH'].includes(req.method)) throw error(405, 'Méthode non autorisée.');
-      if (['POST', 'PATCH'].includes(req.method)) { auth.csrf(req, req.session); limit('write:' + req.session.user.id, req.path.startsWith('/recruitment/')?60:20); auth.touch(req.session); }
+      if (['POST', 'PATCH'].includes(req.method)) { auth.csrf(req, req.session); limit('write:' + req.session.user.id, req.path.startsWith('/adventure/') ? 120 : req.path.startsWith('/recruitment/')?60:20); auth.touch(req.session); }
       next();
     } catch (err) { next(err); }
   });
   const permit = permission => (req, res, next) => { try { requirePermission(req.session, permission); next(); } catch (err) { next(err); } };
   const fresh = (req, res, next) => { try { auth.fresh(req.session); next(); } catch (err) { next(err); } };
+  const adventureRoute = req => {
+    if (!require('./security.cjs').snowflake(req.params.guild) || !['normal','admin'].includes(req.params.mode) || Object.keys(req.query).length) throw error(400, 'Profil d’aventure invalide.');
+    return '/adventure/' + req.params.guild + '/' + req.params.mode;
+  };
+  app.get('/api/platform/adventure/:guild/:mode', async (req, res) => {
+    limit('adventure-read:' + req.session.user.id, 40);
+    res.json(await botConfiguration.send('game', adventureRoute(req), req.session.user.id));
+  });
+  app.post('/api/platform/adventure/:guild/:mode', async (req, res) => {
+    object(req.body, ['operationId','revision','action','input']);
+    if (!/^[a-f\d-]{36}$/i.test(req.body.operationId || '') || !/^[a-f\d]{64}$/.test(req.body.revision || '') || typeof req.body.action !== 'string' || req.body.action.length > 40) throw error(400, 'Opération d’aventure invalide.');
+    res.json(await botConfiguration.send('game', adventureRoute(req), req.session.user.id, req.body));
+  });
+  app.get('/play', (req, res) => {
+    if (!req.session) return res.redirect(303, '/auth/discord/start?next=' + encodeURIComponent(nextPath(req.originalUrl)));
+    if (service.publicSettings().maintenance && req.session.user.role !== 'OWNER') throw error(503, 'L’aventure est en maintenance.');
+    res.type('html').send(require('./adventure.cjs').page(req.session));
+  });
   app.get('/api/platform/recruitment/:guild/:view',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,req.params.view,req.session,undefined,req.query)));
   app.get('/api/platform/recruitment/:guild/application/:id',async(req,res)=>res.json(await botConfiguration.recruitment(req.params.guild,'application/'+req.params.id,req.session,undefined,req.query)));
   app.post('/api/platform/recruitment/:guild',async(req,res)=>{
@@ -145,6 +163,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
   const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js'];
   publicFiles.push('personal-cards.js', 'cards.css', 'cards.js', 'community.js', 'community.css');
+  publicFiles.push('adventure.css', 'adventure.js', 'adventure-audio.js');
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {

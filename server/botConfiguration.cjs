@@ -9,7 +9,10 @@ function createBotConfiguration(db, config, transport) {
     if (!config.botSocketDirectory && !transport) throw error(503, 'La liaison de configuration des bots n’est pas activée.');
     const target=new URL(route,'http://local.invalid');
     const recruitment=/^\/recruitment\/\d{17,20}\/(?:context|mine|reviews|settings|actions|application\/[a-f\d-]{36})$/.test(target.pathname);
-    if (target.origin!=='http://local.invalid'||target.hash||(!recruitment&&(!/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)))||recruitment&&[...target.searchParams.keys()].some(k=>!['page','status','search','track'].includes(k))) throw error(404,'Rubrique inconnue.');
+    const adventure = bot === 'game' && /^\/adventure\/\d{17,20}\/(normal|admin)$/.test(target.pathname);
+    const invalidRecruitmentQuery = recruitment && [...target.searchParams.keys()].some(key => !['page', 'status', 'search', 'track'].includes(key));
+    const invalidAdventureQuery = adventure && Boolean(target.search);
+    if (target.origin !== 'http://local.invalid' || target.hash || invalidAdventureQuery || (!adventure && !recruitment && !/^\/(?:guilds|member\/servers|member\/\d{17,20}\/(?:access|profile\/(?:normal|admin))|features\/\d{17,20}\/(?:prison|youtube)(?:\/\d{1,10}|\/job\/[a-f\d-]{36})?|config\/\d{17,20}(?:\/[a-z][a-z0-9_-]{0,39})?)$/.test(route)) || invalidRecruitmentQuery) throw error(404,'Rubrique inconnue.');
     const options = { socketPath: path.join(config.botSocketDirectory || '.', bot + '.sock'), path: route,
       method: body ? 'PATCH' : 'GET', headers: { 'x-wn-actor': actor, ...(body ? { 'content-type': 'application/json' } : {}) } };
     if (transport) return transport(options, body);
