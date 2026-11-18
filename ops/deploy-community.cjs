@@ -16,7 +16,7 @@ function walk(directory, relative, list) {
 function pack(root) {
   const name = 'community-' + new Date().toISOString().replace(/[-:.TZ]/g, '');
   const directory = path.join(root, 'artifacts', name); fs.mkdirSync(directory, { recursive: true });
-  const files = [...publicFiles, ...fs.readdirSync(root).filter(file => file.endsWith('.html')), 'package.json', 'package-lock.json', 'scripts/build.cjs', 'scripts/check.cjs', 'ui/icons.js', 'ops/deploy-community.cjs', 'ops/deploy-game-adventure.cjs'];
+  const files = [...publicFiles, ...fs.readdirSync(root).filter(file => file.endsWith('.html')), 'package.json', 'package-lock.json', 'vercel.json', 'scripts/build.cjs', 'scripts/check.cjs', 'ui/icons.js', 'ops/deploy-community.cjs', 'ops/deploy-game-adventure.cjs'];
   for (const relative of ['server', 'api', 'assets', 'tests', 'ops/bot-config']) walk(root, relative, files);
   const manifest = { name, createdAt: new Date().toISOString(), files: Object.fromEntries([...new Set(files)].sort().map(file => [file, hash(path.join(root, file))])) };
   fs.writeFileSync(path.join(directory, 'manifest.json'), JSON.stringify(manifest, null, 2));
