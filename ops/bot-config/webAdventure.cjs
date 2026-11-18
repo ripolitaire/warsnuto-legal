@@ -54,7 +54,10 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
     if (!enabled || testers.length && !testers.includes(actor)) fail("L'aventure navigateur n'est pas encore ouverte a ce compte.", 403);
     if (!snowflake(guild) || !snowflake(actor) || !['normal', 'admin'].includes(mode)) fail("Profil d'aventure invalide.");
     if (store.isGameBlacklisted(guild, actor)) fail("Ton acces au jeu est bloque.", 403);
-    if (store.getSetting(guild, 'game_enabled', '1') === '0') fail("L'aventure est en maintenance. Ta progression est conservee.", 503);
+    // The web bridge is private and its public caller is limited to site
+    // administrators. It remains available for that controlled preview while
+    // the Discord game itself is in maintenance; regular Discord access is
+    // still governed by game_enabled everywhere else.
     const admin = store.isGameAdminMember(guild, actor);
     if (mode === 'admin' && !admin) fail('Le profil Admin Mod est reserve aux administrateurs Game.', 403);
     return { admin, partition: mode === 'admin' ? `adminmod|${guild}|${actor}` : guild };
