@@ -1,6 +1,19 @@
 const {test,expect}=require('@playwright/test');
 const {loginPage}=require('./test-session.cjs');
 const guild='1561826762747285654';
+
+test('sign-in preserves the exact internal application destination',async({browser,baseURL})=>{
+ const context=await browser.newContext();
+ try{
+  const next=`/candidature?guild=${guild}&track=responsible`;
+  const started=await context.request.get(baseURL+'/auth/discord/start?'+new URLSearchParams({next}),{maxRedirects:0});
+  const auth=new URL(started.headers().location);
+  const callback=await context.request.get(baseURL+'/auth/discord/callback?'+new URLSearchParams({state:auth.searchParams.get('state'),iss:'https://discord.com',code:'USER-'+require('node:crypto').randomUUID()}),{maxRedirects:0});
+  expect(callback.headers().location).toBe(next);
+  const page=await context.newPage();await page.goto(next);
+  await expect(page.locator('.recruitment-brand h2')).toHaveText('Candidature Responsable Modération');
+ }finally{await context.close();}
+});
 test('rank-up campaigns have independent controls and a non-eligible administrator cannot apply',async({browser,baseURL},info)=>{
  const {context,page}=await loginPage(browser,baseURL,'OWNER');
  try{
