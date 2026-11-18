@@ -58,5 +58,33 @@
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') for (const details of document.querySelectorAll('.wn-account details[open]')) { details.open = false; details.querySelector('summary').focus(); }
   });
+  const motionPreference=matchMedia('(prefers-reduced-motion: reduce)'),activeAnimations=new Set(),elementAnimations=new WeakMap();
+  const motionAllowed=()=>!motionPreference.matches&&document.documentElement.dataset.reducedMotion!=='true';
+  const animate=(node,keyframes,duration=180)=>{
+    if(!node?.isConnected||!motionAllowed()||typeof node.animate!=='function')return;
+    elementAnimations.get(node)?.cancel();
+    const animation=node.animate(keyframes,{duration,easing:'ease-out'});
+    elementAnimations.set(node,animation);activeAnimations.add(animation);
+    const done=()=>{activeAnimations.delete(animation);if(elementAnimations.get(node)===animation)elementAnimations.delete(node);};
+    animation.addEventListener('finish',done,{once:true});animation.addEventListener('cancel',done,{once:true});
+  };
+  const stopMotion=()=>{if(!motionAllowed())for(const animation of activeAnimations)animation.cancel();};
+  motionPreference.addEventListener('change',stopMotion);
+  new MutationObserver(stopMotion).observe(document.documentElement,{attributes:true,attributeFilter:['data-reduced-motion']});
+  document.addEventListener('click',event=>{
+    const control=event.target.closest('button, .button, .v2-button, summary');
+    if(control&&!control.disabled&&control.getAttribute('aria-disabled')!=='true')animate(control,[{scale:'1'},{scale:'.98'},{scale:'1'}],160);
+  },true);
+  document.addEventListener('toggle',event=>{
+    if(event.target.open)animate(event.target.querySelector('.wn-account-dropdown, .reference-popover'),[{opacity:.65,translate:'0 -5px'},{opacity:1,translate:'0 0'}]);
+  },true);
+  const workspace=document.getElementById('platform-content');
+  if(workspace){
+    let frame;
+    new MutationObserver(changes=>{
+      if(!changes.some(change=>change.target===workspace&&change.addedNodes.length)||frame)return;
+      frame=requestAnimationFrame(()=>{frame=null;animate(workspace,[{opacity:.72},{opacity:1}],200);});
+    }).observe(workspace,{childList:true});
+  }
   window.lucide?.createIcons();
 })();

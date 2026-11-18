@@ -12,7 +12,7 @@ function page(route, session, settings = { name: 'WarsNuto' }) {
   const links = admin ? [['/admin', 'Vue d’ensemble', 'admin:read'], ['/servers', 'Mes serveurs'], ['/admin/configuration', 'Configuration des bots'], ['/admin/bots', 'Suivi des bots', 'admin:read'], ['/admin/users', 'Utilisateurs', 'users:read'],
     ['/admin/moderation', 'Modération', 'moderation:read'], ['/admin/staff', 'Équipe et permissions', 'staff:manage'],
     ['/admin/logs', 'Journal', 'audit:read'], ['/admin/settings', 'Paramètres du site', 'settings:write']]
-    : [['/profile', 'Mon espace'], ['/profile/protect', 'Mon XP Protect'], ['/profile/game', 'Ma progression Game'], ['/servers', 'Mes serveurs'], ['/profile/settings', 'Mon compte'], ['/admin/moderation', 'Modération', 'moderation:read'], ...(session.permissions.includes('admin:read') ? [['/admin', 'Administration']] : [])];
+    : [['/profile', 'Mon espace'], ['/profile/protect', 'Mon XP Protect'], ['/profile/game', 'Ma progression Game'], ['/servers', 'Mes serveurs'], ['/profile/settings', 'Mon compte'], ['/admin/moderation', 'Modération', 'moderation:read'], ...(session.permissions.includes('admin:read') ? [['/admin', 'Administration']] : []), ['/admin/settings', 'Paramètres du site', 'settings:write']];
   const prefs = require('./preferences.cjs').normalizePreferences(session.user.preferences);
   links.splice(1, 0, ['/profile/cards', 'Ma collection de cartes']);
   symbols['/profile/cards'] = 'layers';

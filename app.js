@@ -355,7 +355,7 @@ function bindHomeInteractions() {
     if (!node || !currentBotData) return;
     renderHomeProduct(currentBotData, node.dataset.productSwitch);
     if (document.body.classList.contains("home-v2") && node.closest("[data-bot-stats]")) {
-      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.reducedMotion === 'true';
       document.querySelector("#nouveautes")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
     }
   });

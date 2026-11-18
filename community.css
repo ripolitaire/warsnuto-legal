@@ -30,11 +30,12 @@ body .community-header .v2-nav { display: flex; flex: 1; justify-content: center
 .platform-header .workspace-toggle { display: none; }
 body .v2-main { width: min(1240px, calc(100% - 48px)); padding: 48px 0 0; }
 body .v2-main > section { scroll-margin-top: 96px; }
-body .v2-section { margin: 0; padding: 56px 0; border-bottom: 1px solid var(--line); background: none; border-radius: 0; box-shadow: none; }
+body .v2-section { margin: 0; padding: 56px 0; border: 0; border-bottom: 1px solid var(--line); background: none; border-radius: 0; box-shadow: none; }
 body .v2-section-head { margin-bottom: 28px; }
 .v2-section-head > div { min-width: 0; }
 body .v2-section-head h2, body .section-heading h2 { font-size: 28px; line-height: 1.25; font-weight: 750; }
-body .v2-kicker, body .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0; margin-bottom: 12px; color: var(--gold); }
+body .v2-kicker, body .eyebrow { display: block; max-width: 100%; height: auto; padding-block: 2px; font-size: 13px; line-height: 1.6; font-weight: 700; letter-spacing: 0; margin: 0 0 12px; color: var(--gold); white-space: normal; overflow-wrap: anywhere; }
+body .staff-section { overflow: visible; border: 0; border-bottom: 1px solid var(--line); }
 body .v2-grid { gap: 24px; }
 body .v2-card, body .v2-product, body .docs-card, body .metric-card, body .server-area-card, body .role-guide-card, body .staff-node, body .youtube-video-card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: none; }
 body .v2-product::before, body .v2-card::before { display: none; }
@@ -134,6 +135,7 @@ body .youtube-video-card.is-empty > * { margin: 0 0 10px; }
 body .youtube-video-card.is-empty { display: flex; align-items: start; }
 body .youtube-video-card.is-empty > * { order: 0; }
 body .youtube-video-card [data-youtube-retry] { padding: 8px 14px; min-height: 40px; border-radius: 6px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--text); font-size: 13px; }
+body [data-retry-staff] { display: inline-flex; align-items: center; min-height: 42px; margin-top: 16px; padding: 9px 16px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 14px; font-weight: 650; }
 .module-status { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 4px; color: var(--green); font-size: 12px; }
 .module-status.maintenance { color: var(--gold); }
 .game-overview { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 8px 0 40px; }
@@ -154,8 +156,11 @@ body .metric-card dl > div { background: none; border: 0; border-bottom: 1px sol
 body[data-platform-page] { background: var(--bg); font-family: var(--font-sans); }
 body[data-platform-page] .platform-header { height: 80px; padding: 0 28px; }
 body[data-platform-page] .platform-shell { grid-template-columns: 240px minmax(0, 1fr); min-height: calc(100dvh - 80px); }
-body[data-platform-page] .platform-sidebar { top: 80px; height: calc(100dvh - 80px); }
-body[data-platform-page] .platform-sidebar nav a { border-radius: 4px; min-height: 42px; font-size: 13px; }
+body[data-platform-page] .platform-sidebar { top: 80px; height: calc(100dvh - 80px); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-gutter: stable; }
+body[data-platform-page] .platform-sidebar > p, body[data-platform-page] .platform-sidebar nav, body[data-platform-page] .sidebar-account { flex-shrink: 0; }
+body[data-platform-page] .platform-sidebar nav a { border-radius: 4px; min-height: 42px; font-size: 14px; }
+body[data-platform-page] .platform-sidebar nav a > svg { flex-shrink: 0; }
+body[data-platform-page] .platform-sidebar nav a > span { min-width: 0; }
 body[data-platform-page] .platform-sidebar nav { display: grid; grid-template-columns: 1fr; overflow: visible; }
 body[data-platform-page] .platform-main { padding: 32px 40px 56px; }
 body[data-platform-page] .page-heading h1 { font-size: 28px; line-height: 1.3; }
@@ -200,8 +205,18 @@ body[data-platform-page] .connection-state { color: var(--muted); }
 /* Content remains readable even when an observer or animation cannot run. */
 body .reveal { opacity: 1; transform: none; }
 body .reveal.is-visible { animation: community-enter 300ms ease; }
+body .v2-section.reveal.is-visible { animation-name: community-fade; }
 @keyframes community-spin { to { transform: rotate(360deg); } }
 @keyframes community-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes community-fade { from { opacity: .65; } to { opacity: 1; } }
+body .v2-button, body .button, body button, body summary, body .platform-sidebar nav a { transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+body .wn-account summary > svg { transition: transform 180ms ease; }
+body .v2-card, body .v2-product, body .youtube-video-card, body .server-item, body .staff-node, body .card-item { transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  body .v2-button:hover, body .button:hover, body button:not(:disabled):hover { transform: translateY(-2px); }
+  body .v2-card:hover, body .v2-product:hover, body .youtube-video-card:hover, body .server-item:hover { transform: translateY(-3px); border-color: var(--gold); }
+  body .platform-sidebar nav a:hover { transform: translateX(2px); }
+}
 @media (min-width: 1288px) { .community-hero::before, .community-hero::after { inset-inline: calc((1240px - 100vw) / 2); } }
 @media (max-width: 1287px) { .community-hero::before, .community-hero::after, body.discord-v2 .v2-page-hero > .v2-callout { inset-inline: -24px; } }
 @media (max-width: 1100px) {
@@ -232,6 +247,21 @@ body .reveal.is-visible { animation: community-enter 300ms ease; }
 }
 @media (max-width: 780px) {
   .wn-account .wn-account-dropdown { position: fixed; top: 88px; left: 12px; right: 12px; width: auto; }
+  body[data-platform-page] .platform-header { height: 72px; padding: 0 16px; gap: 12px; }
+  body[data-platform-page] .platform-brand { margin-right: auto; font-size: 16px; gap: 8px; }
+  body[data-platform-page] .platform-brand img { width: 30px; height: 30px; }
+  body[data-platform-page] .platform-brand > span { display: none; }
+  body[data-platform-page] .platform-shell { display: block; }
+  body[data-platform-page] .workspace-toggle { display: block; flex-shrink: 0; }
+  body[data-platform-page] .platform-sidebar { display: none; position: fixed; left: 0; top: 72px; width: min(310px, 85vw); height: calc(100dvh - 72px); z-index: 25; border-right: 1px solid var(--line-strong); box-shadow: 12px 0 36px #0005; overflow-y: auto; overflow-x: hidden; padding: 16px 12px; gap: 12px; }
+  body[data-platform-page] .platform-sidebar.navigation-open { display: flex; }
+  body[data-platform-page] .platform-sidebar nav { display: grid; grid-template-columns: 1fr; overflow: visible; }
+  body[data-platform-page] .platform-sidebar nav a { white-space: normal; font-size: 14px; }
+  body[data-platform-page] .sidebar-account { display: flex; }
+  body[data-platform-page] .platform-main { padding: 24px 16px 48px; }
+  body[data-platform-page] .page-heading h1 { font-size: 24px; }
+  body[data-platform-page] .section-heading { align-items: start; flex-wrap: wrap; }
+  body[data-platform-page] .wn-account .wn-account-dropdown { top: 80px; max-height: calc(100dvh - 92px); }
 }
 @media (max-width: 640px) {
   .game-information { grid-template-columns: 1fr; gap: 28px; }
@@ -268,20 +298,6 @@ body .reveal.is-visible { animation: community-enter 300ms ease; }
   body .v2-page-hero h1, body .bot-hero h1, body .docs-hero h1, body .legal-side h1, .game-overview h1 { font-size: 34px; }
   body .v2-footer.community-footer { grid-template-columns: 1fr; }
   .community-footer nav { justify-content: start; }
-  body[data-platform-page] .platform-header { height: 72px; padding: 0 16px; gap: 12px; }
-  body[data-platform-page] .platform-brand { margin-right: auto; font-size: 16px; gap: 8px; }
-  body[data-platform-page] .platform-brand img { width: 30px; height: 30px; }
-  body[data-platform-page] .platform-brand > span { display: none; }
-  body[data-platform-page] .platform-shell { display: block; }
-  body[data-platform-page] .workspace-toggle { display: block; flex-shrink: 0; }
-  body[data-platform-page] .platform-sidebar { display: none; position: fixed; left: 0; top: 72px; width: min(310px, 85vw); height: calc(100dvh - 72px); z-index: 25; border-right: 1px solid var(--line-strong); box-shadow: 12px 0 36px #0005; }
-  body[data-platform-page] .platform-sidebar.navigation-open { display: flex; }
-  body[data-platform-page] .platform-sidebar nav { display: grid; grid-template-columns: 1fr; overflow: visible; }
-  body[data-platform-page] .platform-sidebar nav a { white-space: normal; font-size: 14px; }
-  body[data-platform-page] .sidebar-account { display: flex; }
-  body[data-platform-page] .platform-main { padding: 24px 16px 48px; }
-  body[data-platform-page] .page-heading h1 { font-size: 24px; }
-  body[data-platform-page] .section-heading { align-items: start; flex-wrap: wrap; }
   body[data-platform-page] .profile-person { padding: 20px; gap: 14px; }
   body[data-platform-page] .wn-account summary > span { display: none; }
   body[data-platform-page] .config-module-nav { border-right: 0; padding: 0; }
@@ -313,6 +329,7 @@ body .reveal.is-visible { animation: community-enter 300ms ease; }
   .community-stat strong { font-size: 20px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 .recruitment-tracks { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 16px; }
 .recruitment-tracks .button { border-radius: 6px; min-height: 44px; }
 .recruitment-tracks [aria-current="page"] { color: var(--gold); border-color: var(--gold); background: var(--nav-active-bg); }
