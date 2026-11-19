@@ -6,6 +6,7 @@
   const icon = name => `<i data-lucide="${name}" aria-hidden="true"></i>`;
   const entries = value => Object.values(value || {}), asset = name => '/assets/adventure/' + name;
   let state, session, view = 'world', zoneId = '', busy = false, pending = null, selection = '', poll, loadGeneration = 0;
+  let director;
   const params = new URLSearchParams(location.search);
   let guild = params.get('guild') || '', mode = params.get('mode') === 'admin' ? 'admin' : 'normal';
   function icons() { window.lucide?.createIcons(); }
@@ -68,15 +69,15 @@
   }
   function missions() { return header('CONTRATS','Missions') + `<div class="activity-grid">${entries(state.catalog.missions).map(m=>`<article class="activity"><div class="activity-icon">${icon(m.id==='chasse'?'crosshair':m.id==='tresor'?'gem':'scroll-text')}</div><h2>${escape(m.name)}</h2><p>${m.energyCost} énergie · ${Math.round(m.risk*100)} % de risque de base</p><dl><div><dt>Berrys</dt><dd>${m.berry.join(' – ')}</dd></div><div><dt>XP de base</dt><dd>${m.xp.join(' – ')}</dd></div></dl>${button('Accepter','mission',{id:m.id},{primary:true})}${cooldown('mission:'+m.id)}</article>`).join('')}</div>`; }
   function combatPanel(c) {
-    const template=state.catalog.bosses[c.boss_id] || state.catalog.serverBosses[c.boss_id] || state.catalog.crewBosses[c.boss_id] || {name:c.boss_name};
-    return `<section class="combat-arena" data-combat-status="${escape(c.status)}"><div class="arena-top"><span class="kicker">${c.scope==='server'?'RAID':'COMBAT'} · TOUR ${c.turn}</span><h2>${escape(template.name)}</h2><span class="battle-status">${c.status==='active'?'En cours':c.status==='victory'?'Victoire':c.status==='fled'?'Repli':'Combat terminé'}</span></div>
-      <div class="fighters"><div class="fighter player-fighter"><img src="${escape(session.user.avatar)}" alt="${escape(session.user.displayName)}"><b>${escape(session.user.displayName)}</b>${bar('PV',c.player_hp,c.player_max_hp)}</div>
-      <span class="duel-symbol">VS</span><div class="fighter enemy-fighter"><img src="${escape(state.catalog.bossImages?.[c.boss_id] || asset('enemy.png'))}" alt="${escape(template.name)}" data-fallback="boss"><b>${escape(template.name)}</b>${bar('PV',c.boss_hp,c.boss_max_hp,'enemy')}</div></div>
-      <div class="combat-log" aria-live="polite">${escape(c.log).replace(/\n/g,'<br>')}</div>
-      ${c.status==='active'&&!c.raid_battle_id?`<div class="combat-actions">${[['attack','Attaquer','sword'],['heavy','Coup lourd','flame'],['defend','Défendre','shield'],['heal','Potion','heart-pulse'],['flee','Fuir','door-open']].map(([action,label,ico])=>button(label,'combat',{scope:c.scope,sessionId:c.session_id||String(c.created_at),turn:c.turn,action},{primary:action==='attack',icon:ico,confirm:action==='flee'?'Abandonner ce combat ?':null})).join('')}</div>`:''}</section>`;
+    const history = (state.recentBattles || []).filter(r => r.battle.after.scope === c.scope &&
+      (r.battle.after.session_id || r.battle.after.created_at) === (c.session_id || c.created_at));
+    return window.WarsAdventureCombat.render({ combat: c, catalog: state.catalog, player: state.player, user: session.user, inventory: state.inventory, button, result: history[0], history });
   }
   function bosses() {
-    return header('LE CHAMP DE BATAILLE','Combats')+state.combats.filter(c=>!c.raid_battle_id).map(combatPanel).join('')+`<div class="boss-grid">${entries(state.catalog.bosses).map(b=>`<article class="boss-tile"><img src="${escape(state.catalog.bossImages?.[b.id] || asset('enemy.png'))}" loading="lazy" alt="${escape(b.name)}" data-fallback="boss"><div><small>NIVEAU ${b.minLevel||1}</small><h2>${escape(b.name)}</h2><p>${b.energyCost} énergie</p>${button('Affronter','boss.start',{id:b.id},{primary:true,disabled:state.player.level<(b.minLevel||1)&&mode!=='admin',icon:'swords'})}${cooldown('boss:'+b.id)}</div></article>`).join('')}</div>`;
+    const combats = state.combats.filter(c => !c.raid_battle_id);
+    const last = state.recentBattles?.find(r => r.finished && !combats.some(c => c.scope === r.battle.after.scope));
+    if (last) combats.push(last.battle.after);
+    return header('LE CHAMP DE BATAILLE','Combats')+combats.map(combatPanel).join('')+`<div class="boss-grid">${entries(state.catalog.bosses).map(b=>`<article class="boss-tile"><img src="${escape(state.catalog.bossImages?.[b.id] || asset('enemy.png'))}" loading="lazy" alt="${escape(b.name)}" data-fallback="boss"><div><small>NIVEAU ${b.minLevel||1}</small><h2>${escape(b.name)}</h2><p>${b.energyCost} énergie</p>${button('Affronter','boss.start',{id:b.id},{primary:true,disabled:state.player.level<(b.minLevel||1)&&mode!=='admin',icon:'swords'})}${cooldown('boss:'+b.id)}</div></article>`).join('')}</div>`;
   }
   function character() {
     const p=state.player,fruit=state.catalog.fruits[p.fruit_id];
@@ -126,6 +127,7 @@
     main.querySelectorAll('img[data-fallback]').forEach(img=>img.addEventListener('error',()=>{img.removeAttribute('data-fallback');img.src=asset('enemy.png');},{once:true}));
     $('#inventory-search')?.addEventListener('input',filterInventory);$('#inventory-filter')?.addEventListener('change',filterInventory);
     icons();paintMap();tick();
+    main.querySelectorAll('[data-battle-speed]').forEach(select => { select.value = String(director?.speed ?? 1); select.onchange = () => director?.setSpeed(select.value); });
   }
   function filterInventory(){const query=$('#inventory-search').value.toLocaleLowerCase('fr'),type=$('#inventory-filter').value;document.querySelectorAll('[data-item-name]').forEach(node=>node.hidden=!node.dataset.itemName.includes(query)||Boolean(type&&node.dataset.itemType!==type));}
   function tick(){document.querySelectorAll('[data-until]').forEach(node=>{const seconds=Math.max(0,Math.ceil((Number(node.dataset.until)-Date.now())/1000));node.textContent=seconds?`Disponible dans ${Math.floor(seconds/3600)?Math.floor(seconds/3600)+' h ':''}${Math.floor(seconds%3600/60)} min ${seconds%60} s`:'Disponible';});}
@@ -136,21 +138,28 @@
       // Discord remains the authority for the active normal/Admin Mod profile.
       // Align the browser before any action can use a stale profile partition.
       if (data.activeMode && data.activeMode !== mode) { mode = data.activeMode; updateUrl(); return load(showError); }
-      state=data;render();audioScene();}
+      const unchanged = state?.revision === data.revision && state?.mode === data.mode;
+      mode=data.mode;updateUrl();state=data;
+      if(unchanged&&!showError){drawHud();tick();return;}
+      render();audioScene();}
     catch(error){if(showError||!state){main.innerHTML=`<section class="opening"><h1>Aventure indisponible</h1><p>${escape(error.message)}</p><button id="retry-load">${icon('refresh-cw')}Réessayer</button><a href="/profile">Mon espace</a></section>`;main.setAttribute('aria-busy','false');$('#retry-load').onclick=()=>load(true);icons();}else notice(error.message,true);}
   }
   async function confirm(message){const dialog=$('#game-confirm');$('#game-confirm-text').textContent=message;dialog.returnValue='';dialog.showModal();return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));}
   async function mutate(action,input,confirmText){
     if(busy||!state)return;if(pending)return notice('Vérifie d’abord le résultat de l’action précédente.',true);
     if(confirmText&&!await confirm(confirmText))return;
+    if(busy||pending)return;
     pending={url:endpoint(),body:{operationId:crypto.randomUUID(),revision:state.revision,action,input}};await sendPending();
   }
   async function sendPending(){
     if(!pending||busy)return;busy=true;document.body.dataset.busy='true';main.setAttribute('aria-busy','true');
     try{const data=await api(pending.url,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':session.csrf},body:JSON.stringify(pending.body)});
-      const action=pending.body.action;pending=null;state=data;if(action==='boss.start'||action==='crew.boss'||action==='combat')view='bosses';
-      render();audioScene();const event=data.result.victory?'victory':data.result.failed?'defeat':action==='combat'?'attack':action==='explore'?'discovery':action==='item.use'?'equip':'reward';
-      window.WarsAdventureAudio?.effect(event);notice(data.result.message);if(action==='combat')main.classList.add('strike');setTimeout(()=>main.classList.remove('strike'),350);
+      const action=pending.body.action;pending=null;mode=data.mode;updateUrl();state=data;if(action==='boss.start'||action==='crew.boss'||action==='combat')view='bosses';
+      render();
+      if(data.result.battle){window.WarsAdventureAudio?.scene('boss');await director?.play(main,data.result.battle,{replayed:data.replayed});audioScene();}
+      else audioScene();
+      if(!data.result.battle&&!data.replayed)window.WarsAdventureAudio?.effect(action==='explore'?'discovery':action==='item.use'?'equip':'reward');
+      if(!['combat','boss.start','crew.boss'].includes(action))notice(data.result.message);
     }catch(error){window.WarsAdventureAudio?.effect('error');
       if(error.status&&error.status<500){pending=null;notice(error.message,true);busy=false;await load();}
       else{notice(error.message+' Le résultat reste à vérifier.',true);main.insertAdjacentHTML('afterbegin','<div class="uncertain"><b>Connexion interrompue.</b><button id="retry-action">Vérifier l’action</button></div>');$('#retry-action').onclick=sendPending;}
@@ -165,11 +174,13 @@
   async function boot(){try{
     session=await api('/api/platform/session');if(!session.user){location.assign('/auth/discord/start?next='+encodeURIComponent(location.pathname+location.search));return;}
     window.WarsAdventureAudio?.init(session.user.id);
+    let storage;try{storage=localStorage;}catch{}
+    director=window.WarsAdventureCombat?.createDirector({audio:window.WarsAdventureAudio,storage,reducedMotion:()=>matchMedia('(prefers-reduced-motion: reduce)').matches||document.documentElement.dataset.gameReducedMotion==='true'});
     const servers=await api('/api/platform/servers'),available=servers.guilds.filter(g=>g.bots.some(b=>b.id==='game'));
     $('#game-guild').innerHTML=available.map(g=>`<option value="${escape(g.id)}">${escape(g.name)}</option>`).join('');
     if(!available.some(g=>g.id===guild))guild=available[0]?.id||'';$('#game-guild').value=guild;
     if(!guild){main.innerHTML='<section class="opening"><h1>Aucun serveur Game accessible.</h1><a href="/servers">Mes serveurs</a></section>';return;}
     updateUrl();await load(true);poll=setInterval(()=>{if(!document.hidden&&!main.querySelector('input:focus,select:focus,textarea:focus')&&!$('#game-confirm').open&&!$('#audio-dialog').open)load();},10000);setInterval(tick,1000);
   }catch(error){notice(error.message,true);main.setAttribute('aria-busy','false');}}
-  window.addEventListener('pagehide',()=>{clearInterval(poll);window.WarsAdventureAudio?.stop();});icons();boot();
+  window.addEventListener('pagehide',()=>{clearInterval(poll);director?.cancel();window.WarsAdventureAudio?.stop();});icons();boot();
 })();

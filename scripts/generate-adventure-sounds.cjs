@@ -36,6 +36,9 @@ writeWave('discovery', .5, combine([tone(392, 0, .22, .18), tone(587, .1, .24, .
 writeWave('victory', .9, combine([tone(392, 0, .2, .18), tone(494, .16, .21, .2), tone(587, .32, .22, .22), tone(784, .49, .34, .26)]));
 writeWave('defeat', .6, combine([tone(392, 0, .28, .22), tone(330, .17, .3, .2), tone(247, .34, .25, .2)]));
 writeWave('error', .28, combine([tone(210, 0, .12, .25), tone(180, .13, .12, .2)]));
+writeWave('impact', .18, (time, progress) => (Math.sin(2 * Math.PI * 79 * time) + Math.sin(2 * Math.PI * 173 * time) * .4) * Math.exp(-progress * 13) * .3);
+writeWave('guard', .3, combine([tone(587, 0, .12, .19), tone(1174, .02, .25, .11)]));
+writeWave('heal', .65, combine([tone(440, 0, .3, .16), tone(554, .15, .3, .15), tone(659, .3, .33, .17)]));
 
 let seed = 72821;
 const noise = () => { seed = (seed * 16807) % 2147483647; return (seed / 2147483647) * 2 - 1; };

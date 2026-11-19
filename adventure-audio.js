@@ -3,7 +3,8 @@
 
   const sounds = new Map();
   const sceneTracks = new Map();
-  let preferences = { enabled: false, music: 35, effects: 35, ambience: 28, reducedMotion: false };
+  const playingEffects = new Set();
+  let preferences = { enabled: false, master: 80, music: 35, effects: 35, ambience: 28, reducedMotion: false };
   let storageKey = 'warsnuto:adventure:audio:guest';
   let activeScene = '';
   let initialized = false;
@@ -11,7 +12,7 @@
   const audioPath = name => `/assets/adventure/audio/${name}.wav`;
 
   function save() {
-    localStorage.setItem(storageKey, JSON.stringify(preferences));
+    try { localStorage.setItem(storageKey, JSON.stringify(preferences)); } catch {}
     document.documentElement.dataset.gameReducedMotion = String(preferences.reducedMotion);
   }
 
@@ -21,7 +22,7 @@
       if (stored && typeof stored === 'object') preferences = { ...preferences, ...stored };
     } catch {}
     preferences.enabled = Boolean(preferences.enabled);
-    for (const key of ['music', 'effects', 'ambience']) preferences[key] = Math.max(0, Math.min(100, Number(preferences[key]) || 0));
+    for (const key of ['master', 'music', 'effects', 'ambience']) preferences[key] = Math.max(0, Math.min(100, Number(preferences[key]) || 0));
     preferences.reducedMotion = Boolean(preferences.reducedMotion);
     document.documentElement.dataset.gameReducedMotion = String(preferences.reducedMotion);
   }
@@ -37,7 +38,7 @@
   function preload() {
     if (initialized) return;
     initialized = true;
-    for (const name of ['click', 'navigate', 'attack', 'reward', 'discovery', 'victory', 'defeat', 'error']) create(name);
+    for (const name of ['click', 'navigate', 'attack', 'impact', 'guard', 'heal', 'reward', 'discovery', 'victory', 'defeat', 'error']) create(name);
     for (const [name, channel] of [['theme', 'music'], ['harbour', 'music'], ['storm', 'music'], ['battle', 'music'], ['boss', 'music'], ['sea', 'ambience']]) {
       sceneTracks.set(name, { audio: create(name, true), channel, timer: null });
     }
@@ -48,11 +49,16 @@
     const source = sounds.get(name);
     if (!source) return;
     const audio = source.cloneNode(true);
-    audio.volume = preferences[channel] / 100;
-    audio.play().catch(() => {});
+    audio.volume = (preferences[channel] / 100) * (preferences.master / 100);
+    if (playingEffects.size >= 8) { const oldest = playingEffects.values().next().value; oldest.pause(); playingEffects.delete(oldest); }
+    playingEffects.add(audio);
+    audio.addEventListener('ended', () => playingEffects.delete(audio), { once: true });
+    audio.play().catch(() => playingEffects.delete(audio));
   }
 
   function stopScenes() {
+    for (const effect of playingEffects) effect.pause();
+    playingEffects.clear();
     for (const track of sceneTracks.values()) {
       if (track.timer) clearInterval(track.timer);
       track.timer = null;
@@ -91,7 +97,7 @@
     if (!preferences.enabled) return;
     if (!force && unchanged && wanted.some(key => !sceneTracks.get(key).audio.paused)) return;
     for (const [key, track] of sceneTracks) {
-      const target = wanted.includes(key) ? preferences[track.channel] / 100 : 0;
+      const target = wanted.includes(key) ? preferences[track.channel] / 100 * preferences.master / 100 : 0;
       if (target && track.audio.paused) {
         track.audio.volume = 0;
         track.audio.play().catch(() => {});
@@ -105,6 +111,9 @@
       equip: 'click',
       navigate: 'navigate',
       attack: 'attack',
+      impact: 'impact',
+      guard: 'guard',
+      heal: 'heal',
       reward: 'reward',
       discovery: 'discovery',
       victory: 'victory',
@@ -119,7 +128,7 @@
     if (!enabled) return;
     enabled.checked = preferences.enabled;
     $('#game-motion').checked = preferences.reducedMotion;
-    for (const key of ['music', 'effects', 'ambience']) {
+    for (const key of ['master', 'music', 'effects', 'ambience']) {
       const input = $(`#audio-${key}`);
       const output = $(`#audio-${key}-value`);
       input.value = String(preferences[key]);
@@ -150,12 +159,12 @@
       preferences.reducedMotion = event.target.checked;
       save();
     });
-    for (const key of ['music', 'effects', 'ambience']) {
+    for (const key of ['master', 'music', 'effects', 'ambience']) {
       const input = $(`#audio-${key}`);
       input.addEventListener('input', event => {
         preferences[key] = Number(event.target.value);
         $(`#audio-${key}-value`).textContent = `${preferences[key]} %`;
-        if (key === 'ambience' || key === 'music') scene(activeScene, true);
+        if (key !== 'effects') scene(activeScene, true);
       });
       input.addEventListener('change', save);
     }
@@ -168,6 +177,7 @@
       bindControls();
       updateControls();
       if (preferences.enabled) preload();
+      document.addEventListener('pointerdown', () => { if (preferences.enabled) scene(activeScene, true); }, { once: true });
     },
     scene,
     effect,

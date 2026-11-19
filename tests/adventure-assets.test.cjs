@@ -22,6 +22,12 @@ test('adventure page and staged Game bridge reference complete local assets', ()
     'assets/adventure/audio/battle.wav',
     'assets/adventure/audio/boss.wav',
     'assets/adventure/audio/sea.wav',
+    'assets/adventure/audio/impact.wav',
+    'assets/adventure/audio/guard.wav',
+    'assets/adventure/audio/heal.wav',
+    'assets/adventure/rpg/harbour.webp',
+    'assets/adventure/rpg/adventurer.webp',
+    'adventure-combat.js',
     'ops/bot-config/webAdventure.cjs'
   ]) assert.ok(fs.statSync(file(relative)).isFile(), relative);
 

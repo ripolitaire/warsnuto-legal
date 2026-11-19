@@ -121,6 +121,11 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
       activeMode: source.modeRow?.enabled ? 'admin' : 'normal',
       serverNow: now(), revision: hash(source),
       ...source, player,
+      recentBattles: all(`SELECT result_json FROM adventure_web_receipts
+        WHERE guild_id=? AND user_id=? AND json_valid(result_json)
+          AND json_extract(result_json,'$.battle.profileMode')=?
+        ORDER BY created_at DESC, rowid DESC LIMIT 12`, guild, actor, mode)
+        .map(row => JSON.parse(row.result_json)).filter(result => result.battle),
       inventory: source.inventory.map(row => ({
         ...row,
         name: item(row.item_id)?.name || row.item_id,
@@ -249,8 +254,27 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
         victory: result.victory, failed: result.failed, completed: result.completed,
         berries: result.berries, xp: result.xp, prime: result.prime,
         foundItem: result.foundItem, foundBossItem: result.foundBossItem,
-        foundBossFruit: result.foundBossFruit, damage: result.damage, bossDamage: result.bossDamage
+        foundBossFruit: result.foundBossFruit, damage: result.damage, bossDamage: result.bossDamage,
+        finished: result.finished, fled: result.fled
       };
+      if (body.action === 'combat' && result.session) {
+        const previous = before.combats.find(combat => combat.scope === body.input.scope);
+        const current = result.session;
+        // Presentation only: exact engine states survive session deletion at
+        // victory/defeat. Never roll, grant or infer a new combat outcome here.
+        const fields = ['scope', 'boss_id', 'boss_name', 'session_id', 'created_at', 'turn', 'status',
+          'player_hp', 'player_max_hp', 'boss_hp', 'boss_max_hp', 'potion_used', 'log'];
+        publicResult.battle = {
+          profileMode: mode, id: body.operationId, action: body.input.action,
+          before: previous ? Object.fromEntries(fields.map(key => [key, previous[key]])) : null,
+          after: Object.fromEntries(fields.map(key => [key, current[key]])),
+          missed: result.missed === true,
+          events: previous ? [
+            { id: body.operationId + ':enemy', target: 'enemy', kind: 'health', delta: current.boss_hp - previous.boss_hp },
+            { id: body.operationId + ':player', target: 'player', kind: 'health', delta: current.player_hp - previous.player_hp }
+          ] : []
+        };
+      }
       db.prepare('INSERT INTO adventure_web_receipts VALUES(?,?,?,?,?,?)').run(guild, actor, body.operationId, fingerprint, JSON.stringify(publicResult), now());
       db.prepare('INSERT INTO adventure_web_heads VALUES(?,?,?,1) ON CONFLICT(guild_id,user_id,mode) DO UPDATE SET sequence=sequence+1').run(guild, actor, mode);
       return { ...snapshot(guild, actor, mode), result: publicResult, replayed: false };

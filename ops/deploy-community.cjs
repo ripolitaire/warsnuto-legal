@@ -2,7 +2,7 @@
 const fs = require('node:fs'), path = require('node:path'), cp = require('node:child_process'), crypto = require('node:crypto');
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const run = (bin, args, options = {}) => cp.execFileSync(bin, args, { encoding: 'utf8', timeout: 180000, stdio: ['ignore', 'pipe', 'pipe'], ...options });
-const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js', 'personal-cards.js', 'cards.js', 'cards.css', 'community.js', 'community.css', 'adventure.css', 'adventure.js', 'adventure-audio.js', 'robots.txt', 'sitemap.xml'];
+const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js', 'personal-cards.js', 'cards.js', 'cards.css', 'community.js', 'community.css', 'adventure.css', 'adventure.js', 'adventure-audio.js', 'adventure-combat.js', 'robots.txt', 'sitemap.xml'];
 function walk(directory, relative, list) {
   for (const entry of fs.readdirSync(path.join(directory, relative), { withFileTypes: true })) {
     const file = path.posix.join(relative, entry.name);

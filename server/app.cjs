@@ -169,7 +169,7 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   // Only public files are served. Never expose the checkout, SQLite, env, or sources.
   const publicFiles = ['app.js', 'styles.css', 'theme.css', 'appearance.js', 'platform.js', 'platform.css', 'bot-configuration.js', 'configuration-picker.js', 'feature-dashboard.js', 'member-space.js', 'recruitment.js'];
   publicFiles.push('personal-cards.js', 'cards.css', 'cards.js', 'community.js', 'community.css');
-  publicFiles.push('adventure.css', 'adventure.js', 'adventure-audio.js');
+  publicFiles.push('adventure.css', 'adventure.js', 'adventure-audio.js', 'adventure-combat.js');
   for (const file of publicFiles) app.get('/' + file, (req, res) => res.sendFile(path.join(config.root, file), { dotfiles: 'deny' }));
   app.use('/assets', express.static(path.join(config.root, 'assets'), { dotfiles: 'deny', index: false, redirect: false }));
   if (!config.production) {
