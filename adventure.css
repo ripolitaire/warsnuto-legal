@@ -66,6 +66,7 @@ meter::-webkit-meter-optimum-value { background: var(--game-sea); border-radius:
 .game-shell { max-width: 1540px; min-height: calc(100vh - 145px); display: grid; grid-template-columns: 210px minmax(0, 1fr); margin: 0 auto; }
 .game-nav { position: sticky; top: 0; align-self: start; min-height: calc(100vh - 145px); padding: 18px 12px; border-right: 1px solid var(--game-line); background: #09161d; }
 .game-nav a, .game-nav button { width: 100%; justify-content: flex-start; margin: 2px 0; border-color: transparent; background: transparent; color: var(--game-muted); text-decoration: none; }
+.game-nav a { display: flex; align-items: center; gap: 8px; }
 .game-nav a:hover, .game-nav button:hover, .game-nav button[aria-current="page"] { color: var(--game-text); background: #172d36; border-color: #31505d; }
 .game-nav button[aria-current="page"] { box-shadow: inset 3px 0 0 var(--game-gold); }
 
