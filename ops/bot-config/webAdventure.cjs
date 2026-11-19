@@ -63,6 +63,15 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
     return { admin, partition: mode === 'admin' ? `adminmod|${guild}|${actor}` : guild };
   }
 
+  function activeMode(guild, actor, requestedMode) {
+    // Discord owns the active normal/Admin Mod profile. A browser URL can be
+    // stale after a Discord toggle, so use the active partition consistently.
+    if (!['normal', 'admin'].includes(requestedMode)) fail("Profil d'aventure invalide.");
+    return one('SELECT enabled FROM admin_profile_modes WHERE guild_id=? AND user_id=?', guild, actor)?.enabled
+      ? 'admin'
+      : 'normal';
+  }
+
   function raw(guild, actor, mode, partition) {
     const tables = new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row => row.name));
     const crew = store.getCrewByUser(guild, actor);
@@ -97,6 +106,7 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
   }
 
   function snapshot(guild, actor, mode = 'normal') {
+    mode = activeMode(guild, actor, mode);
     const { partition, admin } = access(guild, actor, mode);
     ensureWebTables();
     const source = raw(guild, actor, mode, partition);
@@ -160,8 +170,6 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
 
   function invoke(guild, actor, mode, input, action, partition) {
     const personal = (method, ...args) => game[method](partition, actor, ...args);
-    const activeAdmin = Boolean(one('SELECT enabled FROM admin_profile_modes WHERE guild_id=? AND user_id=?', guild, actor)?.enabled);
-    if ((mode === 'admin') !== activeAdmin) fail('Le profil actif a change sur Discord. Selectionne le meme profil avant de jouer.', 409);
     if (mode === 'admin' && /^(crew\.|trade\.|raid\.|server\.|halloween\.(create|raid))/.test(action)) {
       fail('Cette activite collective utilise la progression normale. Desactive Admin Mod.', 403);
     }
@@ -218,6 +226,7 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
   }
 
   function execute(guild, actor, mode, body) {
+    mode = activeMode(guild, actor, mode);
     const { partition } = access(guild, actor, mode);
     ensureWebTables();
     object(body, ['operationId', 'revision', 'action', 'input']);
