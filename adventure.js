@@ -132,7 +132,11 @@
   function audioScene(){const combat=state?.combats.some(c=>c.status==='active');const scene=view==='bosses'&&combat?'boss':view==='raids'?'boss':view==='voyage'?(state?.voyage?.encounter?.type==='combat'?'battle':'sea'):view==='world'&&state?.catalog.zones[zoneId]?.minLevel>=20?'storm':view==='shop'||view==='crew'?'harbour':'theme';window.WarsAdventureAudio?.scene(scene);}
   async function load(showError=false){
     if(!guild||busy||pending)return;const gen=++loadGeneration;
-    try{const data=await api(endpoint());if(gen!==loadGeneration)return;state=data;render();audioScene();}
+    try{const data=await api(endpoint());if(gen!==loadGeneration)return;
+      // Discord remains the authority for the active normal/Admin Mod profile.
+      // Align the browser before any action can use a stale profile partition.
+      if (data.activeMode && data.activeMode !== mode) { mode = data.activeMode; updateUrl(); return load(showError); }
+      state=data;render();audioScene();}
     catch(error){if(showError||!state){main.innerHTML=`<section class="opening"><h1>Aventure indisponible</h1><p>${escape(error.message)}</p><button id="retry-load">${icon('refresh-cw')}Réessayer</button><a href="/profile">Mon espace</a></section>`;main.setAttribute('aria-busy','false');$('#retry-load').onclick=()=>load(true);icons();}else notice(error.message,true);}
   }
   async function confirm(message){const dialog=$('#game-confirm');$('#game-confirm-text').textContent=message;dialog.returnValue='';dialog.showModal();return new Promise(resolve=>dialog.addEventListener('close',()=>resolve(dialog.returnValue==='confirm'),{once:true}));}

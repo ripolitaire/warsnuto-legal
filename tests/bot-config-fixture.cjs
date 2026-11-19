@@ -45,7 +45,7 @@ function createBotConfigFixture(ids) {
       adapter.adventure = {
         snapshot(guildId, actor, mode) {
           if (mode === 'admin' && actor !== ids.OWNER) S.fail('Profil Admin Mod inaccessible.', 403);
-          return { ...structuredClone(adventureState), guild: guildId, actor, mode, adminAvailable: actor === ids.OWNER, serverNow: Date.now() };
+          return { ...structuredClone(adventureState), guild: guildId, actor, mode, adminAvailable: actor === ids.OWNER, activeMode: 'normal', serverNow: Date.now() };
         },
         execute(guildId, actor, mode, body) {
           if (mode === 'admin' && actor !== ids.OWNER) S.fail('Profil Admin Mod inaccessible.', 403);

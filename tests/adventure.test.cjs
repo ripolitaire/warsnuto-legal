@@ -21,6 +21,7 @@ test('browser adventure is restricted to website administrators and keeps the Di
   const data = await snapshot.json();
   assert.equal(data.actor, ids.ADMIN);
   assert.equal(data.mode, 'normal');
+  assert.equal(data.activeMode, 'normal');
   assert.equal(bots.calls.at(-1).options.headers['x-wn-actor'], ids.ADMIN);
   assert.equal((await f.request(path + `?guild=${guildId}&mode=normal`, admin)).status, 200);
   assert.equal((await f.request(path + '?route=proxy-internal', admin)).status, 200);

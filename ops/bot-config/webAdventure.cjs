@@ -107,7 +107,9 @@ function createWebAdventure({ store, game, catalog, voyage, halloween, enabled =
       player.nextXp = 100 + (player.level - 1) * 55;
     }
     return {
-      version: 1, guild, actor, mode, adminAvailable: admin, serverNow: now(), revision: hash(source),
+      version: 1, guild, actor, mode, adminAvailable: admin,
+      activeMode: source.modeRow?.enabled ? 'admin' : 'normal',
+      serverNow: now(), revision: hash(source),
       ...source, player,
       inventory: source.inventory.map(row => ({
         ...row,
