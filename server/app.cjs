@@ -85,7 +85,11 @@ function createApp({ db, config, fetcher, botTransport, logger = console }) {
   // document and API endpoints enforce the same site permission.
   const adventureAdmin = permit('admin:read');
   const adventureRoute = req => {
-    if (!require('./security.cjs').snowflake(req.params.guild) || !['normal','admin'].includes(req.params.mode) || Object.keys(req.query).length) throw error(400, 'Profil d’aventure invalide.');
+    // Vercel can preserve the page query during an internal rewrite. Accept
+    // only redundant values that exactly match the already validated path.
+    const queryIsMirror = Object.entries(req.query).every(([key, value]) =>
+      ['guild', 'mode'].includes(key) && value === req.params[key]);
+    if (!require('./security.cjs').snowflake(req.params.guild) || !['normal','admin'].includes(req.params.mode) || !queryIsMirror) throw error(400, 'Profil d’aventure invalide.');
     return '/adventure/' + req.params.guild + '/' + req.params.mode;
   };
   app.get('/api/platform/adventure/:guild/:mode', adventureAdmin, async (req, res) => {

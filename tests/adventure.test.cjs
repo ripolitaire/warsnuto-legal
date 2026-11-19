@@ -22,6 +22,8 @@ test('browser adventure is restricted to website administrators and keeps the Di
   assert.equal(data.actor, ids.ADMIN);
   assert.equal(data.mode, 'normal');
   assert.equal(bots.calls.at(-1).options.headers['x-wn-actor'], ids.ADMIN);
+  assert.equal((await f.request(path + `?guild=${guildId}&mode=normal`, admin)).status, 200);
+  assert.equal((await f.request(path + `?guild=${guildId}&mode=admin`, admin)).status, 400);
   assert.equal((await f.request(`/api/platform/adventure/${guildId}/admin`, admin)).status, 403);
 });
 
